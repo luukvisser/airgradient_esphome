@@ -1,0 +1,23 @@
+{
+  "name": "AirGradient ONE",
+  "version": "1.0.0",
+  "home_assistant_domain": "esphome",
+  "new_install_prompt_erase": false,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "parts": [
+        {
+          "path": "firmware/latest/airgradient-one.factory.bin",
+          "offset": 0
+        }
+      ],
+      "ota": {
+        "path": "firmware/latest/airgradient-one.ota.bin",
+        "md5": "61eb81d43da2a118ae4b1609c749e720",
+        "release_url": "https://github.com/luukvisser/airgradient_esphome/releases/tag/airgradient-one%2Fv1.0.0",
+        "summary": "AirGradient ONE firmware v1.0.0"
+      }
+    }
+  ]
+}
