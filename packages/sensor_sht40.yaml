@@ -21,7 +21,6 @@ sensor:
     source_id: temp_raw
     name: "Temperature"
     id: temp
-    entity_category: ""
     device_class: temperature
     state_class: measurement
     # https://www.airgradient.com/documentation/correction-algorithms/
@@ -34,7 +33,6 @@ sensor:
     source_id: humidity_raw
     name: "Humidity"
     id: humidity
-    entity_category: ""
     device_class: humidity
     state_class: measurement
     # https://www.airgradient.com/documentation/correction-algorithms/

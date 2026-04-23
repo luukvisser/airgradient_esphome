@@ -63,11 +63,13 @@ sensor:
     voc:
       name: "VOC index"
       id: voc
+      icon: mdi:molecule
       web_server:
         sorting_group_id: grp_sensors
     nox:
       name: "NOx index"
       id: nox
+      icon: mdi:molecule
       web_server:
         sorting_group_id: grp_sensors
     compensation:  # Remove this block if no temp/humidity sensor present for compensation

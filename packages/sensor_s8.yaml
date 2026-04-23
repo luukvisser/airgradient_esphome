@@ -1,6 +1,6 @@
 select:
   - platform: template
-    name: "SenseAir S88 CO2 ABC Interval"
+    name: "SenseAir S8 CO2 ABC Interval"
     id: co2_abc_interval_select
     options: ["1", "8", "30", "90"]
     initial_option: "8"
@@ -30,7 +30,7 @@ select:
 
 number:
   - platform: template
-    name: "SenseAir S88 CO2 Offset"
+    name: "SenseAir S8 CO2 Offset"
     id: co2_offset_number
     min_value: -400
     max_value: 400
@@ -68,7 +68,7 @@ sensor:
 button:
   # https://github.com/esphome/issues/issues/2444
   - platform: template
-    name: "SenseAir S88 CO2 Calibration"
+    name: "SenseAir S8 CO2 Calibration"
     id: senseair_co2_calibrate_button
     entity_category: config
     web_server:
@@ -81,7 +81,7 @@ button:
 
   - platform: template
     # Displays the current ABC interval in the ESPhome logs to verify status
-    name: "SenseAir S88 CO2 Write Calibration Interval To Log"
+    name: "SenseAir S8 CO2 Write Calibration Interval To Log"
     id: senseair_co2_abc_get_period
     entity_category: config
     web_server:
@@ -92,7 +92,7 @@ button:
 
 switch:
   - platform: template
-    name: "SenseAir S88 CO2 Automatic Baseline Correction"
+    name: "SenseAir S8 CO2 Automatic Baseline Correction"
     id: senseair_co2_abc_switch
     restore_mode: RESTORE_DEFAULT_ON
     optimistic: True
