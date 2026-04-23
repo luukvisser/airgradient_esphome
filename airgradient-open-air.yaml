@@ -3,8 +3,8 @@
 # https://www.airgradient.com/open-airgradient/instructions/overview/
 
 substitutions:
-  name: "ag-open-air-o-1pst"
-  friendly_name: "AG Open Air O-1PST"
+  name: "airgradient-open-air-o-1pst"
+  friendly_name: "AirGradient Open Air"
   name_add_mac_suffix: "false"  # Must have quotes around value
 
 # Enable Home Assistant API
