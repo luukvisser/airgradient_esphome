@@ -50,6 +50,7 @@ update:
     # workflow publishes to (site/<slug>/manifest.json).
     source: "https://luukvisser.github.io/airgradient-esphome/airgradient-one/manifest.json"
     update_interval: 6h
+    entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
 
