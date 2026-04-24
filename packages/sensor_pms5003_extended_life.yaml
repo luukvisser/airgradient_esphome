@@ -5,8 +5,8 @@ number:
   - platform: template
     name: "PMS5003 PM2.5 Scaling Factor"
     id: pm_2_5_scaling_factor
-    min_value: 0
-    max_value: 10
+    min_value: 0.5
+    max_value: 2.0
     step: 0.01
     initial_value: 1.0
     restore_value: true
@@ -20,8 +20,8 @@ number:
   - platform: template
     name: "PMS5003 PM2.5 Intercept"
     id: pm_2_5_intercept
-    min_value: -100
-    max_value: 100
+    min_value: -10.0
+    max_value: 10.0
     step: 0.1
     initial_value: 0.0
     restore_value: true
@@ -43,6 +43,7 @@ sensor:
       id: pm_2_5_raw
       device_class: pm25  # Added to report properly to HomeKit
       disabled_by_default: true
+      accuracy_decimals: 1
       icon: mdi:molecule
       entity_category: diagnostic
       web_server:
@@ -51,6 +52,7 @@ sensor:
       name: "PM1.0"
       id: pm_1_0
       icon: mdi:molecule
+      accuracy_decimals: 1
       device_class: pm1  # Added to report properly to HomeKit
       web_server:
         sorting_group_id: grp_sensors
@@ -58,6 +60,7 @@ sensor:
       name: "PM10.0"
       id: pm_10_0
       icon: mdi:molecule
+      accuracy_decimals: 1
       device_class: pm10  # Added to report properly to HomeKit
       web_server:
         sorting_group_id: grp_sensors
@@ -66,7 +69,7 @@ sensor:
       id: pm_0_3um
       icon: mdi:blur
       web_server:
-        sorting_group_id: grp_pm25
+        sorting_group_id: grp_sensors
     update_interval: $pm_update_interval
 
   - platform: template
