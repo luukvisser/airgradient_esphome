@@ -78,10 +78,7 @@ script:
                   - light.addressable_set:
                       id: led_strip
                       # 5-band CO2 fade: green(600) -> yellow(700) -> orange(850) -> red(1000) -> purple(1500)
-                      color_brightness: !lambda |-
-                          float lin = (id(led_brightness).state - id(led_fade).state * 2) / 100.0f;
-                          if (lin <= 0.0f) return 0.0f;
-                          return $gamma_floor + (1.0f - $gamma_floor) * powf(lin, $gamma_exp);
+                      color_brightness: !lambda 'return ((id(led_brightness).state - id(led_fade).state * 2) / 100.0f);'
                       range_from: 0
                       range_to: 4
                       red: !lambda 'return (id(co2).state < $co2_green) ? 0 : (id(co2).state <= $co2_yellow) ? (id(co2).state - $co2_green) / ($co2_yellow - $co2_green) : 1;'
@@ -94,10 +91,7 @@ script:
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state <= $co2_purple) ? (id(co2).state - $co2_red) / ($co2_purple - $co2_red) : 1;'
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda |-
-                          float lin = (id(led_brightness).state - id(led_fade).state) / 100.0f;
-                          if (lin <= 0.0f) return 0.0f;
-                          return $gamma_floor + (1.0f - $gamma_floor) * powf(lin, $gamma_exp);
+                      color_brightness: !lambda 'return ((id(led_brightness).state - id(led_fade).state) / 100.0f);'
                       range_from: 1
                       range_to: 3
                       red: !lambda 'return (id(co2).state < $co2_green) ? 0 : (id(co2).state <= $co2_yellow) ? (id(co2).state - $co2_green) / ($co2_yellow - $co2_green) : 1;'
@@ -110,10 +104,7 @@ script:
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state <= $co2_purple) ? (id(co2).state - $co2_red) / ($co2_purple - $co2_red) : 1;'
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda |-
-                          float lin = id(led_brightness).state / 100.0f;
-                          if (lin <= 0.0f) return 0.0f;
-                          return $gamma_floor + (1.0f - $gamma_floor) * powf(lin, $gamma_exp);
+                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
                       range_from: 2
                       range_to: 2
                       red: !lambda 'return (id(co2).state < $co2_green) ? 0 : (id(co2).state <= $co2_yellow) ? (id(co2).state - $co2_green) / ($co2_yellow - $co2_green) : 1;'
@@ -130,10 +121,7 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda |-
-                          float lin = id(led_brightness).state / 100.0f;
-                          if (lin <= 0.0f) return 0.0f;
-                          return $gamma_floor + (1.0f - $gamma_floor) * powf(lin, $gamma_exp);
+                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
                       range_from: 0
                       range_to: 4
                       red: 0%
@@ -148,10 +136,7 @@ script:
                   - light.addressable_set:
                       id: led_strip
                       # 5-band PM2.5 fade: green(5) -> yellow(15) -> orange(25) -> red(35) -> purple(55) µg/m³
-                      color_brightness: !lambda |-
-                          float lin = (id(led_brightness).state - id(led_fade).state * 2) / 100.0f;
-                          if (lin <= 0.0f) return 0.0f;
-                          return $gamma_floor + (1.0f - $gamma_floor) * powf(lin, $gamma_exp);
+                      color_brightness: !lambda 'return ((id(led_brightness).state - id(led_fade).state * 2) / 100.0f);'
                       range_from: 5
                       range_to: 9
                       red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
@@ -164,10 +149,7 @@ script:
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple - $pm_2_5_red) : 1;'
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda |-
-                          float lin = (id(led_brightness).state - id(led_fade).state) / 100.0f;
-                          if (lin <= 0.0f) return 0.0f;
-                          return $gamma_floor + (1.0f - $gamma_floor) * powf(lin, $gamma_exp);
+                      color_brightness: !lambda 'return ((id(led_brightness).state - id(led_fade).state) / 100.0f);'
                       range_from: 6
                       range_to: 8
                       red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
@@ -180,10 +162,7 @@ script:
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple - $pm_2_5_red) : 1;'
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda |-
-                          float lin = id(led_brightness).state / 100.0f;
-                          if (lin <= 0.0f) return 0.0f;
-                          return $gamma_floor + (1.0f - $gamma_floor) * powf(lin, $gamma_exp);
+                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
                       range_from: 7
                       range_to: 7
                       red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
@@ -200,10 +179,7 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda |-
-                          float lin = id(led_brightness).state / 100.0f;
-                          if (lin <= 0.0f) return 0.0f;
-                          return $gamma_floor + (1.0f - $gamma_floor) * powf(lin, $gamma_exp);
+                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
                       range_from: 5
                       range_to: 9
                       red: 0%
@@ -218,10 +194,7 @@ script:
                   - light.addressable_set:
                       id: led_strip
                       # 5-band VOC fade: green(100) -> yellow(200) -> orange(300) -> red(400) -> purple(500)
-                      color_brightness: !lambda |-
-                          float lin = id(led_brightness).state / 100.0f;
-                          if (lin <= 0.0f) return 0.0f;
-                          return $gamma_floor + (1.0f - $gamma_floor) * powf(lin, $gamma_exp);
+                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
                       range_from: 10
                       range_to: 10
                       red: !lambda 'return (id(voc).state < $voc_green) ? 0 : (id(voc).state <= $voc_yellow) ? (id(voc).state - $voc_green) / ($voc_yellow - $voc_green) : 1;'
@@ -238,10 +211,7 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda |-
-                          float lin = id(led_brightness).state / 100.0f;
-                          if (lin <= 0.0f) return 0.0f;
-                          return $gamma_floor + (1.0f - $gamma_floor) * powf(lin, $gamma_exp);
+                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
                       range_from: 10
                       range_to: 10
                       red: 0%
