@@ -11,6 +11,7 @@ number:
     initial_value: 1.0
     restore_value: true
     optimistic: true
+    mode: box
     entity_category: config
     icon: mdi:scale
     web_server:
@@ -25,6 +26,7 @@ number:
     initial_value: 0.0
     restore_value: true
     optimistic: true
+    mode: box
     entity_category: config
     icon: mdi:plus-minus-variant
     web_server:
