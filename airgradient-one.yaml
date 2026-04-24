@@ -71,6 +71,7 @@ captive_portal:
 esp32_improv:
   id: improv_ble
   authorizer: none
+  identifying_distinguisher: "AG-ONE"  
 
 improv_serial:
   id: improv_serial_provisioner
