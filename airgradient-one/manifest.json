@@ -1,6 +1,6 @@
 {
   "name": "AirGradient ONE",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "home_assistant_domain": "esphome",
   "new_install_prompt_erase": false,
   "builds": [
@@ -14,9 +14,9 @@
       ],
       "ota": {
         "path": "firmware/latest/airgradient-one.ota.bin",
-        "md5": "61eb81d43da2a118ae4b1609c749e720",
-        "release_url": "https://github.com/luukvisser/airgradient_esphome/releases/tag/airgradient-one%2Fv1.0.0",
-        "summary": "AirGradient ONE firmware v1.0.0"
+        "md5": "8e020930f3ab435beccccc27ff1069df",
+        "release_url": "https://github.com/luukvisser/airgradient_esphome/releases/tag/airgradient-one%2Fv1.0.1",
+        "summary": "AirGradient ONE firmware v1.0.1"
       }
     }
   ]
