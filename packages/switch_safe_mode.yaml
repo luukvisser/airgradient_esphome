@@ -5,3 +5,4 @@ switch:
     # https://community.home-assistant.io/t/esphome-flashing-over-wifi-does-not-work/357352/1
     name: "Flash Mode (Safe Mode)"
     icon: "mdi:cellphone-arrow-down"
+    disabled_by_default: true

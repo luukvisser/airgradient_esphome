@@ -2,3 +2,7 @@
 button:
   - platform: factory_reset
     name: Restart with Factory Default Settings
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system
+    disabled_by_default: true      

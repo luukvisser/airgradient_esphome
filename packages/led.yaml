@@ -7,10 +7,7 @@ light:
     chipset: ws2812
     name: "LED Strip"
     id: led_strip
-    restore_mode: RESTORE_DEFAULT_OFF
-    # Classify this as primary entity so that it shows up on the Home Assistant
-    # pre-populated default dashboard so `entity_category` is intentionally not
-    # set.
+    restore_mode: RESTORE_DEFAULT_ON
     web_server:
       sorting_group_id: grp_led
 
