@@ -74,10 +74,7 @@ display:
           it.printf(101,51-4, id(open_sans_bold_10), isnan(id(nox).state) ? "-" : "%.0f", id(nox).state);
       - id: boot
         lambda: |-
-          std::string fname = std::string(App.get_friendly_name());
-          auto fname_sp = fname.rfind(' ');
-          if (fname_sp != std::string::npos && fname.size() - fname_sp == 7) fname = fname.substr(0, fname_sp);
-          it.printf(0, 0, id(open_sans_14), "%s", fname.c_str());
+          it.printf(0, 0, id(open_sans_bold_14), "AirGradient ONE");
           it.printf(0, 20, id(open_sans_10), "MAC: %s", get_mac_address().c_str());
           it.printf(0, 35, id(open_sans_10), "Firmware: $config_version");
           auto ver = id(esphome_version).state;

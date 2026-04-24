@@ -16,7 +16,7 @@ substitutions:
 
 esphome:
   name: "airgradient-one"
-  friendly_name: "AirGradient ONE"
+  friendly_name: "AG ONE"
   name_add_mac_suffix: true
   # `project.name` must be globally unique and stable: devices keyed on it
   # for update checks and Home Assistant adoption. Use reverse-domain +
@@ -71,7 +71,6 @@ captive_portal:
 esp32_improv:
   id: improv_ble
   authorizer: none
-  identifying_distinguisher: "AG-ONE"  
 
 improv_serial:
   id: improv_serial_provisioner
