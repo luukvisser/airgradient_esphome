@@ -12,7 +12,7 @@
 #     on GitHub Pages, and attaches binaries to a GitHub Release.
 
 substitutions:
-  config_version: "1.0.1"  # keep in sync with esphome.project.version below
+  config_version: "1.1.0"  # keep in sync with esphome.project.version below
 
 esphome:
   name: "airgradient-one"
@@ -23,7 +23,7 @@ esphome:
   # the device slug so multiple products from the same org don't collide.
   project:
     name: "luukvisser.airgradient-one"
-    version: "1.0.1"
+    version: "1.1.0"
 
 logger:
 
