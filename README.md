@@ -79,6 +79,22 @@ At the time of writing that's:
 
 - **AirGradient ONE** (`airgradient-one`) — ESP32-C3 indoor monitor
 
+## Installing firmware
+
+The easiest way to flash firmware is directly from the browser — no ESPHome or Python installation required.
+
+1. Open **[luukvisser.github.io/airgradient-esphome](https://luukvisser.github.io/airgradient-esphome/)** in a Chromium-based browser (Chrome or Edge — Firefox does not support Web Serial).
+2. The page lists all supported devices, each with an **Install** button.
+
+   ![GitHub Pages install page](docs/images/install-github-pages.png)
+
+3. Plug your device into your computer via USB.
+4. Click **Install** next to your device.
+5. The browser will prompt you to select a serial port — choose the one that corresponds to your device (typically listed as `USB Serial` or similar).
+6. Follow the on-screen prompts. The installer will erase and flash the latest released firmware automatically.
+
+> **Note:** The install page is only live after the first release has been published via the CI/CD pipeline (see [How a release works](#how-a-release-works) below). If the page returns a 404, no release has been tagged yet.
+
 ## How a release works
 
 Tags are scoped per device: **`<slug>/v<semver>`**. That means each

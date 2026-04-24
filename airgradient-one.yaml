@@ -5,14 +5,14 @@
 # https://esphome.io/guides/made_for_esphome/
 #
 # Release workflow:
-#   - Update `esphome.project.version` below.
+#   - Update `config_version` below.
 #   - Tag the commit as `airgradient-one/v<version>` (the slug before /v
 #     must match the filename / devices.yaml slug).
 #   - CI validates, builds, publishes the manifest under /airgradient-one/
 #     on GitHub Pages, and attaches binaries to a GitHub Release.
 
 substitutions:
-  config_version: "1.0.0"  # keep in sync with esphome.project.version below
+  config_version: "1.0.1"
 
 esphome:
   name: "airgradient-one"
@@ -23,7 +23,7 @@ esphome:
   # the device slug so multiple products from the same org don't collide.
   project:
     name: "luukvisser.airgradient-one"
-    version: "1.0.0"
+    version: "$config_version"
 
 logger:
 
