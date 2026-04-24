@@ -7,7 +7,8 @@ light:
     chipset: ws2812
     name: "LED Strip"
     id: led_strip
-    restore_mode: RESTORE_DEFAULT_ON
+    internal: true
+    restore_mode: ALWAYS_ON
     web_server:
       sorting_group_id: grp_led
 

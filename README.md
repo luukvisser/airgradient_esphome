@@ -134,10 +134,10 @@ without cutting a release.
 After the first release, every device has:
 
 ```
-https://<owner>.github.io/<repo>/                         # landing page
-https://<owner>.github.io/<repo>/<slug>/manifest.json     # update manifest
-https://<owner>.github.io/<repo>/<slug>/firmware/latest/  # latest binaries
-https://<owner>.github.io/<repo>/<slug>/firmware/<ver>/   # pinned version
+https://luukvisser.github.io/airgradient_esphome/                         # landing page
+https://luukvisser.github.io/airgradient_esphome/<slug>/manifest.json     # update manifest
+https://luukvisser.github.io/airgradient_esphome/<slug>/firmware/latest/  # latest binaries
+https://luukvisser.github.io/airgradient_esphome/<slug>/firmware/<ver>/   # pinned version
 ```
 
 ## Local development

@@ -22,6 +22,7 @@ sensor:
     name: "Temperature"
     id: temp
     device_class: temperature
+    entity_category: "" 
     state_class: measurement
     # https://www.airgradient.com/documentation/correction-algorithms/
     filters:
@@ -34,6 +35,7 @@ sensor:
     name: "Humidity"
     id: humidity
     device_class: humidity
+    entity_category: "" 
     state_class: measurement
     # https://www.airgradient.com/documentation/correction-algorithms/
     filters:

@@ -12,18 +12,18 @@
 #     on GitHub Pages, and attaches binaries to a GitHub Release.
 
 substitutions:
-  config_version: "1.0.1"  # keep in sync with esphome.project.version below
+  config_version: "1.1.0"  # keep in sync with esphome.project.version below
 
 esphome:
   name: "airgradient-one"
-  friendly_name: "AirGradient ONE"
+  friendly_name: "AG ONE"
   name_add_mac_suffix: true
   # `project.name` must be globally unique and stable: devices keyed on it
   # for update checks and Home Assistant adoption. Use reverse-domain +
   # the device slug so multiple products from the same org don't collide.
   project:
     name: "luukvisser.airgradient-one"
-    version: "1.0.1"
+    version: "1.1.0"
 
 logger:
 
@@ -62,6 +62,9 @@ wifi:
     ap_timeout: 90s
     password: "cleanair"
 
+network:
+    enable_ipv6: true
+    
 captive_portal:
   id: captive_portal_web
 
@@ -127,7 +130,6 @@ packages:
   tvoc: !include packages/sensor_sgp41.yaml
   display: !include packages/display_sh1106_multi_page.yaml
   led: !include packages/led.yaml
-  # led_co2: !include packages/led_co2.yaml
   led_combo: !include packages/led_combo.yaml
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
   hardware_watchdog: !include packages/watchdog.yaml
