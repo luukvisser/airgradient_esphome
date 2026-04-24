@@ -24,6 +24,14 @@ sensor:
     web_server:
       sorting_group_id: grp_system     
 
+text_sensor:
+  - platform: version
+    name: "ESPHome Version"
+    id: esphome_version
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system  
+          
 debug:
   update_interval: 60s
 

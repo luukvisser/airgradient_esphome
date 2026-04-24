@@ -41,7 +41,6 @@ display:
     model: "SH1106 128x64"
     id: oled_display
     address: 0x3C
-    # rotation: 180°
     pages:
       - id: airgradient_default
         # https://forum.airgradient.com/t/airgradient-one-customized-mallocarray-esphome-display/1328
@@ -75,10 +74,16 @@ display:
           it.printf(101,51-4, id(open_sans_bold_10), isnan(id(nox).state) ? "-" : "%.0f", id(nox).state);
       - id: boot
         lambda: |-
-          it.printf(0, 0, id(open_sans_14), "ID:");
-          it.printf(128, 0, id(open_sans_14), TextAlign::TOP_RIGHT, "%s", get_mac_address().c_str());
-          it.printf(0, 21, id(open_sans_14), "Firmware: $config_version");
-          it.printf(0, 42, id(open_sans_14), "%s", App.get_friendly_name().c_str());
+          std::string fname = std::string(App.get_friendly_name());
+          auto fname_sp = fname.rfind(' ');
+          if (fname_sp != std::string::npos && fname.size() - fname_sp == 7) fname = fname.substr(0, fname_sp);
+          it.printf(0, 0, id(open_sans_14), "%s", fname.c_str());
+          it.printf(0, 20, id(open_sans_10), "MAC: %s", get_mac_address().c_str());
+          it.printf(0, 35, id(open_sans_10), "Firmware: $config_version");
+          auto ver = id(esphome_version).state;
+          auto ver_sp = ver.find(' ');
+          if (ver_sp != std::string::npos) ver = ver.substr(0, ver_sp);
+          it.printf(0, 50, id(open_sans_10), "ESPHome: %s", ver.c_str());
       - id: summary1
         lambda: |-
           it.printf(0, 0, id(open_sans_14), "CO2:");
@@ -156,9 +161,13 @@ display:
           it.printf(0, 32, id(open_sans_14), isnan(id(voc).state) ? "VOC: -" : "VOC: %.0f", id(voc).state);
           it.printf(128, 32, id(open_sans_14), TextAlign::TOP_RIGHT, isnan(id(nox).state) ? "NOx: -" : "NOx: %.0f", id(nox).state);
           it.printf(0, 48, id(open_sans_14), isnan(id(pm_2_5_aqi).state) ? "AQI: -" : "AQI: %.0f", id(pm_2_5_aqi).state);
-      - id: blank
+      - id: screen_off
+        # ESPHome's public SSD1306 API on this build does not expose a hardware
+        # power-off. Instead we draw nothing — with auto_clear on (the default)
+        # every pixel is unlit, which captures the practical OLED-longevity
+        # benefit since pixel aging happens while pixels are lit.
         lambda: |-
-          it.printf(0, 0, id(open_sans_14), " ");
+          it.fill(COLOR_OFF);
 
 
 script:
@@ -213,9 +222,9 @@ script:
                   - display.page.show: combo
             - if:
                 condition:
-                  lambda: return id(display_page_select).current_option() == "Blank";
+                  lambda: return id(display_page_select).current_option() == "Off";
                 then:
-                  - display.page.show: blank
+                  - display.page.show: screen_off
       - component.update: oled_display
 
 
@@ -271,7 +280,7 @@ select:
       - "Temp & Humidity"
       - "VOC & NOx"
       - "Combo"
-      - "Blank"
+      - "Off"
     initial_option: "AirGradient Default"
     restore_value: true
     optimistic: true
@@ -281,7 +290,6 @@ select:
       sorting_group_id: grp_display
     set_action:
       - script.execute: update_display_page
-
 
 number:
   - platform: template

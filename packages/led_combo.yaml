@@ -1,64 +1,320 @@
-# Combo LED bar
-# Left 5 LEDs indicate CO2
-# Middle 5 LEDs indicate PM2
-# Far right LED indicates TVOC
-# LED Fade setting fades out the bars on the sides at the set percentage each step
+# Multi-mode LED indicator with HA/web-UI mode selector.
+#
+# Modes:
+#   Combo  — Left 5 LEDs: CO2 | Middle 5 LEDs: PM2.5 | Right 1 LED: TVOC
+#   CO2    — All 11 LEDs: CO2
+#   PM2.5  — All 11 LEDs: PM2.5
+#   VOC    — All 11 LEDs: VOC index
+#   Test   — All LEDs on at full brightness (for testing)
+#   Off    — All LEDs off
 
-# Color thresholds: CO2 follows common indoor ventilation guidance (ASHRAE/UBA);
+# Color thresholds: CO2 follows ASHRAE/UBA indoor ventilation guidance;
 # PM2.5 follows 2021 WHO air quality guidelines; VOC follows Sensirion SGP41
-# index interpretation. See inline rationale comments in substitutions below.
-# Original reference: https://app.airgradient.com/dashboard/about
+# index interpretation (100 = learned baseline for this environment).
 substitutions:
-  # CO2 bands (ppm). Indoor air quality scale inspired by common ventilation
-  # guidance (ASHRAE, UBA). Outdoor CO2 is ~420 ppm; anything above ~1000 ppm
-  # indoors typically indicates inadequate ventilation and starts affecting
-  # cognitive performance. 1500 ppm is widely considered unacceptable indoors.
   co2_green: '600'     # Well-ventilated indoor air
-  co2_yellow: '700'    # Slightly elevated, still comfortable
-  co2_orange: '850'    # Ventilation recommended
-  co2_red: '1000'      # ASHRAE/UBA threshold for poor air; open a window
+  co2_yellow: '900'    # Slightly elevated, still comfortable
+  co2_orange: '1000'   # Ventilation recommended
+  co2_red: '1200'      # Poor air quality; open a window
   co2_purple: '1500'   # Unacceptable; noticeable drowsiness/headaches possible
-  # PM2.5 bands (µg/m³). Aligned to the 2021 WHO global air quality guidelines,
-  # which are the tightest widely-cited health targets. There is no separate
-  # WHO indoor guideline; since indoor PM2.5 is dominated by outdoor
-  # infiltration plus cooking/candles, the same thresholds are applied.
   pm_2_5_green: '5'    # WHO annual guideline (long-term healthy target)
   pm_2_5_yellow: '15'  # WHO 24-hour guideline (short-term exposure limit)
-  pm_2_5_orange: '25'  # Old WHO annual guideline (pre-2021), still seen widely
+  pm_2_5_orange: '25'  # Old WHO annual guideline (pre-2021)
   pm_2_5_red: '35'     # US EPA 24h PM2.5 NAAQS standard
-  pm_2_5_purple: '55'  # US EPA AQI boundary between "unhealthy for sensitive
-                       # groups" and "unhealthy for all"
-  # VOC Index bands (Sensirion SGP41 relative scale, 0-500). Unlike CO2/PM2.5
-  # this is not an absolute concentration: 100 is the algorithm's learned
-  # baseline for this environment, so "green at <=100" means "baseline or
-  # better". Thresholds reflect Sensirion guidance: 100-200 is normal variation,
-  # 200-400 indicates a VOC event (cooking, cleaning, off-gassing), 400+ is
-  # extreme. The fade-below-100-to-blue behaviour was intentionally dropped:
-  # "better than baseline" is not a state worth signaling.
+  pm_2_5_purple: '55'  # US EPA AQI "unhealthy for sensitive groups" boundary
   voc_green: '100'     # Baseline for this environment (or better)
   voc_yellow: '200'    # Normal day-to-day variation
-  voc_orange: '300'    # Notable event in progress
+  voc_orange: '300'    # Notable VOC event in progress
   voc_red: '400'       # Sustained VOC event; ventilate
   voc_purple: '500'    # Extreme (top of SGP41 scale)
 
-script:
-  - id: update_leds
-    # Repaint all LED ranges based on current sensor values and slider settings.
-    # Called every 5s by the interval below, and immediately when the brightness
-    # or fade sliders change.
+# Gate for early-boot safety. The select + number restore_value hooks fire
+# during component setup, before esp32_rmt_led_strip has allocated its LED
+# buffer — painting then crashes with a null pointer in ESPColorView::set_red.
+globals:
+  - id: leds_ready
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+esphome:
+  on_boot:
+    priority: -100
     then:
+      - lambda: 'id(leds_ready) = true;'
+      - script.execute: update_leds
+
+select:
+  - platform: template
+    name: "LED Mode"
+    id: led_mode
+    icon: "mdi:led-strip-variant"
+    optimistic: true
+    restore_value: true
+    initial_option: "Combo"
+    options:
+      - "Combo"
+      - "CO2"
+      - "PM2.5"
+      - "VOC"
+      - "Test"
+      - "Off"
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_led
+    on_value:
       - if:
           condition:
-            light.is_on: led_strip
+            lambda: 'return id(leds_ready);'
+          then:
+            - script.execute: update_leds
+
+number:
+  - id: !extend led_brightness
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(leds_ready);'
+          then:
+            - script.execute: update_leds
+  - id: !extend led_fade
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(leds_ready);'
+          then:
+            - script.execute: update_leds
+
+script:
+  - id: update_leds
+    then:
+      # Ensure the strip is on before painting (handles return from Off mode).
+      - if:
+          condition:
+            lambda: 'return id(led_mode).current_option() != "Off";'
+          then:
+            - light.turn_on:
+                id: led_strip
+                transition_length: 0s
+
+      # ── Test ─────────────────────────────────────────────────────────────
+      - if:
+          condition:
+            lambda: 'return id(led_mode).current_option() == "Test";'
+          then:
+            - light.addressable_set:
+                id: led_strip
+                range_from: 0
+                range_to: 10
+                color_brightness: 100%
+                red: 100%
+                green: 100%
+                blue: 100%
+
+      # ── Off ────────────────────────────────────────────────────────────
+      - if:
+          condition:
+            lambda: 'return id(led_mode).current_option() == "Off";'
+          then:
+            - light.turn_off: led_strip
+
+      # ── CO2 (all 11 LEDs) ────────────────────────────────────────────────
+      - if:
+          condition:
+            lambda: 'return id(led_mode).current_option() == "CO2";'
           then:
             - if:
                 condition:
-                  lambda: 'return !(isnan(id(co2).state));' # Valid data returned
+                  lambda: 'return !isnan(id(co2).state);'
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      # 5-band CO2 fade: green(600) -> yellow(700) -> orange(850) -> red(1000) -> purple(1500)
-                      color_brightness: !lambda 'return ((id(led_brightness).state - id(led_fade).state * 2) / 100.0f);'
+                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state * 2) / 100.0f;'
+                      range_from: 0
+                      range_to: 10
+                      red: !lambda 'return (id(co2).state < $co2_green) ? 0 : (id(co2).state <= $co2_yellow) ? (id(co2).state - $co2_green) / ($co2_yellow - $co2_green) : 1;'
+                      green: !lambda |-
+                          float x = id(co2).state;
+                          if (x < $co2_yellow) return 1.0f;
+                          if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                          if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
+                          return 0.0f;
+                      blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state <= $co2_purple) ? (id(co2).state - $co2_red) / ($co2_purple - $co2_red) : 1;'
+                  - light.addressable_set:
+                      id: led_strip
+                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state) / 100.0f;'
+                      range_from: 1
+                      range_to: 9
+                      red: !lambda 'return (id(co2).state < $co2_green) ? 0 : (id(co2).state <= $co2_yellow) ? (id(co2).state - $co2_green) / ($co2_yellow - $co2_green) : 1;'
+                      green: !lambda |-
+                          float x = id(co2).state;
+                          if (x < $co2_yellow) return 1.0f;
+                          if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                          if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
+                          return 0.0f;
+                      blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state <= $co2_purple) ? (id(co2).state - $co2_red) / ($co2_purple - $co2_red) : 1;'
+                  - light.addressable_set:
+                      id: led_strip
+                      color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
+                      range_from: 5
+                      range_to: 5
+                      red: !lambda 'return (id(co2).state < $co2_green) ? 0 : (id(co2).state <= $co2_yellow) ? (id(co2).state - $co2_green) / ($co2_yellow - $co2_green) : 1;'
+                      green: !lambda |-
+                          float x = id(co2).state;
+                          if (x < $co2_yellow) return 1.0f;
+                          if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                          if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
+                          return 0.0f;
+                      blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state <= $co2_purple) ? (id(co2).state - $co2_red) / ($co2_purple - $co2_red) : 1;'
+            - if:
+                condition:
+                  lambda: 'return isnan(id(co2).state);'
+                then:
+                  - light.addressable_set:
+                      id: led_strip
+                      range_from: 0
+                      range_to: 10
+                      color_brightness: 100%
+                      red: 0%
+                      green: 0%
+                      blue: 0%
+
+      # ── PM2.5 (all 11 LEDs) ──────────────────────────────────────────────
+      - if:
+          condition:
+            lambda: 'return id(led_mode).current_option() == "PM2.5";'
+          then:
+            - if:
+                condition:
+                  lambda: 'return !isnan(id(pm_2_5).state);'
+                then:
+                  - light.addressable_set:
+                      id: led_strip
+                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state * 2) / 100.0f;'
+                      range_from: 0
+                      range_to: 10
+                      red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
+                      green: !lambda |-
+                          float x = id(pm_2_5).state;
+                          if (x < $pm_2_5_yellow) return 1.0f;
+                          if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                          if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
+                          return 0.0f;
+                      blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple - $pm_2_5_red) : 1;'
+                  - light.addressable_set:
+                      id: led_strip
+                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state) / 100.0f;'
+                      range_from: 1
+                      range_to: 9
+                      red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
+                      green: !lambda |-
+                          float x = id(pm_2_5).state;
+                          if (x < $pm_2_5_yellow) return 1.0f;
+                          if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                          if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
+                          return 0.0f;
+                      blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple - $pm_2_5_red) : 1;'
+                  - light.addressable_set:
+                      id: led_strip
+                      color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
+                      range_from: 5
+                      range_to: 5
+                      red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
+                      green: !lambda |-
+                          float x = id(pm_2_5).state;
+                          if (x < $pm_2_5_yellow) return 1.0f;
+                          if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                          if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
+                          return 0.0f;
+                      blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple - $pm_2_5_red) : 1;'
+            - if:
+                condition:
+                  lambda: 'return isnan(id(pm_2_5).state);'
+                then:
+                  - light.addressable_set:
+                      id: led_strip
+                      range_from: 0
+                      range_to: 10
+                      color_brightness: 100%
+                      red: 0%
+                      green: 0%
+                      blue: 0%
+
+      # ── VOC (all 11 LEDs) ────────────────────────────────────────────────
+      - if:
+          condition:
+            lambda: 'return id(led_mode).current_option() == "VOC";'
+          then:
+            - if:
+                condition:
+                  lambda: 'return !isnan(id(voc).state);'
+                then:
+                  - light.addressable_set:
+                      id: led_strip
+                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state * 2) / 100.0f;'
+                      range_from: 0
+                      range_to: 10
+                      red: !lambda 'return (id(voc).state < $voc_green) ? 0 : (id(voc).state <= $voc_yellow) ? (id(voc).state - $voc_green) / ($voc_yellow - $voc_green) : 1;'
+                      green: !lambda |-
+                          float x = id(voc).state;
+                          if (x < $voc_yellow) return 1.0f;
+                          if (x <= $voc_orange) return 1.0f - 0.5f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
+                          if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
+                          return 0.0f;
+                      blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state <= $voc_purple) ? (id(voc).state - $voc_red) / ($voc_purple - $voc_red) : 1;'
+                  - light.addressable_set:
+                      id: led_strip
+                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state) / 100.0f;'
+                      range_from: 1
+                      range_to: 9
+                      red: !lambda 'return (id(voc).state < $voc_green) ? 0 : (id(voc).state <= $voc_yellow) ? (id(voc).state - $voc_green) / ($voc_yellow - $voc_green) : 1;'
+                      green: !lambda |-
+                          float x = id(voc).state;
+                          if (x < $voc_yellow) return 1.0f;
+                          if (x <= $voc_orange) return 1.0f - 0.5f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
+                          if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
+                          return 0.0f;
+                      blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state <= $voc_purple) ? (id(voc).state - $voc_red) / ($voc_purple - $voc_red) : 1;'
+                  - light.addressable_set:
+                      id: led_strip
+                      color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
+                      range_from: 5
+                      range_to: 5
+                      red: !lambda 'return (id(voc).state < $voc_green) ? 0 : (id(voc).state <= $voc_yellow) ? (id(voc).state - $voc_green) / ($voc_yellow - $voc_green) : 1;'
+                      green: !lambda |-
+                          float x = id(voc).state;
+                          if (x < $voc_yellow) return 1.0f;
+                          if (x <= $voc_orange) return 1.0f - 0.5f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
+                          if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
+                          return 0.0f;
+                      blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state <= $voc_purple) ? (id(voc).state - $voc_red) / ($voc_purple - $voc_red) : 1;'
+            - if:
+                condition:
+                  lambda: 'return isnan(id(voc).state);'
+                then:
+                  - light.addressable_set:
+                      id: led_strip
+                      range_from: 0
+                      range_to: 10
+                      color_brightness: 100%
+                      red: 0%
+                      green: 0%
+                      blue: 0%
+
+      # ── Combo (default) ──────────────────────────────────────────────────
+      # LEDs 0-4: CO2 | LEDs 5-9: PM2.5 | LED 10: VOC
+      - if:
+          condition:
+            lambda: 'return id(led_mode).current_option() == "Combo";'
+          then:
+            # CO2 — LEDs 0-4 (center: 2)
+            - if:
+                condition:
+                  lambda: 'return !isnan(id(co2).state);'
+                then:
+                  - light.addressable_set:
+                      id: led_strip
+                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state * 2) / 100.0f;'
                       range_from: 0
                       range_to: 4
                       red: !lambda 'return (id(co2).state < $co2_green) ? 0 : (id(co2).state <= $co2_yellow) ? (id(co2).state - $co2_green) / ($co2_yellow - $co2_green) : 1;'
@@ -71,7 +327,7 @@ script:
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state <= $co2_purple) ? (id(co2).state - $co2_red) / ($co2_purple - $co2_red) : 1;'
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return ((id(led_brightness).state - id(led_fade).state) / 100.0f);'
+                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state) / 100.0f;'
                       range_from: 1
                       range_to: 3
                       red: !lambda 'return (id(co2).state < $co2_green) ? 0 : (id(co2).state <= $co2_yellow) ? (id(co2).state - $co2_green) / ($co2_yellow - $co2_green) : 1;'
@@ -84,7 +340,7 @@ script:
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state <= $co2_purple) ? (id(co2).state - $co2_red) / ($co2_purple - $co2_red) : 1;'
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
+                      color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
                       range_from: 2
                       range_to: 2
                       red: !lambda 'return (id(co2).state < $co2_green) ? 0 : (id(co2).state <= $co2_yellow) ? (id(co2).state - $co2_green) / ($co2_yellow - $co2_green) : 1;'
@@ -97,26 +353,24 @@ script:
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state <= $co2_purple) ? (id(co2).state - $co2_red) / ($co2_purple - $co2_red) : 1;'
             - if:
                 condition:
-                  lambda: 'return (isnan(id(co2).state));'  # No data from sensor yet
+                  lambda: 'return isnan(id(co2).state);'
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
                       range_from: 0
                       range_to: 4
+                      color_brightness: 100%
                       red: 0%
                       green: 0%
                       blue: 0%
-
-            # PM2.5 LEDs
+            # PM2.5 — LEDs 5-9 (center: 7)
             - if:
                 condition:
-                  lambda: 'return !(isnan(id(pm_2_5).state));' # Valid data returned
+                  lambda: 'return !isnan(id(pm_2_5).state);'
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      # 5-band PM2.5 fade: green(5) -> yellow(15) -> orange(25) -> red(35) -> purple(55) µg/m³
-                      color_brightness: !lambda 'return ((id(led_brightness).state - id(led_fade).state * 2) / 100.0f);'
+                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state * 2) / 100.0f;'
                       range_from: 5
                       range_to: 9
                       red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
@@ -129,7 +383,7 @@ script:
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple - $pm_2_5_red) : 1;'
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return ((id(led_brightness).state - id(led_fade).state) / 100.0f);'
+                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state) / 100.0f;'
                       range_from: 6
                       range_to: 8
                       red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
@@ -142,7 +396,7 @@ script:
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple - $pm_2_5_red) : 1;'
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
+                      color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
                       range_from: 7
                       range_to: 7
                       red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
@@ -155,26 +409,24 @@ script:
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple - $pm_2_5_red) : 1;'
             - if:
                 condition:
-                  lambda: 'return (isnan(id(pm_2_5).state));'  # No data from sensor yet
+                  lambda: 'return isnan(id(pm_2_5).state);'
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
                       range_from: 5
                       range_to: 9
+                      color_brightness: 100%
                       red: 0%
                       green: 0%
                       blue: 0%
-
-            # TVOC LED
+            # VOC — LED 10
             - if:
                 condition:
                   lambda: 'return !isnan(id(voc).state);'
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      # 5-band VOC fade: green(100) -> yellow(200) -> orange(300) -> red(400) -> purple(500)
-                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
+                      color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
                       range_from: 10
                       range_to: 10
                       red: !lambda 'return (id(voc).state < $voc_green) ? 0 : (id(voc).state <= $voc_yellow) ? (id(voc).state - $voc_green) / ($voc_yellow - $voc_green) : 1;'
@@ -187,13 +439,13 @@ script:
                       blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state <= $voc_purple) ? (id(voc).state - $voc_red) / ($voc_purple - $voc_red) : 1;'
             - if:
                 condition:
-                  lambda: 'return (isnan(id(voc).state));'  # No data from sensor yet
+                  lambda: 'return isnan(id(voc).state);'
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state / 100.0f);'
                       range_from: 10
                       range_to: 10
+                      color_brightness: 100%
                       red: 0%
                       green: 0%
                       blue: 0%
