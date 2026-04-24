@@ -83,10 +83,10 @@ At the time of writing that's:
 
 The easiest way to flash firmware is directly from the browser — no ESPHome or Python installation required.
 
-1. Open **[luukvisser.github.io/airgradient-esphome](https://luukvisser.github.io/airgradient-esphome/)** in a Chromium-based browser (Chrome or Edge — Firefox does not support Web Serial).
+1. Open **[luukvisser.github.io/airgradient-esphome](https://luukvisser.github.io/airgradient_esphome/)** in a Chromium-based browser (Chrome or Edge — Firefox does not support Web Serial).
 2. The page lists all supported devices, each with an **Install** button.
 
-   ![GitHub Pages install page](docs/images/install-github-pages.png)
+   ![GitHub Pages install page](docs/images/esphome_flash.png)
 
 3. Plug your device into your computer via USB.
 4. Click **Install** next to your device.
