@@ -41,26 +41,6 @@ substitutions:
   voc_red: '400'       # Sustained VOC event; ventilate
   voc_purple: '500'    # Extreme (top of SGP41 scale)
 
-  # Perceptual brightness correction. Human vision is logarithmic and the
-  # WS2812 itself applies a non-linear mapping at low PWM values, so a raw
-  # linear brightness slider spends most of its lower range producing
-  # barely-visible output. We apply gamma ~2.0 to expand the usable dim range,
-  # with a small floor so slider=1 is just-visible while slider=0 stays off.
-  # Formula applied inline below to an input scaled 0.0-1.0:
-  #   out = (in <= 0) ? 0 : floor + (1 - floor) * in^gamma
-  # With gamma_exp=2.0, gamma_floor=0.004 the rough curve is:
-  #   slider=0     -> off
-  #   slider=1-5   -> PWM ~1 (just visible against dark background)
-  #   slider=10    -> PWM ~3
-  #   slider=30    -> PWM ~23
-  #   slider=50    -> PWM ~64 (roughly half perceived brightness)
-  #   slider=100   -> PWM 255 (full)
-  # Tweak gamma_exp up (e.g. 2.4) for an even gentler low-end, or down
-  # (e.g. 1.5) for a more linear feel. Tweak gamma_floor up if slider=1 is
-  # still invisible in your room lighting.
-  gamma_exp: '2.0'
-  gamma_floor: '0.004'
-
 script:
   - id: update_leds
     # Repaint all LED ranges based on current sensor values and slider settings.
