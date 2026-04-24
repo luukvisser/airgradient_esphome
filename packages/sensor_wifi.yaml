@@ -3,3 +3,6 @@ sensor:
     name: "WiFi Signal"
     id: wifi_dbm
     update_interval: 60s
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system

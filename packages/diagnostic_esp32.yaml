@@ -1,34 +1,36 @@
 sensor:
+  - platform: template
+    name: "ESP Free Memory"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    disabled_by_default: true
+    icon: "mdi:memory"
+    web_server:
+      sorting_group_id: grp_system
+    lambda: |-
+      size_t total = heap_caps_get_total_size(MALLOC_CAP_8BIT);
+      size_t free_bytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+      if (total == 0) return NAN;
+      return (float)free_bytes / (float)total * 100.0f;
+
   - platform: internal_temperature
     name: "ESP Temperature"
     id: sys_esp_temperature
-
-  - platform: template
-    id: esp_memory
-    icon: mdi:memory
-    name: ESP Free Memory
-    lambda: return heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024;
-    unit_of_measurement: "kB"
-    state_class: measurement
-    entity_category: "diagnostic"
-
-  - platform: debug
-    # https://esphome.io/components/debug.html
-    free:
-      name: "Heap Free"
-    block:
-      name: "Heap Max Block"
-    loop_time:
-      name: "Loop Time"
-    # psram:
-    #   name: "Free PSRAM"
+    accuracy_decimals: 0
+    icon: "mdi:temperature-celsius"
+    disabled_by_default: true
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system     
 
 debug:
-  update_interval: 1s # Suggested 5s
+  update_interval: 60s
 
-text_sensor:
-  - platform: debug
-    device:
-      name: "Device Info"
-    reset_reason:
-      name: "Reset Reason"
+button:
+  - platform: restart
+    name: Restart Device
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system
+  

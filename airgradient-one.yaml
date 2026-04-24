@@ -5,37 +5,34 @@
 # https://esphome.io/guides/made_for_esphome/
 #
 # Release workflow:
-#   - Update `esphome.project.version` below.
+#   - Update `config_version` below.
 #   - Tag the commit as `airgradient-one/v<version>` (the slug before /v
 #     must match the filename / devices.yaml slug).
 #   - CI validates, builds, publishes the manifest under /airgradient-one/
 #     on GitHub Pages, and attaches binaries to a GitHub Release.
 
 substitutions:
-  name: "ag-one"
-  friendly_name: "AG One"
+  config_version: "1.0.1"
 
 esphome:
-  name: "${name}"
-  friendly_name: "${friendly_name}"
+  name: "airgradient-one"
+  friendly_name: "AirGradient ONE"
   name_add_mac_suffix: true
   # `project.name` must be globally unique and stable: devices keyed on it
   # for update checks and Home Assistant adoption. Use reverse-domain +
   # the device slug so multiple products from the same org don't collide.
   project:
     name: "luukvisser.airgradient-one"
-    version: "1.0.0"
+    version: "$config_version"
 
 logger:
 
 api:
-  # encryption:
-  #   key: !secret api_password
 
 ota:
   - platform: esphome
     id: ota_esphome
-    # password: !secret ota_password
+
   - platform: http_request
     id: ota_http_request
 
@@ -53,14 +50,17 @@ update:
     # workflow publishes to (site/<slug>/manifest.json).
     source: "https://luukvisser.github.io/airgradient-esphome/airgradient-one/manifest.json"
     update_interval: 6h
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system
 
 wifi:
   id: wifi_client
   fast_connect: false
-  min_auth_mode: WPA2
+
   ap:
     ap_timeout: 90s
-    password: "airgradient_password"
+    password: "cleanair"
 
 captive_portal:
   id: captive_portal_web
@@ -71,6 +71,35 @@ esp32_improv:
 
 improv_serial:
   id: improv_serial_provisioner
+
+web_server:
+  version: 3
+  port: 80
+  sorting_groups:
+    - id: grp_sensors
+      name: "Sensors"
+      sorting_weight: 5
+    - id: grp_led
+      name: "LED"
+      sorting_weight: 10
+    - id: grp_display
+      name: "Display"
+      sorting_weight: 20
+    - id: grp_co2
+      name: "CO₂ (SenseAir S8)"
+      sorting_weight: 30
+    - id: grp_pm25
+      name: "PM2.5 (PMS5003)"
+      sorting_weight: 40
+    - id: grp_temp
+      name: "Temperature & Humidity (SHT40)"
+      sorting_weight: 50
+    - id: grp_voc
+      name: "VOC / NOx (SGP41)"
+      sorting_weight: 60
+    - id: grp_system
+      name: "System"
+      sorting_weight: 70
 
 dashboard_import:
   # Per-device import URL. The @main ref means users always adopt the
@@ -84,9 +113,13 @@ button:
     id: safe_mode_button
     name: "Safe Mode Boot"
     entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system
 
 packages:
   board: !include packages/airgradient_esp32-c3_board.yaml
+  diagnostic_esp32: !include packages/diagnostic_esp32.yaml
+  button_factory_reset: !include packages/button_factory_reset.yaml
   captive_portal: !include packages/captive_portal.yaml
   pm_2.5: !include packages/sensor_pms5003_extended_life.yaml
   co2: !include packages/sensor_s8.yaml
