@@ -28,6 +28,13 @@ substitutions:
   voc_red: '400'       # Sustained VOC event; ventilate
   voc_purple: '500'    # Extreme (top of SGP41 scale)
 
+esphome:
+  on_boot:
+    priority: -100
+    then:
+      - lambda: 'id(leds_ready) = true;'
+      - script.execute: update_leds
+
 # Gate for early-boot safety. The select + number restore_value hooks fire
 # during component setup, before esp32_rmt_led_strip has allocated its LED
 # buffer — painting then crashes with a null pointer in ESPColorView::set_red.
@@ -36,13 +43,6 @@ globals:
     type: bool
     restore_value: false
     initial_value: 'false'
-
-esphome:
-  on_boot:
-    priority: -100
-    then:
-      - lambda: 'id(leds_ready) = true;'
-      - script.execute: update_leds
 
 select:
   - platform: template

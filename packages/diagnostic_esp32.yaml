@@ -1,3 +1,9 @@
+# Diagnostic sensors for the ESP32-C3: free heap %, CPU temperature, ESPHome version,
+# loop time. debug: enables loop-time reporting (visible in ESPHome logs).
+
+debug:
+  update_interval: 60s
+
 sensor:
   - platform: template
     name: "ESP Free Memory"
@@ -22,7 +28,7 @@ sensor:
     disabled_by_default: true
     entity_category: diagnostic
     web_server:
-      sorting_group_id: grp_system     
+      sorting_group_id: grp_system
 
 text_sensor:
   - platform: version
@@ -30,10 +36,7 @@ text_sensor:
     id: esphome_version
     entity_category: diagnostic
     web_server:
-      sorting_group_id: grp_system  
-          
-debug:
-  update_interval: 60s
+      sorting_group_id: grp_system
 
 button:
   - platform: restart
@@ -41,4 +44,3 @@ button:
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
-  

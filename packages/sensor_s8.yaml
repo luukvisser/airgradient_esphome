@@ -1,53 +1,6 @@
 # SenseAir S8 NDIR CO2 sensor. Exposes CO2 concentration, offset calibration, ABC controls,
 # and a manual calibration button. Depends on: senseair_co2_uart (from board package).
 
-select:
-  - platform: template
-    name: "SenseAir S8 CO2 ABC Interval"
-    id: co2_abc_interval_select
-    options: ["1", "8", "30", "90"]
-    initial_option: "8"
-    restore_value: true
-    optimistic: true
-    entity_category: config
-    icon: "mdi:calendar-clock"
-    web_server:
-      sorting_group_id: grp_co2
-    set_action:
-      - lambda: |-
-          uint16_t hours = (uint16_t)(atoi(x.c_str()) * 24);
-          uint8_t frame[8] = {
-            0xFE, 0x06, 0x00, 0x1F,
-            (uint8_t)(hours >> 8), (uint8_t)(hours & 0xFF),
-            0x00, 0x00
-          };
-          uint16_t crc = 0xFFFF;
-          for (int i = 0; i < 6; i++) {
-            crc ^= frame[i];
-            for (int j = 0; j < 8; j++)
-              crc = (crc & 1) ? (crc >> 1) ^ 0xA001 : crc >> 1;
-          }
-          frame[6] = crc & 0xFF;
-          frame[7] = crc >> 8;
-          id(senseair_co2_uart).write_array(frame, 8);
-
-number:
-  - platform: template
-    name: "SenseAir S8 CO2 Offset"
-    id: co2_offset_number
-    min_value: -400
-    max_value: 400
-    step: 1
-    initial_value: '22'
-    restore_value: true
-    optimistic: true
-    mode: box
-    entity_category: config
-    unit_of_measurement: "ppm"
-    icon: "mdi:tune-vertical"
-    web_server:
-      sorting_group_id: grp_co2
-
 sensor:
   - platform: senseair
     # SenseAir S8 https://esphome.io/components/sensor/senseair.html
@@ -92,6 +45,53 @@ button:
     on_press:
       then:
         - senseair.abc_get_period: senseair_co2
+
+number:
+  - platform: template
+    name: "SenseAir S8 CO2 Offset"
+    id: co2_offset_number
+    min_value: -400
+    max_value: 400
+    step: 1
+    initial_value: '22'
+    restore_value: true
+    optimistic: true
+    mode: box
+    entity_category: config
+    unit_of_measurement: "ppm"
+    icon: "mdi:tune-vertical"
+    web_server:
+      sorting_group_id: grp_co2
+
+select:
+  - platform: template
+    name: "SenseAir S8 CO2 ABC Interval"
+    id: co2_abc_interval_select
+    options: ["1", "8", "30", "90"]
+    initial_option: "8"
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: "mdi:calendar-clock"
+    web_server:
+      sorting_group_id: grp_co2
+    set_action:
+      - lambda: |-
+          uint16_t hours = (uint16_t)(atoi(x.c_str()) * 24);
+          uint8_t frame[8] = {
+            0xFE, 0x06, 0x00, 0x1F,
+            (uint8_t)(hours >> 8), (uint8_t)(hours & 0xFF),
+            0x00, 0x00
+          };
+          uint16_t crc = 0xFFFF;
+          for (int i = 0; i < 6; i++) {
+            crc ^= frame[i];
+            for (int j = 0; j < 8; j++)
+              crc = (crc & 1) ? (crc >> 1) ^ 0xA001 : crc >> 1;
+          }
+          frame[6] = crc & 0xFF;
+          frame[7] = crc >> 8;
+          id(senseair_co2_uart).write_array(frame, 8);
 
 switch:
   - platform: template
