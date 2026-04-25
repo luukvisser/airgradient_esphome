@@ -1,3 +1,7 @@
+# Plantower PMS5003 particulate sensor (PM1.0, PM2.5, PM10) with EPA correction algorithm.
+# Default 2-minute duty cycle extends rated sensor lifespan. Configurable scaling + intercept
+# calibration offsets. Depends on: pms5003_uart (UART bus from board package).
+
 substitutions:
   pm_update_interval: "2min"
 

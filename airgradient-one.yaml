@@ -63,8 +63,8 @@ wifi:
     password: "cleanair"
 
 network:
-    enable_ipv6: true
-    
+  enable_ipv6: true
+
 captive_portal:
   id: captive_portal_web
 
@@ -120,22 +120,31 @@ button:
       sorting_group_id: grp_system
 
 packages:
+  # ── Hardware ────────────────────────────────────────────────────────────
   board: !include packages/airgradient_esp32-c3_board.yaml
-  diagnostic_esp32: !include packages/diagnostic_esp32.yaml
-  button_factory_reset: !include packages/button_factory_reset.yaml
-  captive_portal: !include packages/captive_portal.yaml
+
+  # ── Sensors ─────────────────────────────────────────────────────────────
   pm_2.5: !include packages/sensor_pms5003_extended_life.yaml
   co2: !include packages/sensor_s8.yaml
   temp_humidity: !include packages/sensor_sht40.yaml
   tvoc: !include packages/sensor_sgp41.yaml
+  wifi: !include packages/sensor_wifi.yaml
+  uptime: !include packages/sensor_uptime.yaml
+
+  # ── Display & indicators ────────────────────────────────────────────────
   display: !include packages/display_sh1106_multi_page.yaml
   led: !include packages/led.yaml
   led_combo: !include packages/led_combo.yaml
+
+  # ── Integrations ────────────────────────────────────────────────────────
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
+
+  # ── System utilities ────────────────────────────────────────────────────
+  diagnostic_esp32: !include packages/diagnostic_esp32.yaml
   hardware_watchdog: !include packages/watchdog.yaml
+  button_factory_reset: !include packages/button_factory_reset.yaml
+  captive_portal: !include packages/captive_portal.yaml
   config_button: !include packages/config_button.yaml
-  wifi: !include packages/sensor_wifi.yaml
-  uptime: !include packages/sensor_uptime.yaml
 
 binary_sensor:
   - id: !extend config_button

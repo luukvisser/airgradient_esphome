@@ -1,3 +1,6 @@
+# SenseAir S8 NDIR CO2 sensor. Exposes CO2 concentration, offset calibration, ABC controls,
+# and a manual calibration button. Depends on: senseair_co2_uart (from board package).
+
 select:
   - platform: template
     name: "SenseAir S8 CO2 ABC Interval"
@@ -95,7 +98,7 @@ switch:
     name: "SenseAir S8 CO2 Automatic Baseline Correction"
     id: senseair_co2_abc_switch
     restore_mode: RESTORE_DEFAULT_ON
-    optimistic: True
+    optimistic: true
     entity_category: config
     web_server:
       sorting_group_id: grp_co2

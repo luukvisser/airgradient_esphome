@@ -1,3 +1,7 @@
+# Sensirion SGP41 MOX sensor — VOC index and NOx index (0–500 scale).
+# Uses on-chip algorithm with SHT40 temp/humidity compensation. Configurable learning time offsets.
+# Depends on: I2C bus (from board package), temp + humidity sensors (from sensor_sht40 package).
+
 globals:
   - id: g_voc_learning_time
     type: int

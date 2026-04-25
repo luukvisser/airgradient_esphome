@@ -1,3 +1,7 @@
+# Uploads sensor readings to the AirGradient Dashboard every 2.5 minutes.
+# Requires the device's MAC-based serial number to be registered at app.airgradient.com.
+# Provides an "Upload to AirGradient Dashboard" toggle switch.
+
 interval:
   - interval: 2.5min
     # Send data to AirGradient API server
@@ -37,7 +41,7 @@ switch:
     name: "Upload to AirGradient Dashboard"
     id: upload_airgradient
     restore_mode: RESTORE_DEFAULT_OFF
-    optimistic: True
+    optimistic: true
     entity_category: config
     web_server:
       sorting_group_id: grp_system
@@ -61,7 +65,5 @@ esphome:
                 wifi: !lambda return to_string(-50);
 
 http_request:
-  # Used to support POST request to send data to AirGradient
   # https://esphome.io/components/http_request.html
-  verify_ssl: false  # Must be explicitly set to false when using Arduino framework
-  watchdog_timeout: 30s  # Slow response from API server can cause watchdog to reboot device
+  watchdog_timeout: 30s
