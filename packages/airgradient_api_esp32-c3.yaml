@@ -10,8 +10,11 @@
 #     to the cloud — those are local-server-only fields in the Arduino lib.
 #     Cloud applies its own correction algorithm to the raw values.
 #   - `resetReason` and `freeHeap` are cloud-only diagnostic fields.
-#   - `tvocRaw` / `noxRaw` are intentionally omitted: ESPHome's stock
-#     `sgp4x` platform does not expose raw SRAW_VOC / SRAW_NOX signals.
+#   - `tvocRaw` / `noxRaw` come from the local sgp4x fork in
+#     `components/sgp4x` which adds raw SRAW outputs. Despite the name,
+#     these are humidity- and temperature-compensated by the SGP41 chip
+#     (RH/Temp ticks are passed into MEASURE_RAW); "raw" only means
+#     pre-gas-index-algorithm. Matches the Arduino library's tvocRaw/noxRaw.
 
 globals:
   - id: boot_count
@@ -68,7 +71,9 @@ interval:
                 atmp: !lambda return to_string(id(temp_raw).state);
                 rhum: !lambda return to_string(id(humidity_raw).state);
                 tvocIndex: !lambda return to_string(id(voc).state);
+                tvocRaw: !lambda return to_string(id(voc_raw).state);
                 noxIndex: !lambda return to_string(id(nox).state);
+                noxRaw: !lambda return to_string(id(nox_raw).state);
                 boot: !lambda return to_string(id(boot_count));
                 resetReason: !lambda |-
                   return to_string((int) esp_reset_reason());
