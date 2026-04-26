@@ -132,6 +132,7 @@ packages:
   led: !include packages/led.yaml
   led_combo: !include packages/led_combo.yaml
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
+  airgradient_config_download: !include packages/airgradient_config_download.yaml
   hardware_watchdog: !include packages/watchdog.yaml
   config_button: !include packages/config_button.yaml
   wifi: !include packages/sensor_wifi.yaml
