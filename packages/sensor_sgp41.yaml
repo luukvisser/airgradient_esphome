@@ -10,7 +10,15 @@ esphome:
     priority: 250
     then:
       - lambda: |-
+          // All parameters are Sensirion defaults except learning_time_offset_hours (user-configurable).
+          // Ref: Sensirion Gas Index Algorithm Application Note
+          // https://sensirion.com/media/documents/02232963/6294E210/Info_Note_SGP_Gas_Index_Algorithm.pdf
+          //
+          // set_voc_algorithm_tuning(index_offset=100, learning_time_offset_hours,
+          //   gating_max_duration_minutes=12, std_initial=180, gain_factor=50, gating_max_ratio=230)
           id(sgp4x_sensor).set_voc_algorithm_tuning(100, (uint16_t)id(g_voc_learning_time), 12, 180, 50, 230);
+          // set_nox_algorithm_tuning(index_offset=100, learning_time_offset_hours,
+          //   gating_max_duration_minutes=12, std_initial=180, gain_factor=230)
           id(sgp4x_sensor).set_nox_algorithm_tuning(100, (uint16_t)id(g_nox_learning_time), 12, 180, 230);
 
 globals:

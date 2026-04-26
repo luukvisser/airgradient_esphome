@@ -55,3 +55,54 @@ jobs:
 
       - name: Validate ${{ matrix.device.yaml }}
         run: esphome config "${{ matrix.device.yaml }}"
+
+  # Validate each YAML in examples/ with the same pinned ESPHome version.
+  validate-examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Install ESPHome
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Validate examples
+        run: |
+          shopt -s nullglob
+          for f in examples/*.yaml; do
+            echo "=== Validating $f ==="
+            esphome config "$f"
+          done
+
+  # Early-warning job: validates devices against the latest unpinned ESPHome.
+  # Uses continue-on-error so breaking changes in a new release are surfaced
+  # without blocking PRs — fix before upgrading pyproject.toml.
+  validate-upcoming:
+    name: "Validate (latest ESPHome)"
+    needs: [discover]
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install latest ESPHome (no version pin)
+        run: |
+          python -m pip install --upgrade pip
+          pip install esphome
+
+      - name: Validate ${{ matrix.device.yaml }}
+        run: esphome config "${{ matrix.device.yaml }}"
