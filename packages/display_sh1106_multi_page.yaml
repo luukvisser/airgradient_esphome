@@ -19,7 +19,7 @@ font:
   - file: "gfonts://Open Sans@700"
     id: open_sans_bold_10
     size: 10
-    glyphs: '!"%()+=,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz/µ³'    
+    glyphs: '!"%()+=,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz/µ³'
   - file: "gfonts://Open Sans@700"
     id: open_sans_bold_14
     size: 14
@@ -33,6 +33,71 @@ font:
     size: 34
     glyphs: '!"%()+=,-_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz/µ³'
 
+number:
+  - platform: template
+    # https://esphome.io/components/number/template.html
+    name: "Display Contrast %"
+    icon: "mdi:lightbulb"
+    id: display_contrast
+    min_value: 0
+    max_value: 100
+    step: 1
+    initial_value: 100
+    optimistic: true
+    restore_value: true
+    mode: slider
+    on_value:
+      then:
+        # https://www.reddit.com/r/Esphome/comments/sy1d1s/how_to_write_a_lamba_to_change_the_contrast_of/
+        lambda: id(oled_display).set_contrast(id(display_contrast).state / 100.0);
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_display
+
+select:
+  - platform: template
+    name: "Display Temperature Unit"
+    id: display_in_f
+    options:
+      - "°C"
+      - "°F"
+    initial_option: "°C"
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: "mdi:thermometer"
+    web_server:
+      sorting_group_id: grp_display
+
+  - platform: template
+    name: "Display Page"
+    id: display_page_select
+    options:
+      - "AirGradient Default"
+      - "Env Summary"
+      - "VOC Summary"
+      - "Large Numbers"
+      - "CO2 & PM2.5"
+      - "Temp & Humidity"
+      - "VOC & NOx"
+      - "Combo"
+      - "Off"
+    initial_option: "AirGradient Default"
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: "mdi:monitor"
+    web_server:
+      sorting_group_id: grp_display
+    set_action:
+      - script.execute: update_display_page
+
+switch:
+  - platform: template
+    id: display_boot_page
+    restore_mode: ALWAYS_ON
+    optimistic: true
+    internal: true
 
 display:
   - platform: ssd1306_i2c
@@ -166,7 +231,6 @@ display:
         lambda: |-
           it.fill(COLOR_OFF);
 
-
 script:
   - id: update_display_page
     # Show the page matching the current select value, or the boot page during startup.
@@ -224,7 +288,6 @@ script:
                   - display.page.show: screen_off
       - component.update: oled_display
 
-
 interval:
   - interval: 10s
     startup_delay: 1s
@@ -240,71 +303,3 @@ interval:
     # Refresh the display with current sensor values
     then:
       - script.execute: update_display_page
-
-
-switch:
-  - platform: template
-    id: display_boot_page
-    restore_mode: ALWAYS_ON
-    optimistic: True
-    internal: true
-
-
-select:
-  - platform: template
-    name: "Display Temperature Unit"
-    id: display_in_f
-    options:
-      - "°C"
-      - "°F"
-    initial_option: "°C"
-    restore_value: true
-    optimistic: true
-    entity_category: config
-    icon: "mdi:thermometer"
-    web_server:
-      sorting_group_id: grp_display
-
-  - platform: template
-    name: "Display Page"
-    id: display_page_select
-    options:
-      - "AirGradient Default"
-      - "Env Summary"
-      - "VOC Summary"
-      - "Large Numbers"
-      - "CO2 & PM2.5"
-      - "Temp & Humidity"
-      - "VOC & NOx"
-      - "Combo"
-      - "Off"
-    initial_option: "AirGradient Default"
-    restore_value: true
-    optimistic: true
-    entity_category: config
-    icon: "mdi:monitor"
-    web_server:
-      sorting_group_id: grp_display
-    set_action:
-      - script.execute: update_display_page
-
-number:
-  - platform: template
-    # https://esphome.io/components/number/template.html
-    name: "Display Contrast %"
-    icon: "mdi:lightbulb"
-    id: display_contrast
-    min_value: 0
-    max_value: 100
-    step: 1
-    initial_value: 100
-    optimistic: true
-    restore_value: true
-    mode: slider
-    on_value:
-      then:
-        # https://www.reddit.com/r/Esphome/comments/sy1d1s/how_to_write_a_lamba_to_change_the_contrast_of/
-        lambda: id(oled_display).set_contrast(id(display_contrast).state / 100.0);
-    entity_category: config
-    web_server:
-      sorting_group_id: grp_display
