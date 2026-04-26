@@ -132,6 +132,11 @@ packages:
   led: !include packages/led.yaml
   led_combo: !include packages/led_combo.yaml
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
+  airgradient_config_download: !include packages/airgradient_config_download.yaml
+  # Optional opt-in: AirGradient-shaped MQTT publishing. Set `mqtt_broker`
+  # (and `mqtt_username` / `mqtt_password` if needed) in `substitutions:`
+  # above and uncomment the line below.
+  # airgradient_mqtt: !include packages/airgradient_mqtt.yaml
   hardware_watchdog: !include packages/watchdog.yaml
   config_button: !include packages/config_button.yaml
   wifi: !include packages/sensor_wifi.yaml

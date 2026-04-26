@@ -1,6 +1,48 @@
 substitutions:
   pm_update_interval: "2min"
 
+select:
+  # PM2.5 correction algorithm. Mirrors the AirGradient Arduino library's
+  # PMCorrectionAlgorithm enum (AgValue.cpp:820-857; PMS/PMS.cpp:329-367):
+  #
+  #   none                  - return raw PM2.5 atmospheric, no correction
+  #   epa_2021              - EPA piecewise compensation by raw PM2.5 + RH
+  #   custom                - sf * pm003 + intercept (slrCorrectionBy003Count)
+  #   custom_via_pm25_raw   - sf * pm25_raw + intercept (slrCorrectionByPm25Raw)
+  #   slr_batch             - low: sf*pm003+intercept (<31), else pm25_raw
+  #                            (slrCorrection; covers factory_calibration and
+  #                             cloud-delivered slr_* batch presets)
+  #
+  # The "use EPA on top of SLR" choice is exposed separately as the
+  # `pm_2_5_use_epa` switch and matches Arduino's pmCorrection.useEPA.
+  - platform: template
+    name: "PM2.5 Correction Algorithm"
+    id: pm_2_5_correction_algorithm
+    options:
+      - "none"
+      - "epa_2021"
+      - "custom"
+      - "custom_via_pm25_raw"
+      - "slr_batch"
+    initial_option: "epa_2021"
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: mdi:function-variant
+    web_server:
+      sorting_group_id: grp_pm25
+
+switch:
+  - platform: template
+    name: "PM2.5 Apply EPA on top of SLR"
+    id: pm_2_5_use_epa
+    restore_mode: RESTORE_DEFAULT_ON
+    optimistic: true
+    entity_category: config
+    icon: mdi:function-variant
+    web_server:
+      sorting_group_id: grp_pm25
+
 number:
   - platform: template
     name: "PMS5003 PM2.5 Scaling Factor"
@@ -73,13 +115,16 @@ sensor:
     update_interval: $pm_update_interval
 
   - platform: template
-    # Implements PM2.5 correction algorithm supported by AirGradient from EPA and optionally batch specific corrections
-    # https://www.airgradient.com/documentation/correction-algorithms/
-    # https://document.airnow.gov/airnow-fire-and-smoke-map-questions-and-answers.pdf
+    # PM2.5 correction algorithm dispatch. Mirrors AirGradient Arduino lib:
+    # https://github.com/airgradienthq/arduino/blob/master/src/AgValue.cpp
+    #   getCorrectedPM25() lines 820-857
+    # https://github.com/airgradienthq/arduino/blob/master/src/PMS/PMS.cpp
+    #   slrCorrection*       lines 329-367
+    #   compensate (EPA)     line  385
     name: "PM2.5"
     id: pm_2_5
     update_interval: $pm_update_interval
-    device_class: pm25  # Added to report properly to HomeKit
+    device_class: pm25
     unit_of_measurement: µg/m³
     icon: mdi:molecule
     accuracy_decimals: 1
@@ -87,39 +132,59 @@ sensor:
     web_server:
       sorting_group_id: grp_sensors
     lambda: |-
-      // https://www.airgradient.com/blog/low-readings-from-pms5003/
-      // Correction for sensor batches after 20231030
-      // Only use the batch/individual calibration if the default scaling and intercept are changed
-      float pm_2_5_calibrated_low = id(pm_2_5_scaling_factor).state * id(pm_0_3um).state + id(pm_2_5_intercept).state;
-      float pm_2_5_calibrated = 0;
-      if (pm_2_5_calibrated_low < 31 && (id(pm_2_5_scaling_factor).state != 1.0f || id(pm_2_5_intercept).state != 0.0f)) {
-        pm_2_5_calibrated = pm_2_5_calibrated_low;
-      } else {
-        pm_2_5_calibrated = id(pm_2_5_raw).state;
+      const float sf      = id(pm_2_5_scaling_factor).state;
+      const float intc    = id(pm_2_5_intercept).state;
+      const float pm25raw = id(pm_2_5_raw).state;
+      const float pm003   = id(pm_0_3um).state;
+      const float rh      = id(humidity_raw).state;
+      const std::string algo = id(pm_2_5_correction_algorithm).state;
+      const bool use_epa  = id(pm_2_5_use_epa).state;
+
+      auto epa_compensate = [&](float pm) -> float {
+        if (pm <= 0.0f) return 0.0f;
+        float h = rh; if (h < 0) h = 0; if (h > 100) h = 100;
+        if (pm < 30.0f) {
+          return (0.524f * pm) - (0.0862f * h) + 5.75f;
+        } else if (pm < 50.0f) {
+          float k = pm / 20.0f - 3.0f/2.0f;
+          return (0.786f * k + 0.524f * (1.0f - k)) * pm - (0.0862f * h) + 5.75f;
+        } else if (pm < 210.0f) {
+          return (0.786f * pm) - (0.0862f * h) + 5.75f;
+        } else if (pm < 260.0f) {
+          float k = pm / 50.0f - 21.0f/5.0f;
+          return (0.69f * k + 0.786f * (1.0f - k)) * pm
+                 - (0.0862f * h * (1.0f - k))
+                 + (2.966f * k)
+                 + (5.75f * (1.0f - k))
+                 + (8.84e-4f * pm * pm * k);
+        } else {
+          return 2.966f + (0.69f * pm) + (8.84e-4f * pm * pm);
+        }
+      };
+
+      float corrected = pm25raw;
+      if (algo == "none") {
+        corrected = pm25raw;
+      } else if (algo == "epa_2021") {
+        corrected = epa_compensate(pm25raw);
+      } else if (algo == "custom") {
+        // slrCorrectionBy003Count: sf*pm003 + intc, clamped at 0
+        corrected = sf * pm003 + intc;
+        if (corrected < 0) corrected = 0;
+        if (use_epa) corrected = epa_compensate(corrected);
+      } else if (algo == "custom_via_pm25_raw") {
+        // slrCorrectionByPm25Raw: pm25==0 -> 0 else sf*pm25 + intc
+        corrected = (pm25raw == 0.0f) ? 0.0f : (sf * pm25raw + intc);
+        if (use_epa) corrected = epa_compensate(corrected);
+      } else {  // slr_batch
+        // slrCorrection: low <31 -> sf*pm003+intc, else fall back to raw
+        float low = sf * pm003 + intc;
+        corrected = (low < 31.0f) ? low : pm25raw;
+        if (corrected < 0) corrected = 0;
+        if (use_epa) corrected = epa_compensate(corrected);
       }
-      if (pm_2_5_calibrated < 0) {
-        pm_2_5_calibrated = 0;
-      }
-      // EPA Formula
-      float result = 0.0;
-      if (pm_2_5_calibrated == 0.0) {
-        result = 0.0;
-      } else if (pm_2_5_calibrated < 30.0) {
-        result = (0.524 * pm_2_5_calibrated) - (0.0862 * id(humidity_raw).state) + 5.75;
-      } else if (pm_2_5_calibrated < 50.0) {
-        result = (0.786 * (pm_2_5_calibrated / 20 - 3/2) + 0.524 * (1 - (pm_2_5_calibrated / 20 - 3/2))) * pm_2_5_calibrated - (0.0862 * id(humidity_raw).state) + 5.75;
-      } else if (pm_2_5_calibrated < 210.0) {
-        result = (0.786 * pm_2_5_calibrated) - (0.0862 * id(humidity_raw).state) + 5.75;
-      } else if (pm_2_5_calibrated < 260.0) {
-        result = (0.69 * (pm_2_5_calibrated / 50 - 21/5) + 0.786 * (1 - (pm_2_5_calibrated / 50 - 21/5))) * pm_2_5_calibrated - (0.0862 * id(humidity_raw).state * (1 - (pm_2_5_calibrated / 50 - 21/5))) + (2.966 * (pm_2_5_calibrated / 50 - 21/5)) + (5.75 * (1 - (pm_2_5_calibrated / 50 - 21/5))) + (8.84 * pow(10,-4) * pow(pm_2_5_calibrated,2) * (pm_2_5_calibrated / 50 - 21/5));
-      } else {
-        result = 2.966 + (0.69 * pm_2_5_calibrated) + (8.84 * pow(10,-4) * pow(pm_2_5_calibrated,2));
-      }
-      if (result <= 0.0) {
-        return 0.0;
-      } else {
-        return result;
-      }
+      if (corrected < 0.0f) corrected = 0.0f;
+      return corrected;
 
   - platform: template
     # Depends on another sensor providing an ID of pm_2_5 such as a pms5003
