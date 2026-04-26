@@ -1,6 +1,7 @@
 # Downloads device configuration from the AirGradient cloud (hw.airgradient.com)
-# keyed by the device MAC address and applies the calibration constants to the
-# template numbers / selects defined elsewhere in this project.
+# keyed by the device MAC address and applies the calibration constants and
+# runtime settings to the template numbers / selects / buttons defined elsewhere
+# in this project.
 #
 # Endpoint and JSON layout mirror the official AirGradient Arduino library:
 #   GET https://hw.airgradient.com/sensors/airgradient:<mac>/one/config
@@ -10,16 +11,44 @@
 # Polling interval matches WIFI_SERVER_CONFIG_SYNC_INTERVAL (60 s) from
 #   https://github.com/airgradienthq/arduino/blob/master/examples/OneOpenAir/OneOpenAir.ino
 #
+# When `configurationControl == "local"` the device skips the apply pass
+# entirely (matching AgConfigure.cpp:289-310) so a user pinning the device
+# to local control via the AG app keeps full ownership of every knob.
+#
 # Required IDs from sibling packages (airgradient-one.yaml):
 #   number: pm_2_5_scaling_factor, pm_2_5_intercept,
-#           temp_scale, temp_offset, humidity_scale, humidity_offset
+#           temp_scale, temp_offset, humidity_scale, humidity_offset,
+#           led_brightness, display_contrast
 #   select: voc_learning_time_offset, nox_learning_time_offset,
-#           co2_abc_interval_select
+#           co2_abc_interval_select, led_mode, display_in_f,
+#           pm_2_5_correction_algorithm
+#   switch: pm_2_5_use_epa
+#   sensor: senseair_co2 (for CO2 calibration trigger)
 
 substitutions:
   ag_config_download_interval: "60s"
 
 json:
+
+# Rising-edge detectors for the cloud's one-shot fields. AgConfigure clears
+# its local cached flag after reading; the cloud may keep returning true
+# until the user resets it via the app, so we must remember the last value
+# and only fire on the false -> true transition.
+globals:
+  - id: ag_last_co2_cal_req
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: ag_last_led_test_req
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  # Saves the pre-test LED mode so we can restore it after the cloud-triggered
+  # LED bar test sweep finishes.
+  - id: ag_led_mode_before_test
+    type: std::string
+    restore_value: false
+    initial_value: '""'
 
 switch:
   - platform: template
@@ -69,6 +98,14 @@ script:
                     return;
                   }
                   bool ok = json::parse_json(body, [](JsonObject root) -> bool {
+                    // configurationControl == "local" => owner has pinned the
+                    // device to local control; skip the entire apply pass.
+                    const char *cc = root["configurationControl"] | "";
+                    if (strcmp(cc, "local") == 0) {
+                      ESP_LOGI("ag_config", "configurationControl=local; skipping apply");
+                      return true;
+                    }
+
                     auto apply_number = [](auto *n, float v) {
                       if (n->state != v) {
                         auto call = n->make_call();
@@ -76,7 +113,7 @@ script:
                         call.perform();
                       }
                     };
-                    auto apply_select = [](auto *s, int v) {
+                    auto apply_select_int = [](auto *s, int v) {
                       char buf[8];
                       snprintf(buf, sizeof(buf), "%d", v);
                       std::string opt(buf);
@@ -84,6 +121,19 @@ script:
                         auto call = s->make_call();
                         call.set_option(opt);
                         call.perform();
+                      }
+                    };
+                    auto apply_select_str = [](auto *s, const std::string &opt) {
+                      if (s->state != opt) {
+                        auto call = s->make_call();
+                        call.set_option(opt);
+                        call.perform();
+                      }
+                    };
+                    auto apply_switch = [](auto *sw, bool on) {
+                      if (sw->state != on) {
+                        if (on) sw->turn_on();
+                        else    sw->turn_off();
                       }
                     };
                     auto apply_slr = [&](auto *scale_n, auto *offset_n,
@@ -103,8 +153,26 @@ script:
                         apply_number(offset_n, slr["intercept"].as<float>());
                     };
 
+                    // -- Calibration constants -------------------------------------
                     JsonVariant corrections = root["corrections"];
                     if (corrections.is<JsonObject>()) {
+                      // PM2.5: also propagate the algorithm and useEpa2021 flag so
+                      // the dispatch in sensor_pms5003_extended_life.yaml picks the
+                      // right formula. AgValue.cpp:820-857 lists the cases.
+                      JsonVariant pm = corrections["pm02"];
+                      if (pm.is<JsonObject>()) {
+                        const char *algo = pm["correctionAlgorithm"] | "";
+                        std::string algo_opt = "epa_2021";
+                        if (strcmp(algo, "none") == 0)                       algo_opt = "none";
+                        else if (strcmp(algo, "epa_2021") == 0)              algo_opt = "epa_2021";
+                        else if (strcmp(algo, "custom") == 0)                algo_opt = "custom";
+                        else if (strcmp(algo, "custom_via_pm25_raw") == 0)   algo_opt = "custom_via_pm25_raw";
+                        else if (strcmp(algo, "factory_calibration") == 0 ||
+                                 strncmp(algo, "slr_", 4) == 0)              algo_opt = "slr_batch";
+                        apply_select_str(id(pm_2_5_correction_algorithm), algo_opt);
+                        if (!pm["slr"]["useEpa2021"].isNull())
+                          apply_switch(id(pm_2_5_use_epa), pm["slr"]["useEpa2021"].as<bool>());
+                      }
                       apply_slr(id(pm_2_5_scaling_factor), id(pm_2_5_intercept),
                                 corrections["pm02"], 1.0f, 0.0f);
                       apply_slr(id(temp_scale), id(temp_offset),
@@ -114,11 +182,58 @@ script:
                     }
 
                     if (!root["tvocLearningOffset"].isNull())
-                      apply_select(id(voc_learning_time_offset), root["tvocLearningOffset"].as<int>());
+                      apply_select_int(id(voc_learning_time_offset), root["tvocLearningOffset"].as<int>());
                     if (!root["noxLearningOffset"].isNull())
-                      apply_select(id(nox_learning_time_offset), root["noxLearningOffset"].as<int>());
+                      apply_select_int(id(nox_learning_time_offset), root["noxLearningOffset"].as<int>());
                     if (!root["abcDays"].isNull())
-                      apply_select(id(co2_abc_interval_select), root["abcDays"].as<int>());
+                      apply_select_int(id(co2_abc_interval_select), root["abcDays"].as<int>());
+
+                    // -- Runtime settings ------------------------------------------
+                    if (!root["ledBarBrightness"].isNull()) {
+                      int v = root["ledBarBrightness"].as<int>();
+                      if (v < 0) v = 0; if (v > 100) v = 100;
+                      apply_number(id(led_brightness), (float)v);
+                    }
+                    if (!root["displayBrightness"].isNull()) {
+                      int v = root["displayBrightness"].as<int>();
+                      if (v < 0) v = 0; if (v > 100) v = 100;
+                      apply_number(id(display_contrast), (float)v);
+                    }
+                    if (!root["temperatureUnit"].isNull()) {
+                      const char *u = root["temperatureUnit"].as<const char *>();
+                      if (u && (u[0] == 'f' || u[0] == 'F'))
+                        apply_select_str(id(display_in_f), std::string("\xC2\xB0""F"));
+                      else if (u && (u[0] == 'c' || u[0] == 'C'))
+                        apply_select_str(id(display_in_f), std::string("\xC2\xB0""C"));
+                    }
+                    if (!root["ledBarMode"].isNull()) {
+                      const char *m = root["ledBarMode"].as<const char *>();
+                      if (m) {
+                        std::string opt;
+                        if      (strcmp(m, "off") == 0) opt = "Off";
+                        else if (strcmp(m, "pm")  == 0) opt = "PM2.5";
+                        else if (strcmp(m, "co2") == 0) opt = "CO2";
+                        if (!opt.empty()) apply_select_str(id(led_mode), opt);
+                      }
+                    }
+
+                    // -- One-shot triggers (rising-edge) ---------------------------
+                    if (!root["co2CalibrationRequested"].isNull()) {
+                      bool req = root["co2CalibrationRequested"].as<bool>();
+                      if (req && !id(ag_last_co2_cal_req)) {
+                        ESP_LOGI("ag_config", "Cloud requested CO2 calibration");
+                        id(trigger_co2_calibration).execute();
+                      }
+                      id(ag_last_co2_cal_req) = req;
+                    }
+                    if (!root["ledBarTestRequested"].isNull()) {
+                      bool req = root["ledBarTestRequested"].as<bool>();
+                      if (req && !id(ag_last_led_test_req)) {
+                        ESP_LOGI("ag_config", "Cloud requested LED bar test");
+                        id(trigger_led_bar_test).execute();
+                      }
+                      id(ag_last_led_test_req) = req;
+                    }
 
                     return true;
                   });
@@ -129,6 +244,31 @@ script:
                     id(airgradient_config_last_sync).publish_state("Parse error");
                     ESP_LOGW("ag_config", "Failed to parse config JSON");
                   }
+
+  - id: trigger_co2_calibration
+    mode: single
+    then:
+      - senseair.background_calibration: senseair_co2
+      - delay: 70s
+      - senseair.background_calibration_result: senseair_co2
+
+  - id: trigger_led_bar_test
+    mode: single
+    then:
+      # Save the current mode, switch to Test for ~10 s, then restore.
+      # AgStateMachine.cpp:299-322 runs ~5 s for non-TH locales; we use 10 s
+      # so the user has time to visually confirm.
+      - lambda: 'id(ag_led_mode_before_test) = id(led_mode).state;'
+      - select.set:
+          id: led_mode
+          option: "Test"
+      - delay: 10s
+      - lambda: |-
+          if (!id(ag_led_mode_before_test).empty()) {
+            auto call = id(led_mode).make_call();
+            call.set_option(id(ag_led_mode_before_test));
+            call.perform();
+          }
 
 interval:
   - interval: $ag_config_download_interval
