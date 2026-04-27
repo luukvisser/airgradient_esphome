@@ -1,12 +1,15 @@
 # Multi-mode LED indicator with HA/web-UI mode selector.
 #
 # Modes:
-#   Combo  — Left 5 LEDs: CO2 | Middle 5 LEDs: PM2.5 | Right 1 LED: TVOC
-#   CO2    — All 11 LEDs: CO2
-#   PM2.5  — All 11 LEDs: PM2.5
-#   VOC    — All 11 LEDs: VOC index
-#   Test   — All LEDs on at full brightness (for testing)
-#   Off    — All LEDs off
+#   Combo      — Left 5 LEDs: CO2 | Middle 5 LEDs: PM2.5 | Right 1 LED: TVOC
+#   Combo 5-3-1— LEDs 1-5: CO2 | LEDs 6-8: PM2.5 | LED 10: VOC
+#   CO2        — All 11 LEDs: CO2
+#   PM2.5      — All 11 LEDs: PM2.5
+#   VOC        — All 11 LEDs: VOC index
+#   CO2 Bar    — Bar fills right→left: right LED on at <500 ppm, all on at 2000 ppm
+#   PM2.5 Bar  — Bar fills right→left: right LED on at <5 µg/m³, all on at ~150 µg/m³
+#   Test       — All LEDs on at full brightness (for testing)
+#   Off        — All LEDs off
 
 # Color thresholds: CO2 follows ASHRAE/UBA indoor ventilation guidance;
 # PM2.5 follows 2021 WHO air quality guidelines; VOC follows Sensirion SGP41
@@ -58,6 +61,8 @@ select:
       - "CO2"
       - "PM2.5"
       - "VOC"
+      - "CO2 Bar"
+      - "PM2.5 Bar"
       - "Test"
       - "Off"
     entity_category: config
@@ -601,6 +606,102 @@ script:
                       id: led_strip
                       range_from: 9
                       range_to: 9
+                      color_brightness: 100%
+                      red: 0%
+                      green: 0%
+                      blue: 0%
+
+      # ── CO2 Bar ──────────────────────────────────────────────────────────
+      # Bar fills right-to-left: rightmost LED on below 500 ppm,
+      # leftmost LED lights up at 2000 ppm (150 ppm per step).
+      # All lit LEDs share the same CO2 color.
+      - if:
+          condition:
+            lambda: 'return id(led_mode).current_option() == "CO2 Bar";'
+          then:
+            - if:
+                condition:
+                  lambda: 'return !isnan(id(co2).state);'
+                then:
+                  - light.addressable_set:
+                      id: led_strip
+                      range_from: 0
+                      range_to: 10
+                      color_brightness: 100%
+                      red: 0%
+                      green: 0%
+                      blue: 0%
+                  - light.addressable_set:
+                      id: led_strip
+                      range_from: !lambda |-
+                          int n = std::max(1, std::min(11, 1 + (int)((id(co2).state - 500.0f) / 150.0f)));
+                          return 11 - n;
+                      range_to: 10
+                      color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
+                      red: !lambda 'return (id(co2).state < $co2_green) ? 0 : (id(co2).state <= $co2_yellow) ? (id(co2).state - $co2_green) / ($co2_yellow - $co2_green) : 1;'
+                      green: !lambda |-
+                          float x = id(co2).state;
+                          if (x < $co2_yellow) return 1.0f;
+                          if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                          if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
+                          return 0.0f;
+                      blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state <= $co2_purple) ? (id(co2).state - $co2_red) / ($co2_purple - $co2_red) : 1;'
+            - if:
+                condition:
+                  lambda: 'return isnan(id(co2).state);'
+                then:
+                  - light.addressable_set:
+                      id: led_strip
+                      range_from: 0
+                      range_to: 10
+                      color_brightness: 100%
+                      red: 0%
+                      green: 0%
+                      blue: 0%
+
+      # ── PM2.5 Bar ────────────────────────────────────────────────────────
+      # Bar fills right-to-left: rightmost LED on below 5 µg/m³,
+      # leftmost LED lights up at ~150 µg/m³ (14.5 µg/m³ per step).
+      # All lit LEDs share the same PM2.5 color.
+      - if:
+          condition:
+            lambda: 'return id(led_mode).current_option() == "PM2.5 Bar";'
+          then:
+            - if:
+                condition:
+                  lambda: 'return !isnan(id(pm_2_5).state);'
+                then:
+                  - light.addressable_set:
+                      id: led_strip
+                      range_from: 0
+                      range_to: 10
+                      color_brightness: 100%
+                      red: 0%
+                      green: 0%
+                      blue: 0%
+                  - light.addressable_set:
+                      id: led_strip
+                      range_from: !lambda |-
+                          int n = std::max(1, std::min(11, 1 + (int)((id(pm_2_5).state - 5.0f) / 14.5f)));
+                          return 11 - n;
+                      range_to: 10
+                      color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
+                      red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
+                      green: !lambda |-
+                          float x = id(pm_2_5).state;
+                          if (x < $pm_2_5_yellow) return 1.0f;
+                          if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                          if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
+                          return 0.0f;
+                      blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple - $pm_2_5_red) : 1;'
+            - if:
+                condition:
+                  lambda: 'return isnan(id(pm_2_5).state);'
+                then:
+                  - light.addressable_set:
+                      id: led_strip
+                      range_from: 0
+                      range_to: 10
                       color_brightness: 100%
                       red: 0%
                       green: 0%
