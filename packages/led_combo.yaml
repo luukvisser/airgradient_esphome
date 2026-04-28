@@ -332,18 +332,15 @@ script:
                       color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
                       red: !lambda |-
                         float s = id(go_iaqs_score).state;
-                        if (s >= 8.0f) return 0x64 / 255.0f;  // blue  #648EFF
-                        return 1.0f;                           // amber #FFB000 or red #FF190C
+                        if (s >= 8.0f) return 0.0f;   // green
+                        return 1.0f;                   // orange or red
                       green: !lambda |-
                         float s = id(go_iaqs_score).state;
-                        if (s >= 8.0f) return 0x8E / 255.0f;  // blue  #648EFF
-                        if (s >= 4.0f) return 0xB0 / 255.0f;  // amber #FFB000
-                        return 0x19 / 255.0f;                  // red   #FF190C
+                        if (s >= 8.0f) return 1.0f;   // green
+                        if (s >= 4.0f) return 0.5f;   // orange
+                        return 0.0f;                   // red
                       blue: !lambda |-
-                        float s = id(go_iaqs_score).state;
-                        if (s >= 8.0f) return 1.0f;            // blue  #648EFF
-                        if (s >= 4.0f) return 0.0f;            // amber #FFB000
-                        return 0x0C / 255.0f;                  // red   #FF190C
+                        return 0.0f;
 
       # ── Combo (default) ──────────────────────────────────────────────────
       # LEDs 0-4: CO2 | LEDs 5-9: PM2.5 | LED 10: VOC
