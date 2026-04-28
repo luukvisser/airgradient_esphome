@@ -131,6 +131,7 @@ packages:
   display: !include packages/display_sh1106_multi_page.yaml
   led: !include packages/led.yaml
   led_combo: !include packages/led_combo.yaml
+  go_iaqs: !include packages/sensor_go_iaqs.yaml
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
   hardware_watchdog: !include packages/watchdog.yaml
   config_button: !include packages/config_button.yaml
