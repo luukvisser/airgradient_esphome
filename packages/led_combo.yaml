@@ -68,6 +68,19 @@ select:
           condition:
             lambda: 'return id(leds_ready);'
           then:
+            # Turn on (or off) the strip when the mode changes, before painting.
+            - if:
+                condition:
+                  lambda: 'return id(led_mode).current_option() != "Off";'
+                then:
+                  - light.turn_on:
+                      id: led_strip
+                      transition_length: 0s
+            - if:
+                condition:
+                  lambda: 'return id(led_mode).current_option() == "Off";'
+                then:
+                  - light.turn_off: led_strip
             - script.execute: update_leds
 
 number:
@@ -89,15 +102,6 @@ number:
 script:
   - id: update_leds
     then:
-      # Ensure the strip is on before painting (handles return from Off mode).
-      - if:
-          condition:
-            lambda: 'return id(led_mode).current_option() != "Off";'
-          then:
-            - light.turn_on:
-                id: led_strip
-                transition_length: 0s
-
       # ── Test ─────────────────────────────────────────────────────────────
       - if:
           condition:
@@ -111,13 +115,6 @@ script:
                 red: 100%
                 green: 100%
                 blue: 100%
-
-      # ── Off ────────────────────────────────────────────────────────────
-      - if:
-          condition:
-            lambda: 'return id(led_mode).current_option() == "Off";'
-          then:
-            - light.turn_off: led_strip
 
       # ── CO2 (all 11 LEDs) ────────────────────────────────────────────────
       - if:
