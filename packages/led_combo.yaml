@@ -57,6 +57,7 @@ select:
       - "CO2"
       - "PM2.5"
       - "VOC"
+      - "GO IAQS"
       - "Test"
       - "Off"
     entity_category: config
@@ -67,6 +68,19 @@ select:
           condition:
             lambda: 'return id(leds_ready);'
           then:
+            # Turn on (or off) the strip when the mode changes, before painting.
+            - if:
+                condition:
+                  lambda: 'return id(led_mode).current_option() != "Off";'
+                then:
+                  - light.turn_on:
+                      id: led_strip
+                      transition_length: 0s
+            - if:
+                condition:
+                  lambda: 'return id(led_mode).current_option() == "Off";'
+                then:
+                  - light.turn_off: led_strip
             - script.execute: update_leds
 
 number:
@@ -88,15 +102,6 @@ number:
 script:
   - id: update_leds
     then:
-      # Ensure the strip is on before painting (handles return from Off mode).
-      - if:
-          condition:
-            lambda: 'return id(led_mode).current_option() != "Off";'
-          then:
-            - light.turn_on:
-                id: led_strip
-                transition_length: 0s
-
       # ── Test ─────────────────────────────────────────────────────────────
       - if:
           condition:
@@ -110,13 +115,6 @@ script:
                 red: 100%
                 green: 100%
                 blue: 100%
-
-      # ── Off ────────────────────────────────────────────────────────────
-      - if:
-          condition:
-            lambda: 'return id(led_mode).current_option() == "Off";'
-          then:
-            - light.turn_off: led_strip
 
       # ── CO2 (all 11 LEDs) ────────────────────────────────────────────────
       - if:
@@ -300,6 +298,46 @@ script:
                       red: 0%
                       green: 0%
                       blue: 0%
+
+      # ── GO IAQS (LEDs 0-9 fill bar right→left, LED 10 always off) ──────
+      # Score 10 = 0 LEDs lit (clean air); score 0 = 10 LEDs lit (unhealthy).
+      # Fill range: [score_int .. 9].  Colors: Good=blue, Moderate=amber, Unhealthy=red.
+      - if:
+          condition:
+            lambda: 'return id(led_mode).current_option() == "GO IAQS";'
+          then:
+            # Blank all 11 LEDs first (LED 10 stays dark throughout)
+            - light.addressable_set:
+                id: led_strip
+                range_from: 0
+                range_to: 10
+                color_brightness: 100%
+                red: 0%
+                green: 0%
+                blue: 0%
+            - if:
+                condition:
+                  lambda: 'return !isnan(id(go_iaqs_score).state);'
+                then:
+                  # Light LEDs [score .. 9]; score=10 → range_from(10)>range_to(9) → nothing lit
+                  - light.addressable_set:
+                      id: led_strip
+                      range_from: !lambda |-
+                        int s = (int)id(go_iaqs_score).state;
+                        return (s > 9) ? 10 : s;
+                      range_to: 9
+                      color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
+                      red: !lambda |-
+                        float s = id(go_iaqs_score).state;
+                        if (s >= 8.0f) return 0.0f;   // green
+                        return 1.0f;                   // orange or red
+                      green: !lambda |-
+                        float s = id(go_iaqs_score).state;
+                        if (s >= 8.0f) return 1.0f;   // green
+                        if (s >= 4.0f) return 0.5f;   // orange
+                        return 0.0f;                   // red
+                      blue: !lambda |-
+                        return 0.0f;
 
       # ── Combo (default) ──────────────────────────────────────────────────
       # LEDs 0-4: CO2 | LEDs 5-9: PM2.5 | LED 10: VOC
