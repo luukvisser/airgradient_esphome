@@ -153,7 +153,10 @@ sensor:
       return((300.0 - 201.0) / (225.4 - 125.5) * (id(pm_2_5).state - 125.5) + 201.0);
       } else if (id(pm_2_5).state <= 325.4) {
       // hazardous
-      return((500.0 - 301.0) / (325.4 - 225.5) * (id(pm_2_5).state - 225.5) + 301.0);
+      return((400.0 - 301.0) / (325.4 - 225.5) * (id(pm_2_5).state - 225.5) + 301.0);
+      } else if (id(pm_2_5).state <= 500.4) {
+      // very hazardous
+      return((500.0 - 401.0) / (500.4 - 325.5) * (id(pm_2_5).state - 325.5) + 401.0);
       } else {
       return(500);
       }
