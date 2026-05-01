@@ -199,7 +199,7 @@ script:
           }
 
           int aqi_calc = std::max(aqi_2_5, aqi_10_0);
-          if (aqi_calc > 0) {
+          if (aqi_calc >= 0) {
             id(aqi).publish_state(aqi_calc);
             // Just in case we're counting down, make sure we set to zero
             if (isnan(id(aqi_delay_mins)) || id(aqi_delay_mins) > 0) {
@@ -346,7 +346,7 @@ script:
           }
 
           int nowcast_calc = nowcast_10_0 > nowcast_2_5 ? nowcast_10_0 : nowcast_2_5;
-          if (nowcast_calc > 0) {
+          if (nowcast_calc >= 0) {
             id(nowcast).publish_state(nowcast_calc);
             // Just in case we're counting down, make sure we set to zero
             if (isnan(id(nowcast_delay_mins)) || id(nowcast_delay_mins) > 0) {
