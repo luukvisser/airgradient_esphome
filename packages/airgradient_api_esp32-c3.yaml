@@ -39,6 +39,7 @@ esphome:
               # Boot ping: the wifi_signal sensor has not reported yet, so
               # the Arduino library hard-codes -50 as a placeholder to make
               # the device show as "online" on the dashboard immediately.
+
               url: !lambda |-
                 return "https://hw.airgradient.com/sensors/airgradient:" + get_mac_address() + "/measures";
               request_headers:
@@ -46,6 +47,20 @@ esphome:
               json:
                 wifi: !lambda return to_string(-50);
                 boot: !lambda return to_string(id(boot_count));
+
+http_request:
+  # https://esphome.io/components/http_request.html
+  watchdog_timeout: 30s
+
+switch:
+  - platform: template
+    name: "Upload to AirGradient Dashboard"
+    id: upload_airgradient
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
 
 interval:
   - interval: 1min

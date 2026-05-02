@@ -1,0 +1,85 @@
+# Minimal AirGradient ONE — CO₂ + temperature/humidity only.
+#
+# Omits display, LED strip, PM2.5 sensor, and VOC/NOx sensor.
+# Useful for cost-reduced builds, discreet installs, or nodes where
+# only CO₂ and climate readings are needed.
+#
+# Packages excluded vs airgradient-one.yaml:
+#   display_sh1106_multi_page  — no display
+#   led / led_combo / led_*    — no LED strip
+#   sensor_pms5003_*           — no PM2.5 sensor
+#   sensor_sgp41               — no VOC/NOx sensor
+#   sensor_nowcast_aqi         — requires PM2.5
+#   config_button              — references display_in_f; needs display package
+#   airgradient_api            — requires AirGradient cloud registration
+
+substitutions:
+  config_version: "1.0.0"
+
+esphome:
+  name: "ag-co2-temp"
+  friendly_name: "AG CO2 & Temp"
+  name_add_mac_suffix: true
+  project:
+    name: "luukvisser.ag-co2-temp-example"
+    version: $config_version
+
+logger:
+
+api:
+
+ota:
+  - platform: esphome
+  - platform: http_request
+
+http_request:
+  verify_ssl: true
+  timeout: 10s
+  buffer_size_rx: 2048
+
+wifi:
+  fast_connect: false
+  ap:
+    ap_timeout: 90s
+    password: "cleanair"
+
+network:
+  enable_ipv6: true
+
+esp32_improv:
+  authorizer: none
+
+improv_serial:
+
+web_server:
+  version: 3
+  port: 80
+  sorting_groups:
+    - id: grp_sensors
+      name: "Sensors"
+      sorting_weight: 5
+    - id: grp_co2
+      name: "CO₂ (SenseAir S8)"
+      sorting_weight: 30
+    - id: grp_temp
+      name: "Temperature & Humidity (SHT40)"
+      sorting_weight: 50
+    - id: grp_system
+      name: "System"
+      sorting_weight: 70
+
+packages:
+  # ── Hardware ────────────────────────────────────────────────────────────
+  board:         !include ../packages/airgradient_esp32-c3_board.yaml
+
+  # ── Sensors ─────────────────────────────────────────────────────────────
+  co2:           !include ../packages/sensor_s8.yaml
+  temp_humidity: !include ../packages/sensor_sht40.yaml
+  wifi:          !include ../packages/sensor_wifi.yaml
+  uptime:        !include ../packages/sensor_uptime.yaml
+
+  # ── System utilities ────────────────────────────────────────────────────
+  diagnostic:    !include ../packages/diagnostic_esp32.yaml
+  watchdog:      !include ../packages/watchdog.yaml
+  captive_portal: !include ../packages/captive_portal.yaml
+  factory_reset: !include ../packages/button_factory_reset.yaml

@@ -1,3 +1,8 @@
+# Physical config button (GPIO9) on AirGradient ONE hardware.
+# Depends on: display_in_f (from display_sh1106_multi_page package) for short-press toggle,
+#             senseair_co2 (from sensor_s8 package) for long-press CO2 calibration.
+# Cannot be used without both the display and CO2 sensor packages.
+
 binary_sensor:
   - platform: gpio
     # Binary sensor to perform action when physical config button is pressed

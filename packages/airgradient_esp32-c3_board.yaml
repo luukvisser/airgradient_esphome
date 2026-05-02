@@ -1,3 +1,6 @@
+# ESP32-C3 board target + UART/I2C bus declarations for AirGradient ONE hardware.
+# UART0 (GPIO0/1): SenseAir S8 CO2  |  UART1 (GPIO20/21): PMS5003  |  I2C (GPIO6/7): SHT40, SGP41, SH1106
+
 esp32:
   board: esp32-c3-devkitm-1
   framework:
