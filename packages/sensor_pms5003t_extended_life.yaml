@@ -1,3 +1,8 @@
+# Plantower PMS5003T particulate + temperature/humidity sensor with EPA PM2.5 correction.
+# Variant of sensor_pms5003_extended_life for the T model, which adds onboard temp/humidity.
+# Use instead of sensor_sht40 when the board has a PMS5003T (e.g. AirGradient Open Air).
+# Depends on: pms5003_uart (UART bus from board package).
+
 substitutions:
   pm_update_interval: "2min"
   pm_2_5_scaling_factor: '1'

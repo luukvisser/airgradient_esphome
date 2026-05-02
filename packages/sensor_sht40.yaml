@@ -1,3 +1,7 @@
+# Sensirion SHT40 temperature + humidity sensor with independent per-axis calibration controls.
+# Exposes raw (diagnostic) and corrected readings; provides scale + offset sliders and reset buttons.
+# Depends on: I2C bus (from board package).
+
 sensor:
   - platform: sht4x
     # SHT40 https://esphome.io/components/sensor/sht4x.html

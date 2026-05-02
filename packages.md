@@ -1,374 +1,263 @@
 # Packages
 
-This repository is primarily configured around Packages for ESPhome, which are single files that contain all of the related configurations for a particular feature.
+This repository uses ESPHome's [packages](https://esphome.io/guides/configuration-types.html#packages) feature. Each file under `packages/` is a self-contained unit of configuration. The device YAML (`airgradient-one.yaml`) composes them via `!include`.
 
-## airgradient_api_d1_mini_no_sgp41.yaml
+Most packages expose **substitutions** so you can override defaults in your device YAML without editing the package itself.
 
-Uploads sensor data to the [AirGradient Dashboard](https://app.airgradient.com/dashboard). This file is for devices based on the D1 Mini chip (AG Basic and AG Pro) that does not include the SGP41 sensor for VOC/NOx
+---
 
-## airgradient_api_d1_mini.yaml
+## Board & hardware
 
-Uploads sensor data to the [AirGradient Dashboard](https://app.airgradient.com/dashboard). This file is for devices based on the D1 Mini chip (AG Basic and AG Pro) with all current sensors, including SGP41
+### `airgradient_esp32-c3_board.yaml`
 
-# airgradient_api_d1_mini_insecure.yaml
+Sets the ESP32-C3 DevKit M1 board target with the ESP-IDF framework, and declares the three hardware buses used by the AirGradient ONE:
 
-Uploads sensor data to the [AirGradient Dashboard](https://app.airgradient.com/dashboard) using http instead of https.  Some boards, such as the ESP8266 D1 Mini can sometimes go into a reboot loop when communicating over https.  Original firmware used http without issue, so offering this as an alternative for devices that require it.
+| Bus | Pins | Connected to |
+|-----|------|-------------|
+| UART 0 | RX: GPIO0, TX: GPIO1 | SenseAir S8 (CO2) |
+| UART 1 | RX: GPIO20, TX: GPIO21 | PMS5003 (PM2.5) |
+| I2C | SDA: GPIO7, SCL: GPIO6 | SHT40, SGP41, SH1106 |
 
- This file is for devices based on the D1 Mini chip (AG Basic and AG Pro) with all current sensors, including SGP41
+### `watchdog.yaml`
 
-## airgradient_api_esp32-c3_dual_pms5003t.yaml
+Pulses a hardware watchdog pin every 2.5 minutes. If the pulse is missed for ~5 minutes the watchdog IC resets the ESP. Installed on AirGradient ONE and Open Air.
 
-Uploads sensor data to the [AirGradient Dashboard](https://app.airgradient.com/dashboard). This file is for devices based on the ESP32-C3 chip (AG ONE and OpenAir) with dual PMS5003t sensors.  Designed for the Outdoor OpenAir model O-PPT1
+### `diagnostic_esp32.yaml`
 
-## airgradient_api_esp32-c3.yaml
+Exposes free heap memory, CPU temperature, and ESPHome loop time as diagnostic sensors. Useful for monitoring resource pressure during development.
 
-Uploads sensor data to the [AirGradient Dashboard](https://app.airgradient.com/dashboard). This file is for devices based on the ESP32-C3 chip (AG ONE and OpenAir) with all current sensors for the indoor models
+### `button_factory_reset.yaml`
 
-## airgradient_d1_mini_board.yaml
+Adds a button entity that erases all NVS/preferences storage and reboots. Use this if you see persistent warnings about being unable to save preferences.
 
-Board configuration for devices based on the D1 Mini chip (AG Basic and AG Pro), now using the esp-idf framework which reduces some memory usage and allow for newer features to be enabled
+### `captive_portal.yaml`
 
-## airgradient_esp32-c3_board_arduino.yaml
+Configures a fallback Wi-Fi AP with a captive portal so the device can be re-provisioned without reflashing when Wi-Fi credentials change.
 
-Board configuration for devices based on the ESP32-C3 chip (AG ONE and OpenAir) using the original Arduino framework
+### `config_button.yaml`
 
-## airgradient_lolin-c3-mini_board.yaml
+Wires the physical button (GPIO9, strapping pin) to two actions:
 
-Board configuration for the AG DIY/Pro that has been user upgraded to use a Lolin C3 mini, such as https://www.aliexpress.us/item/3256804553736450.html
+- **Short press** — toggle temperature display between °C and °F.
+- **Hold ≤ 5 s** — initiate SenseAir S8 CO2 manual baseline calibration (position the device outdoors or near an open window for 5+ minutes first).
 
-If upgrading a Pro, change the `!extend config_button` section to use pin number `4` instead of `D7`
+### `switch_safe_mode.yaml`
 
-## button_factory_reset.yaml
+Adds a switch that reboots the device into safe mode, which disables most components to allow OTA flashing when a misbehaving component or low-memory condition is blocking normal OTA.
 
-Enables a button to reset device to factory resets, which erases all nvram and erases all stored preferences.
+---
 
-Useful if warning messages about being unable to save preferences appear
+## Sensors
 
-## captive_portal.yaml
+### `sensor_pms5003_extended_life.yaml`
 
-Configures the device to provide a captive portal to create a hotspot if wifi is not connected, so it can be connected to a new wifi network without reconfiguring the config file
+Plantower PMS5003 particulate sensor (PM2.5, PM10, PM1.0).
 
-## config_button.yaml
-
-Enables the configuration button on the AirGradient device.  Default configuration is for devices based on ESP32-C3 chip, but additional configuration can be added to change the pin to support D1 Mini if the device has a physical button installed (Already part of the config file for AG Pro v4.2)
-
-```yaml
-binary_sensor:
-  - id: !extend config_button
-    pin:
-      number: D7
-```
-
-If using an AG Pro v4.2 with a user lolin-d3-mini upgrade use pin 4 instead of D7
-
-* Short press - Toggle temperature display between C and F
-* Press and hold up to 5 seconds - Initiate Senseair S8 CO2 manual calibration.  Ensure device is already outdoors or near an open window for 5+ minutes before initiating
-
-## cpu_clock_speed_80_mhz.yaml
-
-For devices that use the ESP32-C3 the CPU clock can be lowered from default 160
-MHz to 80 MHz to save power. The higher default clock is not needed for the
-calculations that even the AirGradient One by default has to do to interact
-with all the sensors, display, LEDs and so on. If you suspect this causes
-problems, look at the ESPHome log or enable the `diagnostic_esp32.yaml` package
-and look at "Loop Time".
-
-It is currently not included by default for any AirGradient ESPHome config. If
-you want to use it, you must include the package yourself.
-
-For more details refer to the [Video from Andreas Spiess #410 Unknown ESP32 saving: Light Sleep, Clock Reduction, Modem Sleep, Hibernation, and a few tricks](https://www.youtube.com/watch?v=JFDiqPHw3Vc)
-
-## diagnostic_esp32.yaml
-
-Enables debug sensor information for the ESP32-C3 chip that is very verbose.
-
-## diagnostic_esp8266.yaml
-
-Enables debug sensor information for the ESP8266 (D1 Mini) chip that is very verbose.
-
-## display_sh1106_multi_page.yaml
-
-Display configuration for AG Pro and ONE.  Supports multiple pages that can be rotated through by enabling the switches in the Home Assistant interface
-
-Contrast adjustment is available, which can dim the display considerably, but will not fully disable it
-
-Consumes more RAM than the single page config.  If having trouble with devices, particular the D1 Mini, consider trying the single page configuration instead.
-
-* AirGradient default page
-* Summary pages with larger font
-* Measurement values without units page with huge font: Top line: CO2, Humidity; Bottom line: PM2.5, Temperature
-* Air quality with only CO2 and PM2.5 values
-* Air temp and humidity
-* VOC and NOx values
-* Combo page with multiple sensor values
-
-## display_sh1106_single_page.yaml
-
-Display configuration for AG Pro and ONE. Displays only a single page based on the default AirGradient look
-
-Contrast adjustment is available, which can dim the display considerably, but will not fully disable it
-
-## display_ssd1306.yaml
-
-Display configuration for AG Basic
-
-## led_co2.yaml
-
-LED bar in AG ONE reflecting multiple sensor values.
-
-Mixes colors from green>yellow>orange>red>purple based on numbers provided by AirGradient.  The values for each color can be modified by adding a substitution section to your config.
+By default the sensor wakes every 2 minutes to take a reading, extending its rated lifespan. The update interval is configurable:
 
 ```yaml
 substitutions:
-  co2_green: '400'
-  co2_yellow: '1000'
-  co2_red: '2000'
-  co2_purple: '4000'
+  pm_update_interval: "2min"
 ```
 
-## led_combo.yaml
-
-LED bar in AG ONE reflecting multiple sensor values. Left 5 LEDs reflect CO2 levels, middle 5 LEDs reflect PM2.5 levels, far right indicates TVOC. (Same as display)
-
-Mixes colors from green>yellow>orange>red>purple based on numbers provided by AirGradient. The values for each color can be modified by adding a substitution section to your config.
+An EPA correction algorithm is applied. Per-device calibration offsets can be set:
 
 ```yaml
 substitutions:
-  co2_green: '400'
-  co2_yellow: '1000'
-  co2_red: '2000'
-  co2_purple: '4000'
-  pm_2_5_green: '0'
-  pm_2_5_yellow: '11'
-  pm_2_5_red: '56'
-  pm_2_5_purple: '201'
-  voc_green: '100'
-  voc_yellow: '150'
-  voc_red: '250'
-  voc_purple: '400'
-  voc_blue: '50'
+  pm_2_5_scaling_factor: '1'   # multiplicative correction
+  pm_2_5_intercept: '0'        # additive correction (µg/m³)
 ```
 
-  ![1715467068556](image/README/1715467068556.png)
+Reports: PM2.5, PM10, PM1.0, PM0.3 particle count.
 
-## led_pm25.yaml
+### `sensor_pms5003t_extended_life.yaml`
 
-LED bar in AG ONE reflects PM2.5 levels.
+Plantower PMS5003T variant that adds temperature and humidity outputs alongside PM measurements. Includes AirGradient's enclosure compensation for the Open Air housing. Same extended duty-cycle and calibration substitutions as `sensor_pms5003_extended_life.yaml`.
 
-Mixes colors from green>yellow>orange>red>purple based on numbers provided by AirGradient. The values for each color can be modified by adding a substitution section to your config.
+### `sensor_s8.yaml`
+
+SenseAir S8 NDIR CO2 sensor.
+
+Reports CO2 concentration. Exposes controls for:
+
+- **CO2 offset** — shift the reading by a known number of ppm (positive or negative):
+  ```yaml
+  substitutions:
+    co2_offset: '0'
+  ```
+- **ABC interval** — Automatic Baseline Correction period (1, 8, 30, or 90 days; default 8).
+- **Manual calibration button** — triggers a background calibration and logs the result 70 s later.
+- **ABC on/off switch** — disable ABC entirely if the device rarely sees outdoor-equivalent air.
+
+### `sensor_sgp41.yaml`
+
+Sensirion SGP41 MOX sensor. Reports VOC index (0–500) and NOx index (0–500) using Sensirion's on-chip algorithm with temperature/humidity compensation from the SHT40.
+
+The algorithm learning time offsets are configurable:
 
 ```yaml
 substitutions:
-  pm_2_5_green: '0'
-  pm_2_5_yellow: '11'
-  pm_2_5_red: '56'
-  pm_2_5_purple: '201'
-```
-
-## led_tvoc.yaml
-
-LED bar in AG ONE reflects VOC levels.
-
-Mixes colors from blue>green>purple based on numbers provided by AirGradient. The values for each color can be modified by adding a substitution section to your config.
-
-```yaml
-substitutions:
-  voc_green: '100'
-  voc_yellow: '150'
-  voc_red: '250'
-  voc_purple: '400'
-  voc_blue: '50'
-```
-
-## led.yaml
-
-Configures the 11 segment LED bar in AG ONE models.
-
-Also enables On/Off toggle, brightness, and LED fade out
-
-## sensor_nowcast_aqi.yaml
-
-Configures sensors for AQI and NowCast values and Category directly on the device.
-
-Submitted by GitHub user @Ex-Nerd
-
-## sensor_bme680.yaml
-
-Configures sensors from BME 680 chip to supply temperature, humidity, pressure, IAQ, CO2 equivalent, and Breath VOC.
-
-Has not been a reliable source of CO2 or VOC.
-
-## sensor_pms5003_extended_life.yaml
-
-Configures the Plantower PMS5003 sensor.
-
-By default collects readings every second. Since this device has a limited lifespan, it is possible to extend the life by collecting readings less frequently.  Could introduce a new failure mode as the fan shuts down, allowing insects to get inside past the fan that is no longer spinning after 30 seconds.
-
-Collects readings every 2 minutes by default, but can be modified by adding an entry under substitutions, ensuring the value is surrounded by double quotes
-`pm_update_interval: "2min"`
-
-Can also apply batch or device specific correction formulas. See [calibration.md](calibration.md) for more details.
-
-```yaml
-substitutions:
-  pm_2_5_scaling_factor: '1'
-  pm_2_5_intercept: '0'
-```
-
-## sensor_pms5003t_2_extended_life.yaml
-
-Configures a second Plantower PMS5003T sensor when 2 are installed, such as the Open Air Model O-1PPT.  Reports PM2.5, Temperature, and Humidity.
-
-Also applies a compensation algorithm from AirGradient to correct temperature and humidity readings when used inside of the Open Air enclosure
-
-In addition to enabling sensors from the second device, also creates sensors that report the average of the 2 devices.
-
-By default collects readings every second. Since this device has a limited lifespan, it is possible to extend the life by collecting readings less frequently.  Could introduce a new failure mode as the fan shuts down, allowing insects to get inside past the fan that is no longer spinning after 30 seconds.
-
-Collects readings every 2 minutes by default, but can be modified by adding an entry under substitutions, ensuring the value is surrounded by double quotes
-`pm_update_interval: "2min"`
-
-Can also apply batch or device specific correction formulas. See [calibration.md](calibration.md) for more details.
-
-```yaml
-substitutions:
-  pm_2_5_scaling_factor: '1'
-  pm_2_5_intercept: '0'
-```
-
-## sensor_pms5003t_2.yaml
-
-Configures a second Plantower PMS5003T sensor when 2 are installed, such as the Open Air Model O-1PPT.  Reports PM 2.5, Temperature, and Humidity.
-
-Also applies a compensation algorithm from AirGradient to correct temperature and humidity readings when used inside of the Open Air enclosure
-
-In addition to enabling sensors from the second device, also creates sensors that report the average of the 2 devices.
-
-## sensor_pms5003t_extended_life.yaml
-
-Configures a Plantower PMS5003T sensor.  Reports PM 2.5, Temperature, and Humidity.
-
-Also applies a compensation algorithm from AirGradient to correct temperature and humidity readings when used inside of the Open Air enclosure
-
-By default collects readings every second. Since this device has a limited lifespan, it is possible to extend the life by collecting readings less frequently.  Could introduce a new failure mode as the fan shuts down, allowing insects to get inside past the fan that is no longer spinning after 30 seconds.
-
-Collects readings every 2 minutes by default, but can be modified by adding an entry under substitutions, ensuring the value is surrounded by double quotes
-`pm_update_interval: "2min"`
-
-Can also apply batch or device specific correction formulas. See [calibration.md](calibration.md) for more details.
-
-```yaml
-substitutions:
-  pm_2_5_scaling_factor: '1'
-  pm_2_5_intercept: '0'
-```
-
-## sensor_pms5003t_uncorrected.yaml
-
-Configures a Plantower PMS5003T sensor.  Reports PM 2.5, Temperature, and Humidity.
-
-Does not apply a compensation algorithm to provide values directly from the sensor
-
-## sensor_pms5003t.yaml
-
-Configures a Plantower PMS5003T sensor.  Reports PM 2.5, Temperature, and Humidity.
-
-Also applies a compensation algorithm from AirGradient to correct temperature and humidity readings when used inside of the Open Air enclosure
-
-Can also apply batch or device specific correction formulas. See [calibration.md](calibration.md) for more details.
-
-```yaml
-substitutions:
-  pm_2_5_scaling_factor: '1'
-  pm_2_5_intercept: '0'
-```
-
-## sensor_pms5003_uncorrected.yaml
-
-Configures a Plantower PMS5003 sensor using raw values from the sensor
-
-Reports PM 2.5, PM 10, PM 1.0, PM 0.3, and Air Quality Index based on the current readings.
-
-## sensor_pms5003.yaml
-
-Configures a Plantower PMS5003 sensor.
-
-Applies correction algorithms provided by AirGradient
-
-https://www.airgradient.com/documentation/correction-algorithms/
-
-Reports PM 2.5, PM 10, PM 1.0, PM 0.3, and Air Quality Index based on the current readings.
-
-Can also apply batch or device specific correction formulas. See [calibration.md](calibration.md) for more details.
-
-```yaml
-substitutions:
-  pm_2_5_scaling_factor: '1'
-  pm_2_5_intercept: '0'
-```
-
-## sensor_s8.yaml
-
-Configures a Senseair S8 sensor.
-
-Reports CO2 levels and enables buttons to initiate a manual baseline correction, show the correction interval, and disable/enable Automatic Baseline Correction feature
-
-Also supports a substitution to introduce an offset to the CO2 readings.  May be helpful if wanting to calibrate to a number different than 400 ppm, or if the sensor is off by a known number.
-
-To your main YAML file, add the following to the substitution section.  Numbers must be surrounded by single quotes and may be positive or negative.
-
-```yaml
-substitutions:
-  co2_offset: '0'
-```
-
-## sensor_sgp41.yaml
-
-Configures a Sensirion SGP41 sensor.
-
-Reports VOC and NOx Index values.
-
-Now supports modifying VOC and NOx learning time offset hours by adding the substitutions
-
-```yaml
-substitutions:
-  # 12, 60, 120, 360, 720 are suggested values from AirGradient (range 1..1000)
+  # Suggested values: 12, 60, 120, 360, 720 (range: 1–1000 hours)
   voc_learning_time_offset_hours: '12'
   nox_learning_time_offset_hours: '12'
 ```
 
-## sensor_sht30.yaml
+### `sensor_sht40.yaml`
 
-Configures a Sensirion SHT30 sensor
+Sensirion SHT40 temperature and humidity sensor (I2C address 0x44).
 
-Reports temperature and humidity
+Raw readings are passed through independent linear correction filters. Per-axis calibration controls are exposed to Home Assistant and the web UI:
 
-## sensor_sht40.yaml
+| Control | Default | Range |
+|---------|---------|-------|
+| Temperature scale | 1.0 | 0.5 – 2.0 |
+| Temperature offset | 0.0 °C | −10 – +10 °C |
+| Humidity scale | 1.0 | 0.5 – 2.0 |
+| Humidity offset | 0.0 % | −20 – +20 % |
 
-Configures a Sensirion SHT40 sensor
+Reset buttons restore each axis to factory defaults (scale 1.0, offset 0.0).
 
-Reports temperature and humidity
+### `sensor_nowcast_aqi.yaml`
 
-## sensor_uptime.yaml
+Calculates US EPA AQI and NowCast AQI entirely on-device, using a 24-hour rolling window of PM2.5 readings and the 2024 EPA breakpoints. Also emits an AQI category string (Good, Moderate, …, Hazardous). Contributed by [@Ex-Nerd](https://github.com/Ex-Nerd).
 
-Configures an Uptime sensor
+### `sensor_wifi.yaml`
 
-Reports how long since the last reboot in seconds
+Reports Wi-Fi signal strength (RSSI, dBm). Values are always negative; closer to zero means stronger signal.
 
-## sensor_wifi.yaml
+### `sensor_uptime.yaml`
 
-Configures a WiFi sensor
+Reports device uptime in seconds since last boot.
 
-These values are always negative and the closer they are to zero, the better the signal is.
+---
 
-## switch_safe_mode.yaml
+## Display
 
-Configures a switch to enable Safe Mode
+### `display_sh1106_multi_page.yaml`
 
-This is useful in certain situations where a misbehaving component, or low memory state is preventing Over-The-Air updates from completing successfully.
+SH1106 128×64 OLED display with ten independently switchable pages. Each page is toggled by a Home Assistant switch (or the web UI):
 
-## watchdog.yaml
+| Switch | Page contents |
+|--------|--------------|
+| Default | Compact layout: temp, humidity, CO2, PM2.5, TVOC, NOx |
+| Summary 1 | CO2 · PM2.5 · Temperature · Humidity |
+| Summary 2 | CO2 · PM2.5 · VOC · NOx |
+| Air Quality | CO2 + PM2.5 in large type |
+| Temp & Hum | Temperature + humidity in large type |
+| VOC | VOC index + NOx in large type |
+| Combo | Mixed full-screen layout |
+| Huge (no units) | Four readings in the largest available font |
+| Boot | Device MAC address + config version |
+| Blank | Display off |
 
-Configures a hardware watchdog for devices that have one installed, such as AG ONE and Open Air
+Additional controls:
 
-Sends a notification to the watchdog every 2.5 minutes to indicate it is still alive. If not received after ~5 minutes, device will reset
+- **Display Contrast %** slider (0–100) — dims the OLED backlight.
+- **Temperature unit** — toggle between °C and °F (also controllable via the config button).
+
+Uses six bitmap fonts (Open Sans regular + bold, sizes 10–34 pt).
+
+---
+
+## LED indicators
+
+### `led.yaml`
+
+Base package for the WS2812 RGB LED strip (11 LEDs, GPIO10). Must be included before any `led_*.yaml` mode package.
+
+Exposes:
+
+- **LED Brightness %** slider (0–100) with gamma 2.0 perceptual correction.
+- **LED Fade %** slider (0–100) — dims the outer LEDs of each segment relative to the centre, softening the bar edges.
+
+### `led_combo.yaml`
+
+Multi-mode indicator. Depends on `led.yaml`. Adds a **LED Mode** selector with six options:
+
+| Mode | Behaviour |
+|------|-----------|
+| **Combo** | LEDs 0–4: CO2 · LEDs 5–9: PM2.5 · LED 10: VOC |
+| **CO2** | All 11 LEDs: CO2 |
+| **PM2.5** | All 11 LEDs: PM2.5 |
+| **VOC** | All 11 LEDs: VOC index |
+| **Test** | All LEDs white at full brightness |
+| **Off** | All LEDs off |
+
+Color thresholds are configurable via substitutions (defaults follow ASHRAE/WHO/Sensirion guidelines — see `README.md`):
+
+```yaml
+substitutions:
+  co2_green: '600'
+  co2_yellow: '900'
+  co2_orange: '1000'
+  co2_red: '1200'
+  co2_purple: '1500'
+  pm_2_5_green: '5'
+  pm_2_5_yellow: '15'
+  pm_2_5_orange: '25'
+  pm_2_5_red: '35'
+  pm_2_5_purple: '55'
+  voc_green: '100'
+  voc_yellow: '200'
+  voc_orange: '300'
+  voc_red: '400'
+  voc_purple: '500'
+```
+
+### `led_co2.yaml`
+
+All 11 LEDs reflect CO2 level only (legacy single-sensor mode).
+
+Threshold substitutions:
+
+```yaml
+substitutions:
+  co2_green: '600'
+  co2_yellow: '900'
+  co2_orange: '1000'
+  co2_red: '1200'
+  co2_purple: '1500'
+```
+
+### `led_pm25.yaml`
+
+All 11 LEDs reflect PM2.5 level only.
+
+Threshold substitutions:
+
+```yaml
+substitutions:
+  pm_2_5_green: '5'
+  pm_2_5_yellow: '15'
+  pm_2_5_orange: '25'
+  pm_2_5_red: '35'
+  pm_2_5_purple: '55'
+```
+
+### `led_tvoc.yaml`
+
+All 11 LEDs reflect VOC index, using a blue-to-purple color scale.
+
+Threshold substitutions:
+
+```yaml
+substitutions:
+  voc_blue: '50'
+  voc_green: '100'
+  voc_yellow: '200'
+  voc_orange: '300'
+  voc_red: '400'
+  voc_purple: '500'
+```
+
+---
+
+## Integrations
+
+### `airgradient_api_esp32-c3.yaml`
+
+Uploads sensor readings to the [AirGradient Dashboard](https://app.airgradient.com/dashboard) every 2.5 minutes via HTTPS. A boot POST is sent on startup.
+
+Includes a **Send to AirGradient** toggle switch so data upload can be disabled without reflashing.
+
+Requires the device's MAC-based serial number to be registered in the AirGradient account.

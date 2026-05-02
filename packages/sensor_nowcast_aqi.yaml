@@ -21,19 +21,6 @@ globals:
     type: std::vector<float>
     restore_value: false
 
-text_sensor:
-  - platform: template
-    id: aqi_category
-    name: "AQI Category"
-    icon: "mdi:weather-windy-variant"
-    update_interval: 15min
-
-  - platform: template
-    id: nowcast_category
-    name: "NowCast Category"
-    icon: "mdi:weather-windy-variant"
-    update_interval: 15min
-
 sensor:
   - platform: template
     id: aqi
@@ -114,6 +101,19 @@ sensor:
             id(pm_10_0_hourly_avg).resize(24);
           }
         }
+
+text_sensor:
+  - platform: template
+    id: aqi_category
+    name: "AQI Category"
+    icon: "mdi:weather-windy-variant"
+    update_interval: 15min
+
+  - platform: template
+    id: nowcast_category
+    name: "NowCast Category"
+    icon: "mdi:weather-windy-variant"
+    update_interval: 15min
 
 script:
   - id: calculate_aqi
