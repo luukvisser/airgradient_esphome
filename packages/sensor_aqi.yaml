@@ -1,0 +1,54 @@
+# US EPA Air Quality Index (AQI) — instantaneous PM2.5 estimate.
+#
+# Strict EPA AQI uses a 24h PM2.5 average (see sensor_nowcast_aqi.yaml for
+# that variant). This package produces a live AQI from the current PM2.5
+# reading using the 2024 EPA breakpoints, suitable for a real-time display.
+#
+# 2024 EPA breakpoints: https://document.airnow.gov/technical-assistance-document-for-the-reporting-of-daily-air-quailty.pdf
+#
+# Categories: Good (0–50), Moderate (51–100), USG (101–150),
+#             Unhealthy (151–200), Very Unhealthy (201–300), Hazardous (301+)
+
+sensor:
+  - platform: template
+    id: aqi
+    name: "AQI"
+    device_class: aqi
+    icon: "mdi:weather-windy-variant"
+    accuracy_decimals: 0
+    update_interval: 60s
+    web_server:
+      sorting_group_id: grp_sensors
+    lambda: |-
+      float pm25 = id(pm_2_5).state;
+      if (isnan(pm25) || pm25 < 0.0f) return NAN;
+
+      // Linear interpolation between EPA breakpoints
+      float aqi;
+      if      (pm25 <  9.1f)   aqi = (50.0f  / 9.0f)              * pm25;
+      else if (pm25 <= 35.4f)  aqi = (49.0f  / (35.4f - 9.1f))    * (pm25 -   9.1f) + 51.0f;
+      else if (pm25 <= 55.4f)  aqi = (49.0f  / (55.4f - 35.5f))   * (pm25 -  35.5f) + 101.0f;
+      else if (pm25 <= 125.4f) aqi = (49.0f  / (125.4f - 55.5f))  * (pm25 -  55.5f) + 151.0f;
+      else if (pm25 <= 225.4f) aqi = (99.0f  / (225.4f - 125.5f)) * (pm25 - 125.5f) + 201.0f;
+      else if (pm25 <= 325.4f) aqi = (99.0f  / (325.4f - 225.5f)) * (pm25 - 225.5f) + 301.0f;
+      else if (pm25 <= 500.4f) aqi = (99.0f  / (500.4f - 325.5f)) * (pm25 - 325.5f) + 401.0f;
+      else                     aqi = 500.0f;
+
+      return aqi;
+    on_value:
+      - lambda: |-
+          if      (x <=  50.0f) id(aqi_category).publish_state("Good");
+          else if (x <= 100.0f) id(aqi_category).publish_state("Moderate");
+          else if (x <= 150.0f) id(aqi_category).publish_state("Unhealthy for Sensitive Groups");
+          else if (x <= 200.0f) id(aqi_category).publish_state("Unhealthy");
+          else if (x <= 300.0f) id(aqi_category).publish_state("Very Unhealthy");
+          else                  id(aqi_category).publish_state("Hazardous");
+
+text_sensor:
+  - platform: template
+    id: aqi_category
+    name: "AQI Category"
+    icon: "mdi:weather-windy-variant"
+    update_interval: 15min
+    web_server:
+      sorting_group_id: grp_sensors
