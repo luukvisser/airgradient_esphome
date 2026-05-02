@@ -54,9 +54,9 @@ select:
     icon: "mdi:led-strip-variant"
     optimistic: true
     restore_value: true
-    initial_option: "Combo"
+    initial_option: "Combo 5-5-1"
     options:
-      - "Combo"
+      - "Combo 5-5-1"
       - "Combo 5-3-1"
       - "CO2"
       - "PM2.5"
