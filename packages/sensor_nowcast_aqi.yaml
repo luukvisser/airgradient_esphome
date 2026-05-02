@@ -153,8 +153,10 @@ script:
               aqi_2_5 = (200.0 - 151.0) / (125.4 - 55.5) * (pm25 - 55.5) + 151.0;
             } else if (pm25 < 225.4) {
               aqi_2_5 = (300.0 - 201.0) / (225.4 - 125.5) * (pm25 - 125.5) + 201.0;
-            } else if (pm25 < 500.0) {
-              aqi_2_5 = (500.0 - 301.0) / (500.0 - 225.5) * (pm25 - 225.5) + 301.0;
+            } else if (pm25 < 325.4) {
+              aqi_2_5 = (400.0 - 301.0) / (325.4 - 225.5) * (pm25 - 225.5) + 301.0;
+            } else if (pm25 < 500.4) {
+              aqi_2_5 = (500.0 - 401.0) / (500.4 - 325.5) * (pm25 - 325.5) + 401.0;
             } else {
               // everything higher is just counted as 500
               aqi_2_5 = 500;
@@ -190,16 +192,18 @@ script:
               aqi_10_0 = (200.0 - 151.0) / (354.0 - 255.0) * (pm10 - 255.0) + 151.0;
             } else if (pm10 < 424.0) {
               aqi_10_0 = (300.0 - 201.0) / (424.0 - 355.0) * (pm10 - 355.0) + 201.0;
-            } else if (pm10 < 500.0) {
-              aqi_10_0 = (500.0 - 301.0) / (500.0 - 425.0) * (pm10 - 425.0) + 301.0;
+            } else if (pm10 < 504.0) {
+              aqi_10_0 = (400.0 - 301.0) / (504.0 - 425.0) * (pm10 - 425.0) + 301.0;
+            } else if (pm10 < 604.0) {
+              aqi_10_0 = (500.0 - 401.0) / (604.0 - 505.0) * (pm10 - 505.0) + 401.0;
             } else {
               // everything higher is just counted as 500
-              aqi_10_0 = 500.0;
+              aqi_10_0 = 500;
             }
           }
 
           int aqi_calc = std::max(aqi_2_5, aqi_10_0);
-          if (aqi_calc > 0) {
+          if (aqi_calc >= 0) {
             id(aqi).publish_state(aqi_calc);
             // Just in case we're counting down, make sure we set to zero
             if (isnan(id(aqi_delay_mins)) || id(aqi_delay_mins) > 0) {
@@ -271,8 +275,10 @@ script:
                 nowcast_2_5 = (200.0 - 151.0) / (125.4 - 55.5) * (pm25 - 55.5) + 151.0;
               } else if (pm25 < 225.4) {
                 nowcast_2_5 = (300.0 - 201.0) / (225.4 - 125.5) * (pm25 - 125.5) + 201.0;
-              } else if (pm25 < 500.0) {
-                nowcast_2_5 = (500.0 - 301.0) / (500.0 - 225.5) * (pm25 - 225.5) + 301.0;
+              } else if (pm25 < 325.4) {
+                nowcast_2_5 = (400.0 - 301.0) / (325.4 - 225.5) * (pm25 - 225.5) + 301.0;
+              } else if (pm25 < 500.4) {
+                nowcast_2_5 = (500.0 - 401.0) / (500.4 - 325.5) * (pm25 - 325.5) + 401.0;
               } else {
                 // everything higher is just counted as 500
                 nowcast_2_5 = 500;
@@ -335,18 +341,20 @@ script:
                 nowcast_10_0 = (200.0 - 151.0) / (354.0 - 255.0) * (pm10 - 255.0) + 151.0;
               } else if (pm10 < 424.0) {
                 nowcast_10_0 = (300.0 - 201.0) / (424.0 - 355.0) * (pm10 - 355.0) + 201.0;
-              } else if (pm10 < 500.0) {
-                nowcast_10_0 = (500.0 - 301.0) / (500.0 - 425.0) * (pm10 - 425.0) + 301.0;
+              } else if (pm10 < 504.0) {
+                nowcast_10_0 = (400.0 - 301.0) / (504.0 - 425.0) * (pm10 - 425.0) + 301.0;
+              } else if (pm10 < 604.0) {
+                nowcast_10_0 = (500.0 - 401.0) / (604.0 - 505.0) * (pm10 - 505.0) + 401.0;
               } else {
                 // everything higher is just counted as 500
-                nowcast_10_0 = 500.0;
+                nowcast_10_0 = 500;
               }
 
             }
           }
 
           int nowcast_calc = nowcast_10_0 > nowcast_2_5 ? nowcast_10_0 : nowcast_2_5;
-          if (nowcast_calc > 0) {
+          if (nowcast_calc >= 0) {
             id(nowcast).publish_state(nowcast_calc);
             // Just in case we're counting down, make sure we set to zero
             if (isnan(id(nowcast_delay_mins)) || id(nowcast_delay_mins) > 0) {

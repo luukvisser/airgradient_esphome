@@ -130,6 +130,7 @@ packages:
   tvoc: !include packages/sensor_sgp41.yaml
   wifi: !include packages/sensor_wifi.yaml
   uptime: !include packages/sensor_uptime.yaml
+  go_iaqs: !include packages/sensor_go_iaqs.yaml
 
   # ── Display & indicators ────────────────────────────────────────────────
   display: !include packages/display_sh1106_multi_page.yaml

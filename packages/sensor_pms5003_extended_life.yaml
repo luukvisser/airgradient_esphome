@@ -76,7 +76,7 @@ sensor:
       // EPA Formula
       float result = 0.0;
       if (pm_2_5_calibrated == 0.0) {
-        result = 0.0;
+        return NAN; // raw sensor reading of 0 is a transient glitch, not valid data
       } else if (pm_2_5_calibrated < 30.0) {
         result = (0.524 * pm_2_5_calibrated) - (0.0862 * id(humidity_raw).state) + 5.75;
       } else if (pm_2_5_calibrated < 50.0) {
@@ -89,7 +89,7 @@ sensor:
         result = 2.966 + (0.69 * pm_2_5_calibrated) + (8.84 * pow(10,-4) * pow(pm_2_5_calibrated,2));
       }
       if (result <= 0.0) {
-        return 0.0;
+        return NAN; // EPA correction formula gives unphysical result (low PM + high humidity)
       } else {
         return result;
       }
@@ -126,7 +126,10 @@ sensor:
       return((300.0 - 201.0) / (225.4 - 125.5) * (id(pm_2_5).state - 125.5) + 201.0);
       } else if (id(pm_2_5).state <= 325.4) {
       // hazardous
-      return((500.0 - 301.0) / (325.4 - 225.5) * (id(pm_2_5).state - 225.5) + 301.0);
+      return((400.0 - 301.0) / (325.4 - 225.5) * (id(pm_2_5).state - 225.5) + 301.0);
+      } else if (id(pm_2_5).state <= 500.4) {
+      // very hazardous
+      return((500.0 - 401.0) / (500.4 - 325.5) * (id(pm_2_5).state - 325.5) + 401.0);
       } else {
       return(500);
       }
