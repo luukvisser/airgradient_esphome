@@ -10,7 +10,7 @@ requires-python = ">=3.11,<3.15"
 # reproducible builds. Bump deliberately after verifying a new minor
 # release compiles every device in devices.yaml.
 dependencies = [
-    "esphome == 2026.4",
+    "esphome == 2026.4.3",
     # Used by scripts/ to parse devices.yaml and build the landing page.
     "pyyaml == 6.0.3",
 ]
