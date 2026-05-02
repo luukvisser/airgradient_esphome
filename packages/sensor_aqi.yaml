@@ -11,7 +11,7 @@
 
 sensor:
   - platform: template
-    id: aqi
+    id: pm_2_5_aqi
     name: "PM2.5 AQI"
     device_class: aqi
     icon: "mdi:weather-windy-variant"
