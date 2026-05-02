@@ -1,0 +1,144 @@
+# Auto-dim the LED bar at night to reduce wear and avoid bedroom glare.
+#
+# When the local hour falls inside the night window, led_brightness is
+# overridden with night_brightness. The user's daytime value is saved on
+# the night→day transition so it can be restored at sunrise. Adjusting
+# the brightness slider during the night sets a live night override; the
+# saved daytime value is restored when the night window ends.
+#
+# Depends on: packages/led.yaml (provides led_brightness number).
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Amsterdam
+
+globals:
+  - id: g_day_brightness
+    type: float
+    restore_value: true
+    initial_value: '100.0'
+  - id: g_is_night
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+switch:
+  - platform: template
+    name: "Auto Dim at Night"
+    id: night_dim_enable
+    icon: "mdi:weather-night"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_led
+    turn_on_action:
+      - script.execute: apply_night_dim
+    turn_off_action:
+      # Restore daytime brightness immediately when disabled mid-night.
+      - if:
+          condition:
+            lambda: 'return id(g_is_night);'
+          then:
+            - lambda: 'id(g_is_night) = false;'
+            - number.set:
+                id: led_brightness
+                value: !lambda 'return id(g_day_brightness);'
+
+number:
+  - platform: template
+    name: "Night Brightness %"
+    id: night_brightness
+    icon: "mdi:lightbulb-night"
+    min_value: 0
+    max_value: 100
+    step: 1
+    initial_value: 20
+    optimistic: true
+    restore_value: true
+    mode: slider
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_led
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(g_is_night);'
+          then:
+            - number.set:
+                id: led_brightness
+                value: !lambda 'return x;'
+
+  - platform: template
+    name: "Night Start Hour"
+    id: night_start_hour
+    icon: "mdi:clock-start"
+    min_value: 0
+    max_value: 23
+    step: 1
+    initial_value: 22
+    optimistic: true
+    restore_value: true
+    mode: box
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_led
+    on_value:
+      - script.execute: apply_night_dim
+
+  - platform: template
+    name: "Night End Hour"
+    id: night_end_hour
+    icon: "mdi:clock-end"
+    min_value: 0
+    max_value: 23
+    step: 1
+    initial_value: 7
+    optimistic: true
+    restore_value: true
+    mode: box
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_led
+    on_value:
+      - script.execute: apply_night_dim
+
+script:
+  - id: apply_night_dim
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: |-
+              auto t = id(sntp_time).now();
+              return id(night_dim_enable).state && t.is_valid();
+          then:
+            - lambda: |-
+                int hour = id(sntp_time).now().hour;
+                int start = (int)id(night_start_hour).state;
+                int end = (int)id(night_end_hour).state;
+                bool night = (start == end) ? false
+                           : (start < end)  ? (hour >= start && hour < end)
+                                            : (hour >= start || hour < end);
+                if (night && !id(g_is_night)) {
+                  // Day → night: remember current brightness as daytime value,
+                  // then dim. Skip the save if we somehow re-enter night while
+                  // already dimmed (defensive; the outer check prevents this).
+                  id(g_day_brightness) = id(led_brightness).state;
+                  id(g_is_night) = true;
+                  auto call = id(led_brightness).make_call();
+                  call.set_value(id(night_brightness).state);
+                  call.perform();
+                } else if (!night && id(g_is_night)) {
+                  // Night → day: restore saved daytime brightness.
+                  id(g_is_night) = false;
+                  auto call = id(led_brightness).make_call();
+                  call.set_value(id(g_day_brightness));
+                  call.perform();
+                }
+
+interval:
+  - interval: 1min
+    then:
+      - script.execute: apply_night_dim

@@ -136,6 +136,7 @@ packages:
   display: !include packages/display_sh1106_multi_page.yaml
   led: !include packages/led.yaml
   led_combo: !include packages/led_combo.yaml
+  led_night_dim: !include packages/led_night_dim.yaml
 
   # ── Integrations ────────────────────────────────────────────────────────
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
