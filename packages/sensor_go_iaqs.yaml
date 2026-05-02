@@ -51,9 +51,10 @@ sensor:
       return (float)combined;
     on_value:
       - lambda: |-
-          if (x >= 8.0f)      id(go_iaqs_category).publish_state("Good");
+          if (isnan(x))       id(go_iaqs_category).publish_state("Unknown");
+          else if (x >= 8.0f) id(go_iaqs_category).publish_state("Good");
           else if (x >= 4.0f) id(go_iaqs_category).publish_state("Moderate");
-          else                 id(go_iaqs_category).publish_state("Unhealthy");
+          else                id(go_iaqs_category).publish_state("Unhealthy");
 
 text_sensor:
   - platform: template

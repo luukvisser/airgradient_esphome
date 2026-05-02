@@ -37,7 +37,8 @@ sensor:
       return aqi;
     on_value:
       - lambda: |-
-          if      (x <=  50.0f) id(aqi_category).publish_state("Good");
+          if      (isnan(x))    id(aqi_category).publish_state("Unknown");
+          else if (x <=  50.0f) id(aqi_category).publish_state("Good");
           else if (x <= 100.0f) id(aqi_category).publish_state("Moderate");
           else if (x <= 150.0f) id(aqi_category).publish_state("Unhealthy for Sensitive Groups");
           else if (x <= 200.0f) id(aqi_category).publish_state("Unhealthy");
