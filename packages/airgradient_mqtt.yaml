@@ -1,0 +1,74 @@
+# Mirrors the AirGradient Arduino library's MQTT publishing path.
+#
+#   - Topic format:  airgradient/readings/<deviceId>     (deviceId = MAC, lower case)
+#                    matches OneOpenAir.ino + MqttClient.cpp
+#   - Payload:       same JSON shape as the cloud upload (see
+#                    packages/airgradient_api_esp32-c3.yaml)
+#   - Cadence:       1 minute on WiFi (WIFI_TRANSMISSION_INTERVAL)
+#
+# Opt-in: include this package only after setting `mqtt_broker` (and any
+# auth substitutions) in the device YAML, e.g.:
+#
+#   substitutions:
+#     mqtt_broker: "mqtt.example.com"
+#     mqtt_username: "agone"
+#     mqtt_password: "..."
+#
+#   packages:
+#     ...
+#     mqtt: !include packages/airgradient_mqtt.yaml
+#
+# Compilation will fail with a useful error if `mqtt_broker` is unset.
+
+substitutions:
+  mqtt_broker: ""
+  mqtt_username: ""
+  mqtt_password: ""
+
+mqtt:
+  id: mqtt_client
+  broker: $mqtt_broker
+  username: $mqtt_username
+  password: $mqtt_password
+  # Disable HA discovery topics; the AirGradient mobile app and AG cloud do
+  # not subscribe to them, and the local AG MQTT consumers expect a single
+  # readings topic. Re-enable manually if you want HA auto-discovery too.
+  discovery: false
+  # Match Arduino library: only publishes, never subscribes.
+  birth_message:
+  will_message:
+
+interval:
+  - interval: 1min
+    then:
+      - mqtt.publish_json:
+          topic: !lambda |-
+            return "airgradient/readings/" + get_mac_address();
+          payload: |-
+            root["wifi"]         = id(wifi_dbm).state;
+            root["rco2"]         = id(co2).state;
+            root["pm01"]         = id(pm_1_0).state;
+            root["pm02"]         = id(pm_2_5_raw).state;
+            root["pm10"]         = id(pm_10_0).state;
+            root["pm003Count"]   = id(pm_0_3um).state;
+            root["atmp"]         = id(temp_raw).state;
+            root["rhum"]         = id(humidity_raw).state;
+            root["tvocIndex"]    = id(voc).state;
+            root["tvocRaw"]      = id(voc_raw).state;
+            root["noxIndex"]     = id(nox).state;
+            root["noxRaw"]       = id(nox_raw).state;
+            root["boot"]         = id(boot_count);
+            root["resetReason"]  = (int) esp_reset_reason();
+            root["freeHeap"]     = (int) heap_caps_get_free_size(MALLOC_CAP_8BIT);
+
+esphome:
+  on_boot:
+    - priority: 200
+      then:
+        # Boot ping mirrors the cloud uploader: WiFi placeholder + bootCount.
+        - mqtt.publish_json:
+            topic: !lambda |-
+              return "airgradient/readings/" + get_mac_address();
+            payload: |-
+              root["wifi"] = -50;
+              root["boot"] = id(boot_count);

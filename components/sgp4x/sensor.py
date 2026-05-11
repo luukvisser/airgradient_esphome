@@ -1,0 +1,173 @@
+# Local fork of esphome/components/sgp4x. See sgp4x.h for diff overview.
+# Adds two optional sensor outputs: voc_raw and nox_raw, exposing the
+# uncompensated SRAW signals so the AirGradient cloud uploader can populate
+# tvocRaw / noxRaw to match the official Arduino library payload.
+
+import esphome.codegen as cg
+from esphome.components import i2c, sensirion_common, sensor
+import esphome.config_validation as cv
+from esphome.const import (
+    CONF_ALGORITHM_TUNING,
+    CONF_COMPENSATION,
+    CONF_GAIN_FACTOR,
+    CONF_GATING_MAX_DURATION_MINUTES,
+    CONF_ID,
+    CONF_INDEX_OFFSET,
+    CONF_LEARNING_TIME_GAIN_HOURS,
+    CONF_LEARNING_TIME_OFFSET_HOURS,
+    CONF_NOX,
+    CONF_STD_INITIAL,
+    CONF_STORE_BASELINE,
+    CONF_TEMPERATURE_SOURCE,
+    CONF_VOC,
+    DEVICE_CLASS_AQI,
+    ICON_RADIATOR,
+    STATE_CLASS_MEASUREMENT,
+)
+
+DEPENDENCIES = ["i2c"]
+AUTO_LOAD = ["sensirion_common"]
+CODEOWNERS = ["@SenexCrenshaw", "@martgras"]
+
+sgp4x_ns = cg.esphome_ns.namespace("sgp4x")
+SGP4xComponent = sgp4x_ns.class_(
+    "SGP4xComponent",
+    sensor.Sensor,
+    cg.PollingComponent,
+    sensirion_common.SensirionI2CDevice,
+)
+
+CONF_HUMIDITY_SOURCE = "humidity_source"
+CONF_VOC_RAW = "voc_raw"
+CONF_NOX_RAW = "nox_raw"
+
+
+def validate_sensors(config):
+    if CONF_VOC not in config and CONF_NOX not in config:
+        raise cv.Invalid(
+            f"At least one sensor is required. Define {CONF_VOC} and/or {CONF_NOX}"
+        )
+    return config
+
+
+def _gas_sensor_schema(index_offset_default: int):
+    return cv.Schema(
+        {
+            cv.Optional(CONF_ALGORITHM_TUNING): cv.Schema(
+                {
+                    cv.Optional(
+                        CONF_INDEX_OFFSET, default=index_offset_default
+                    ): cv.int_,
+                    cv.Optional(CONF_LEARNING_TIME_OFFSET_HOURS, default=12): cv.int_,
+                    cv.Optional(CONF_LEARNING_TIME_GAIN_HOURS, default=12): cv.int_,
+                    cv.Optional(CONF_GATING_MAX_DURATION_MINUTES, default=720): cv.int_,
+                    cv.Optional(CONF_STD_INITIAL, default=50): cv.int_,
+                    cv.Optional(CONF_GAIN_FACTOR, default=230): cv.int_,
+                }
+            )
+        }
+    )
+
+
+VOC_SENSOR = _gas_sensor_schema(100)
+NOX_SENSOR = _gas_sensor_schema(1)
+
+# Raw signals are unitless ticks straight from the SGP4x; declared with
+# state_class=measurement so they graph but no device_class (not an AQI).
+RAW_SENSOR_SCHEMA = sensor.sensor_schema(
+    icon=ICON_RADIATOR,
+    accuracy_decimals=0,
+    state_class=STATE_CLASS_MEASUREMENT,
+)
+
+CONFIG_SCHEMA = cv.All(
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.declare_id(SGP4xComponent),
+            cv.Optional(CONF_VOC): sensor.sensor_schema(
+                icon=ICON_RADIATOR,
+                accuracy_decimals=0,
+                device_class=DEVICE_CLASS_AQI,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ).extend(VOC_SENSOR),
+            cv.Optional(CONF_NOX): sensor.sensor_schema(
+                icon=ICON_RADIATOR,
+                accuracy_decimals=0,
+                device_class=DEVICE_CLASS_AQI,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ).extend(NOX_SENSOR),
+            cv.Optional(CONF_VOC_RAW): RAW_SENSOR_SCHEMA,
+            cv.Optional(CONF_NOX_RAW): RAW_SENSOR_SCHEMA,
+            cv.Optional(CONF_STORE_BASELINE, default=True): cv.boolean,
+            cv.Optional(CONF_COMPENSATION): cv.Schema(
+                {
+                    cv.Required(CONF_HUMIDITY_SOURCE): cv.use_id(sensor.Sensor),
+                    cv.Required(CONF_TEMPERATURE_SOURCE): cv.use_id(sensor.Sensor),
+                },
+            ),
+        }
+    )
+    .extend(cv.polling_component_schema("60s"))
+    .extend(i2c.i2c_device_schema(0x59)),
+    validate_sensors,
+)
+
+
+async def to_code(config):
+    var = cg.new_Pvariable(config[CONF_ID])
+    await cg.register_component(var, config)
+    await i2c.register_i2c_device(var, config)
+
+    if CONF_COMPENSATION in config:
+        compensation_config = config[CONF_COMPENSATION]
+        sens = await cg.get_variable(compensation_config[CONF_HUMIDITY_SOURCE])
+        cg.add(var.set_humidity_sensor(sens))
+        sens = await cg.get_variable(compensation_config[CONF_TEMPERATURE_SOURCE])
+        cg.add(var.set_temperature_sensor(sens))
+
+    cg.add(var.set_store_baseline(config[CONF_STORE_BASELINE]))
+
+    if CONF_VOC in config:
+        sens = await sensor.new_sensor(config[CONF_VOC])
+        cg.add(var.set_voc_sensor(sens))
+        if CONF_ALGORITHM_TUNING in config[CONF_VOC]:
+            cfg = config[CONF_VOC][CONF_ALGORITHM_TUNING]
+            cg.add(
+                var.set_voc_algorithm_tuning(
+                    cfg[CONF_INDEX_OFFSET],
+                    cfg[CONF_LEARNING_TIME_OFFSET_HOURS],
+                    cfg[CONF_LEARNING_TIME_GAIN_HOURS],
+                    cfg[CONF_GATING_MAX_DURATION_MINUTES],
+                    cfg[CONF_STD_INITIAL],
+                    cfg[CONF_GAIN_FACTOR],
+                )
+            )
+
+    if CONF_NOX in config:
+        sens = await sensor.new_sensor(config[CONF_NOX])
+        cg.add(var.set_nox_sensor(sens))
+        if CONF_ALGORITHM_TUNING in config[CONF_NOX]:
+            cfg = config[CONF_NOX][CONF_ALGORITHM_TUNING]
+            cg.add(
+                var.set_nox_algorithm_tuning(
+                    cfg[CONF_INDEX_OFFSET],
+                    cfg[CONF_LEARNING_TIME_OFFSET_HOURS],
+                    cfg[CONF_LEARNING_TIME_GAIN_HOURS],
+                    cfg[CONF_GATING_MAX_DURATION_MINUTES],
+                    cfg[CONF_GAIN_FACTOR],
+                )
+            )
+
+    if CONF_VOC_RAW in config:
+        sens = await sensor.new_sensor(config[CONF_VOC_RAW])
+        cg.add(var.set_voc_raw_sensor(sens))
+
+    if CONF_NOX_RAW in config:
+        sens = await sensor.new_sensor(config[CONF_NOX_RAW])
+        cg.add(var.set_nox_raw_sensor(sens))
+
+    cg.add_library(
+        "Sensirion Gas Index Algorithm",
+        None,
+        "https://github.com/Sensirion/arduino-gas-index-algorithm.git#3.2.1",
+    )
