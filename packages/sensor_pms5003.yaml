@@ -106,7 +106,7 @@ sensor:
     device_class: aqi
     update_interval: 5 min
     icon: "mdi:air-filter"
-    accuracy_decimals: 2
+    accuracy_decimals: 0
     web_server:
       sorting_group_id: grp_sensors
     lambda: |-
