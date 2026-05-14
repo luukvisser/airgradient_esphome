@@ -5,6 +5,51 @@ environment, conventions, and the process for common contribution types.
 
 ---
 
+## Repository layout
+
+```
+.
+├── devices.yaml                    # registry: one entry per releasable device
+├── airgradient-one.yaml            # ESPHome config for the ONE
+├── packages/
+│   ├── airgradient_esp32-c3_board.yaml    # ESP32-C3 board + UART/I2C pin config
+│   ├── led.yaml                           # WS2812 LED strip base (brightness, fade)
+│   ├── led_combo.yaml                     # 11-LED strip: ten selectable modes
+│   ├── display_sh1106_multi_page.yaml     # multi-page OLED with per-page HA switches
+│   ├── sensor_pms5003.yaml                # PM2.5 (PMS5003, with EPA correction)
+│   ├── sensor_pms5003t.yaml               # PM2.5 + temp/humidity variant (PMS5003T)
+│   ├── sensor_s8.yaml                     # CO2 (SenseAir S8)
+│   ├── sensor_sgp41.yaml                  # VOC + NOx (SGP41)
+│   ├── sensor_sht40.yaml                  # Temperature + humidity (SHT40)
+│   ├── sensor_go_iaqs.yaml                # GO IAQS score (0–10) from CO2 + PM2.5
+│   ├── sensor_nowcast_aqi.yaml            # On-device EPA AQI + NowCast calculation
+│   ├── airgradient_api_esp32-c3.yaml      # AirGradient dashboard upload
+│   ├── diagnostic_esp32.yaml              # Free memory, CPU temp, loop time
+│   ├── watchdog.yaml                      # Hardware watchdog pulse
+│   ├── config_button.yaml                 # GPIO button: temp unit + CO2 calibration
+│   ├── captive_portal.yaml                # Fallback Wi-Fi AP + captive portal
+│   ├── button_factory_reset.yaml          # Factory-reset button
+│   ├── switch_safe_mode.yaml              # Safe-mode OTA switch
+│   ├── sensor_wifi.yaml                   # Wi-Fi RSSI sensor
+│   └── sensor_uptime.yaml                 # Device uptime sensor
+├── docs/
+│   ├── led.md                      # LED indicator reference
+│   ├── display.md                  # Display pages reference
+│   ├── firmware.md                 # Installing firmware + OTA + published URLs
+│   └── images/
+│       └── esphome_flash.png
+├── scripts/
+│   ├── build_manifest.py           # writes per-device manifest.json
+│   └── build_landing_page.py       # rebuilds the Pages index listing every device
+├── pyproject.toml                  # pins esphome + pyyaml
+├── .github/workflows/
+│   ├── build-firmware.yml          # tag-driven build + release + Pages
+│   └── validate.yml                # PR-time config validation, matrixed
+└── README.md
+```
+
+---
+
 ## Development environment
 
 ```bash
@@ -159,6 +204,42 @@ The `Build & Release Firmware` workflow validates the version, compiles firmware
 publishes to GitHub Pages, and cuts a GitHub Release automatically. Pre-release tags
 (containing a `-`) are not pushed to the OTA manifest so fielded devices do not install
 them automatically.
+
+### What the pipeline does
+
+```mermaid
+graph TD
+    TAG["git tag slug/vX.Y.Z\ngit push origin slug/vX.Y.Z"]
+
+    TAG --> resolve
+
+    subgraph resolve["1 · Resolve"]
+        R1["Parse slug + version from tag"]
+        R2["Look up device in devices.yaml"]
+        R3["Assert YAML project.version == tag version"]
+    end
+
+    resolve --> build
+
+    subgraph build["2 · Build"]
+        B1["esphome compile device.yaml"]
+        B2["Stage factory.bin + ota.bin + MD5"]
+    end
+
+    build --> publish
+    build --> release
+
+    subgraph publish["3 · Publish  (stable tags only)"]
+        P1["Overlay manifest.json → gh-pages/slug/"]
+        P2["Versioned + latest firmware binaries"]
+        P3["Rebuild index.html landing page"]
+    end
+
+    subgraph release["4 · GitHub Release  (all tags)"]
+        RL1["Generate changelog since last slug tag"]
+        RL2["Create Release + attach binaries"]
+    end
+```
 
 ---
 
