@@ -4,14 +4,16 @@
 # Depends on: pms5003_uart (UART bus from board package).
 
 substitutions:
-  pm_update_interval: "2min"
+  pm_update_interval: "30s"
   pm_2_5_scaling_factor: '1'
   pm_2_5_intercept: '0'
 
 sensor:
   - platform: pmsx003
+    # AirGradient native firmware reads every 2s (continuous active mode, fan never stops).
+    # 30s keeps the fan spinning continuously while reducing HA state updates vs 1s default.
+    # 2min+ causes the fan to stop between polls, requiring ~30s spin-up and causing unstable/missed readings.
     # PMS5003T with temperature and humidity https://esphome.io/components/sensor/pmsx003.html
-    # Update every 2 minutes to attempt to extend life, but could impact accuracy of readings in device
     type: PMS5003T
     uart_id: pms5003_uart
     pm_2_5:

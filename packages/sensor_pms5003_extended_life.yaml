@@ -3,11 +3,13 @@
 # calibration offsets. Depends on: pms5003_uart (UART bus from board package).
 
 substitutions:
-  pm_update_interval: "2min"
+  pm_update_interval: "30s"
 
 sensor:
   - platform: pmsx003
-    # Default interval of updating every second, but changing to 30 seconds to extend life but keep fan spinning
+    # AirGradient native firmware reads every 2s (continuous active mode, fan never stops).
+    # 30s keeps the fan spinning continuously while reducing HA state updates vs 1s default.
+    # 2min+ causes the fan to stop between polls, requiring ~30s spin-up and causing unstable/missed readings.
     # PMS5003 https://esphome.io/components/sensor/pmsx003.html
     type: PMSX003
     uart_id: pms5003_uart
