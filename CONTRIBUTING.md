@@ -11,9 +11,8 @@ environment, conventions, and the process for common contribution types.
 git clone https://github.com/luukvisser/airgradient_esphome.git
 cd airgradient_esphome
 
-python -m venv .venv
+uv sync                        # creates .venv and installs esphome + pyyaml
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install .                  # installs esphome + pyyaml from pyproject.toml
 ```
 
 Validate a config without building firmware:
