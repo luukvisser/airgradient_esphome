@@ -262,8 +262,8 @@ https://luukvisser.github.io/airgradient_esphome/<slug>/firmware/<ver>/   # pinn
 ## Local development
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install .
+uv sync
+source .venv/bin/activate
 esphome config airgradient-one.yaml       # validate
 esphome compile airgradient-one.yaml      # build
 esphome run airgradient-one.yaml          # build + upload (wired or OTA)
