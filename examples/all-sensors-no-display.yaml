@@ -77,7 +77,7 @@ packages:
   board:         !include ../packages/airgradient_esp32-c3_board.yaml
 
   # ── Sensors ─────────────────────────────────────────────────────────────
-  pm_2_5:        !include ../packages/sensor_pms5003_extended_life.yaml
+  pm_2_5:        !include ../packages/sensor_pms5003.yaml
   co2:           !include ../packages/sensor_s8.yaml
   temp_humidity: !include ../packages/sensor_sht40.yaml
   tvoc:          !include ../packages/sensor_sgp41.yaml

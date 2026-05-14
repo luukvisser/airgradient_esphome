@@ -1,88 +1,73 @@
-# Plantower PMS5003T particulate + temperature/humidity sensor with EPA PM2.5 correction.
-# Variant of sensor_pms5003_extended_life for the T model, which adds onboard temp/humidity.
-# Use instead of sensor_sht40 when the board has a PMS5003T (e.g. AirGradient Open Air).
-# Depends on: pms5003_uart (UART bus from board package).
+# Plantower PMS5003 particulate sensor (PM1.0, PM2.5, PM10) with EPA correction algorithm.
+# Default 2-minute duty cycle extends rated sensor lifespan. Configurable scaling + intercept
+# calibration offsets. Depends on: pms5003_uart (UART bus from board package).
 
 substitutions:
-  pm_update_interval: "2min"
-  pm_2_5_scaling_factor: '1'
-  pm_2_5_intercept: '0'
+  pm_update_interval: "30s"
 
 sensor:
   - platform: pmsx003
-    # PMS5003T with temperature and humidity https://esphome.io/components/sensor/pmsx003.html
-    # Update every 2 minutes to attempt to extend life, but could impact accuracy of readings in device
-    type: PMS5003T
+    # AirGradient native firmware reads every 2s (continuous active mode, fan never stops).
+    # 30s keeps the fan spinning continuously while reducing HA state updates vs 1s default.
+    # 2min+ causes the fan to stop between polls, requiring ~30s spin-up and causing unstable/missed readings.
+    # PMS5003 https://esphome.io/components/sensor/pmsx003.html
+    type: PMSX003
     uart_id: pms5003_uart
     pm_2_5:
-      name: "PM 2.5 Raw"
+      name: "PM2.5 Raw"
       id: pm_2_5_raw
       device_class: pm25  # Added to report properly to HomeKit
       disabled_by_default: true
+      accuracy_decimals: 1
+      icon: mdi:molecule
+      entity_category: diagnostic
+      web_server:
+        sorting_group_id: grp_sensors
     pm_1_0:
-      name: "PM 1.0"
+      name: "PM1.0"
       id: pm_1_0
+      icon: mdi:molecule
+      accuracy_decimals: 1
       device_class: pm1  # Added to report properly to HomeKit
+      web_server:
+        sorting_group_id: grp_sensors
     pm_10_0:
-      name: "PM 10.0"
+      name: "PM10.0"
       id: pm_10_0
+      icon: mdi:molecule
+      accuracy_decimals: 1
       device_class: pm10  # Added to report properly to HomeKit
+      web_server:
+        sorting_group_id: grp_sensors
     pm_0_3um:
-      name: "PM 0.3"
+      name: "PM0.3"
       id: pm_0_3um
-    temperature:
-      name: "Temperature Raw"
-      id: temp_raw
-      icon: "mdi:thermometer"
-      disabled_by_default: true
-    humidity:
-      name: "Humidity Raw"
-      id: humidity_raw
-      icon: "mdi:water-percent"
-      disabled_by_default: true
+      icon: mdi:blur
+      web_server:
+        sorting_group_id: grp_sensors
     update_interval: $pm_update_interval
-
-  - platform: copy
-    source_id: temp_raw
-    name: "Temperature"
-    id: temp
-    # https://www.airgradient.com/documentation/correction-algorithms/
-    filters:
-      - lambda: |-
-          if (x < 10.0) return (x * 1.327) - 6.738;
-          return (x * 1.181) - 5.113;
-
-  - platform: copy
-    source_id: humidity_raw
-    name: "Humidity"
-    id: humidity
-    # https://www.airgradient.com/documentation/correction-algorithms/
-    # Ensuring max is 100% as calculation can exceed
-    filters:
-      - lambda: |-
-          float result = x * 1.259f + 7.34f;
-          if (result > 100) return 100;
-          return result;
 
   - platform: template
     # Implements PM2.5 correction algorithm supported by AirGradient from EPA and optionally batch specific corrections
     # https://www.airgradient.com/documentation/correction-algorithms/
     # https://document.airnow.gov/airnow-fire-and-smoke-map-questions-and-answers.pdf
-    name: "PM 2.5"
+    name: "PM2.5"
     id: pm_2_5
     update_interval: $pm_update_interval
     device_class: pm25  # Added to report properly to HomeKit
     unit_of_measurement: µg/m³
-    icon: mdi:chemical-weapon
-    accuracy_decimals: 0
+    icon: mdi:molecule
+    accuracy_decimals: 1
     state_class: measurement
+    web_server:
+      sorting_group_id: grp_sensors
     lambda: |-
       // https://www.airgradient.com/blog/low-readings-from-pms5003/
       // Correction for sensor batches after 20231030
       // Only use the batch/individual calibration if the default scaling and intercept are changed
-      float pm_2_5_calibrated_low = $pm_2_5_scaling_factor * id(pm_0_3um).state + $pm_2_5_intercept;
+      float pm_2_5_calibrated_low = id(pm_2_5_scaling_factor).state * id(pm_0_3um).state + id(pm_2_5_intercept).state;
       float pm_2_5_calibrated = 0;
-      if (pm_2_5_calibrated_low < 31 && ($pm_2_5_scaling_factor != 1 || $pm_2_5_intercept != 0)) {
+      if (pm_2_5_calibrated_low < 31 && (id(pm_2_5_scaling_factor).state != 1.0f || id(pm_2_5_intercept).state != 0.0f)) {
         pm_2_5_calibrated = pm_2_5_calibrated_low;
       } else {
         pm_2_5_calibrated = id(pm_2_5_raw).state;
@@ -113,14 +98,14 @@ sensor:
 
   - platform: template
     # Depends on another sensor providing an ID of pm_2_5 such as a pms5003
-    name: "PM 2.5 AQI"
+    name: "PM2.5 AQI"
     id: pm_2_5_aqi
-    update_interval: 5 min
     device_class: aqi
+    update_interval: 5 min
     icon: "mdi:air-filter"
     accuracy_decimals: 0
-    filters:
-      - skip_initial: 1  # Need valid data from PM 2.5 sensor before able to calculate
+    web_server:
+      sorting_group_id: grp_sensors
     lambda: |-
       // 2024 update from EPA https://www.epa.gov/system/files/documents/2024-02/pm-naaqs-air-quality-index-fact-sheet.pdf
       // https://en.wikipedia.org/wiki/Air_quality_index#Computing_the_AQI
@@ -150,3 +135,34 @@ sensor:
       } else {
       return(500);
       }
+
+number:
+  - platform: template
+    name: "PMS5003 PM2.5 Scaling Factor"
+    id: pm_2_5_scaling_factor
+    min_value: 0.5
+    max_value: 2.0
+    step: 0.01
+    initial_value: 1.0
+    restore_value: true
+    optimistic: true
+    mode: box
+    entity_category: config
+    icon: mdi:scale
+    web_server:
+      sorting_group_id: grp_pm25
+
+  - platform: template
+    name: "PMS5003 PM2.5 Intercept"
+    id: pm_2_5_intercept
+    min_value: -10.0
+    max_value: 10.0
+    step: 0.1
+    initial_value: 0.0
+    restore_value: true
+    optimistic: true
+    mode: box
+    entity_category: config
+    icon: mdi:plus-minus-variant
+    web_server:
+      sorting_group_id: grp_pm25
