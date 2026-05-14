@@ -35,12 +35,13 @@ graph TD
     B --> b5[captive_portal]
     B --> b6[config_button]
 
-    S --> s1[sensor_pms5003_extended_life]
+    S --> s1[sensor_pms5003]
     S --> s2[sensor_s8]
     S --> s3[sensor_sht40]
     S --> s4[sensor_sgp41]
     S --> s5[sensor_wifi]
     S --> s6[sensor_uptime]
+    S --> s7[sensor_go_iaqs]
 
     D --> d1[display_sh1106_multi_page]
 
@@ -165,21 +166,24 @@ the bar a soft edge.
 
 ### Display: multi-page OLED with per-page switches
 
-The active display package is `display_sh1106_multi_page`. Ten pages are available, each
-independently toggled by a switch in Home Assistant:
+The active display package is `display_sh1106_multi_page`. Nine pages are selectable via
+the **Display Page** dropdown in Home Assistant or the web UI, plus a boot page shown
+automatically at startup:
 
-| Page            | Contents                                                  |
-| --------------- | --------------------------------------------------------- |
-| Default         | Compact all-in-one: temp, humidity, CO2, PM2.5, TVOC, NOx |
-| Summary 1       | CO2 · PM2.5 · Temperature · Humidity                      |
-| Summary 2       | CO2 · PM2.5 · VOC · NOx                                   |
-| Air Quality     | CO2 and PM2.5 in large type                               |
-| Temp & Hum      | Temperature and humidity in large type                    |
-| VOC             | VOC index and NOx in large type                           |
-| Combo           | Mixed full-screen layout                                  |
-| Huge (no units) | Four key readings in the largest font                     |
-| Boot            | Device MAC address and config version                     |
-| Blank           | Turns the display off                                     |
+| Page (option name)      | Contents                                                                 |
+| ----------------------- | ------------------------------------------------------------------------ |
+| AirGradient Default ★   | Compact all-in-one: temp, humidity, CO2 (large), PM2.5 (large), VOC, NOx |
+| Env Summary             | CO2 · PM2.5 · Temperature · Humidity                                     |
+| VOC Summary             | CO2 · PM2.5 · VOC · NOx                                                  |
+| CO2 & PM2.5             | CO2 and PM2.5 in large type                                              |
+| Temp & Humidity         | Temperature and humidity in large type                                   |
+| VOC & NOx               | VOC index and NOx in large type                                          |
+| Combo                   | Temp, humidity, PM2.5, CO2, VOC, NOx, AQI                                |
+| Large Numbers           | CO2, humidity, PM2.5, temp in the largest font (no units)                |
+| Off                     | Turns the display off                                                    |
+| _(Boot — startup only)_ | Device name, MAC address, firmware version; auto-dismissed after 10 s    |
+
+★ default on first boot
 
 A **Display Contrast %** slider (0–100) controls screen brightness.
 
@@ -369,11 +373,12 @@ esphome run airgradient-one.yaml          # build + upload (wired or OTA)
 │   ├── led.yaml                           # WS2812 LED strip base (brightness, fade)
 │   ├── led_combo.yaml                     # 11-LED strip: CO2 + PM2.5 + VOC modes
 │   ├── display_sh1106_multi_page.yaml     # multi-page OLED with per-page HA switches
-│   ├── sensor_pms5003_extended_life.yaml  # PM2.5 (PMS5003, extended duty-cycle)
-│   ├── sensor_pms5003t_extended_life.yaml # PM2.5 + temp/humidity variant (PMS5003T)
+│   ├── sensor_pms5003.yaml                # PM2.5 (PMS5003, with EPA correction)
+│   ├── sensor_pms5003t.yaml               # PM2.5 + temp/humidity variant (PMS5003T)
 │   ├── sensor_s8.yaml                     # CO2 (SenseAir S8)
 │   ├── sensor_sgp41.yaml                  # VOC + NOx (SGP41)
 │   ├── sensor_sht40.yaml                  # Temperature + humidity (SHT40)
+│   ├── sensor_go_iaqs.yaml                # GO IAQS score (0–10) from CO2 + PM2.5
 │   ├── sensor_nowcast_aqi.yaml            # On-device EPA AQI + NowCast calculation
 │   ├── airgradient_api_esp32-c3.yaml      # AirGradient dashboard upload
 │   ├── diagnostic_esp32.yaml              # Free memory, CPU temp, loop time
