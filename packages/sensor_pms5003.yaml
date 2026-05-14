@@ -17,7 +17,7 @@ sensor:
       id: pm_2_5_raw
       device_class: pm25 # Added to report properly to HomeKit
       disabled_by_default: true
-      accuracy_decimals: 1
+      accuracy_decimals: 2
       icon: mdi:molecule
       entity_category: diagnostic
       web_server:
