@@ -19,7 +19,7 @@
 #                 `substitutions.name` (or the value `esphome.name` resolves
 #                 to) in the device's YAML.
 #   description   Short one-line description for the Pages landing page.
-
+---
 devices:
   - slug: airgradient-one
     name: "AirGradient ONE"
@@ -28,12 +28,12 @@ devices:
     node_name: airgradient-one
     description: "Indoor air-quality monitor (I-9PSL) — PM2.5, CO₂, VOC/NOx, temp/humidity."
 
-  # Uncomment and populate as you add more devices. Each new entry enables
-  # an independent release tagged as <slug>/vX.Y.Z.
-  #
-  # - slug: airgradient-open-air
-  #   name: "AirGradient Open Air"
-  #   yaml: airgradient-open-air.yaml
-  #   chip_family: "ESP32-C3"
-  #   node_name: ag-open-air
-  #   description: "Outdoor air-quality monitor (O-1PST)."
+# Uncomment and populate as you add more devices. Each new entry enables
+# an independent release tagged as <slug>/vX.Y.Z.
+#
+# - slug: airgradient-open-air
+#   name: "AirGradient Open Air"
+#   yaml: airgradient-open-air.yaml
+#   chip_family: "ESP32-C3"
+#   node_name: ag-open-air
+#   description: "Outdoor air-quality monitor (O-1PST)."

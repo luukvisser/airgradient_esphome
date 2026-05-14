@@ -1,7 +1,7 @@
 # On-device Nowcast and AQI created by ex-nerd
 # https://github.com/ex-nerd/ESPHome-AirGradient/blob/main/air-gradient-open-air.yaml
 # https://github.com/ex-nerd/ESPHome-AirGradient/commit/3c0e8db922cfb3de7950fb34aa9874739f56c95f
-
+---
 globals:
   - id: aqi_delay_mins
     type: int
@@ -20,7 +20,6 @@ globals:
   - id: pm_10_0_hourly_avg
     type: std::vector<float>
     restore_value: false
-
 sensor:
   - platform: template
     id: aqi
@@ -28,28 +27,24 @@ sensor:
     device_class: aqi
     icon: "mdi:weather-windy-variant"
     accuracy_decimals: 0
-
   - platform: template
     id: nowcast
     name: "NowCast"
     device_class: aqi
     icon: "mdi:weather-windy-variant"
     accuracy_decimals: 0
-
   - platform: template
     id: aqi_mins_remaining
     name: "AQI: Minutes Remaining"
     icon: mdi:timer-sand
     accuracy_decimals: 0
     unit_of_measurement: minutes
-
   - platform: template
     id: nowcast_mins_remaining
     name: "NowCast: Minutes Remaining"
     icon: mdi:timer-sand
     accuracy_decimals: 0
     unit_of_measurement: minutes
-
   - platform: template
     id: pm_2_5_1h_avg
     name: "PM 2.5 1h Average"
@@ -75,7 +70,6 @@ sensor:
             id(pm_2_5_hourly_avg).resize(24);
           }
         }
-
   - platform: template
     id: pm_10_0_1h_avg
     name: "PM 10.0 1h Average"
@@ -101,20 +95,17 @@ sensor:
             id(pm_10_0_hourly_avg).resize(24);
           }
         }
-
 text_sensor:
   - platform: template
     id: aqi_category
     name: "AQI Category"
     icon: "mdi:weather-windy-variant"
     update_interval: 15min
-
   - platform: template
     id: nowcast_category
     name: "NowCast Category"
     icon: "mdi:weather-windy-variant"
     update_interval: 15min
-
 script:
   - id: calculate_aqi
     then:
@@ -211,7 +202,6 @@ script:
               id(aqi_mins_remaining).publish_state(0);
             }
           }
-
   # https://forum.airnowtech.org/t/the-nowcast-for-pm2-5-and-pm10/172
   - id: calculate_nowcast
     then:
@@ -364,7 +354,6 @@ script:
           } else {
             id(nowcast).publish_state(std::nan(""));
           }
-
   - id: calculate_categories
     then:
       - lambda: |
@@ -413,8 +402,6 @@ script:
           } else {
             id(nowcast_category).publish_state("Hazardous"); // and again
           }
-
-
 interval:
   # Decrement the AQI countdowns once per minute until they reach zero
   - interval: 1min
@@ -428,7 +415,6 @@ interval:
             id(nowcast_delay_mins) -= 1;
             id(nowcast_mins_remaining).publish_state(id(nowcast_delay_mins));
           }
-
   # Every hour, attempt to calculate
   - interval: 1h
     then:

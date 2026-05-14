@@ -9,7 +9,7 @@
 #
 # Combination: take the minimum per-pollutant score, then apply a synergetic
 # deduction of -1 (floor 0) when the combined score is ≤ 7.
-
+---
 sensor:
   - platform: template
     id: go_iaqs_score
@@ -54,7 +54,6 @@ sensor:
           if (x >= 8.0f)      id(go_iaqs_category).publish_state("Good");
           else if (x >= 4.0f) id(go_iaqs_category).publish_state("Moderate");
           else                 id(go_iaqs_category).publish_state("Unhealthy");
-
 text_sensor:
   - platform: template
     id: go_iaqs_category

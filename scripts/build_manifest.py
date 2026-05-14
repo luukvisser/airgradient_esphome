@@ -72,7 +72,9 @@ def main() -> int:
     )
     parser.add_argument("--md5", required=True, help="MD5 of the OTA binary")
     parser.add_argument("--release-url", required=True, help="GitHub Release URL")
-    parser.add_argument("--output", required=True, type=Path, help="Where to write manifest.json")
+    parser.add_argument(
+        "--output", required=True, type=Path, help="Where to write manifest.json"
+    )
     args = parser.parse_args()
 
     manifest = build_manifest(

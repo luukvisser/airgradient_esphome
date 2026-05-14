@@ -1,6 +1,6 @@
 # SenseAir S8 NDIR CO2 sensor. Exposes CO2 concentration, offset calibration, ABC controls,
 # and a manual calibration button. Depends on: senseair_co2_uart (from board package).
-
+---
 sensor:
   - platform: senseair
     # SenseAir S8 https://esphome.io/components/sensor/senseair.html
@@ -13,14 +13,13 @@ sensor:
       device_class: carbon_dioxide
       accuracy_decimals: 0
       filters:
-        - skip_initial: 1  # Sometimes returns 0 at first boot instead of valid data
+        - skip_initial: 1 # Sometimes returns 0 at first boot instead of valid data
         - lambda: return x + id(co2_offset_number).state;
       web_server:
         sorting_group_id: grp_sensors
     id: senseair_co2
     uart_id: senseair_co2_uart
     update_interval: 60s
-
 button:
   # https://github.com/esphome/issues/issues/2444
   - platform: template
@@ -34,7 +33,6 @@ button:
         - senseair.background_calibration: senseair_co2
         - delay: 70s
         - senseair.background_calibration_result: senseair_co2
-
   - platform: template
     # Displays the current ABC interval in the ESPhome logs to verify status
     name: "SenseAir S8 CO2 Write Calibration Interval To Log"
@@ -45,7 +43,6 @@ button:
     on_press:
       then:
         - senseair.abc_get_period: senseair_co2
-
 number:
   - platform: template
     name: "SenseAir S8 CO2 Offset"
@@ -62,7 +59,6 @@ number:
     icon: "mdi:tune-vertical"
     web_server:
       sorting_group_id: grp_co2
-
 select:
   - platform: template
     name: "SenseAir S8 CO2 ABC Interval"
@@ -92,7 +88,6 @@ select:
           frame[6] = crc & 0xFF;
           frame[7] = crc >> 8;
           id(senseair_co2_uart).write_array(frame, 8);
-
 switch:
   - platform: template
     name: "SenseAir S8 CO2 Automatic Baseline Correction"

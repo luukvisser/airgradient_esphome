@@ -1,0 +1,9 @@
+formatter:
+  type: basic
+  indent: 2
+  line_ending: lf
+  trim_trailing_whitespace: true
+  eof_newline: true
+  include_document_start: true
+  max_line_length: 88
+  pad_line_comments: 1
