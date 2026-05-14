@@ -51,13 +51,14 @@ sensor:
       return (float)combined;
     on_value:
       - lambda: |-
-          if (x >= 8.0f)      id(go_iaqs_category).publish_state("Good");
-          else if (x >= 4.0f) id(go_iaqs_category).publish_state("Moderate");
-          else                 id(go_iaqs_category).publish_state("Unhealthy");
+          if (isnan(x))       id(go_iaqs_summary).publish_state("NaN");
+          else if (x >= 8.0f) id(go_iaqs_summary).publish_state("Good");
+          else if (x >= 4.0f) id(go_iaqs_summary).publish_state("Moderate");
+          else                id(go_iaqs_summary).publish_state("Unhealthy");
 text_sensor:
   - platform: template
-    id: go_iaqs_category
-    name: "GO IAQS Category"
+    id: go_iaqs_summary
+    name: "GO IAQS Summary"
     icon: "mdi:air-filter"
     update_interval: 15min
     web_server:
