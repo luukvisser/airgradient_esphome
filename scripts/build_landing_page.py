@@ -17,9 +17,11 @@ import json
 import sys
 from pathlib import Path
 
+
 # Imported lazily so --help works without pyyaml installed.
 def _load_yaml(path: Path):
     import yaml  # type: ignore
+
     with path.open() as fh:
         return yaml.safe_load(fh)
 

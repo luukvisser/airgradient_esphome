@@ -1,3 +1,4 @@
+---
 # https://esphome.io/components/button/factory_reset.html
 button:
   - platform: factory_reset
@@ -5,4 +6,4 @@ button:
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
-    disabled_by_default: true      
+    disabled_by_default: true

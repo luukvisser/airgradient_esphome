@@ -1,8 +1,9 @@
+---
 light:
-    # https://esphome.io/components/light/esp32_rmt_led_strip.html
+  # https://esphome.io/components/light/esp32_rmt_led_strip.html
   - platform: esp32_rmt_led_strip
     rgb_order: GRB
-    pin: GPIO10  # Pin 16
+    pin: GPIO10 # Pin 16
     num_leds: 11
     chipset: ws2812
     name: "LED Strip"
@@ -11,7 +12,6 @@ light:
     restore_mode: ALWAYS_ON
     web_server:
       sorting_group_id: grp_led
-
 number:
   - platform: template
     # https://esphome.io/components/number/template.html
@@ -28,7 +28,6 @@ number:
     entity_category: config
     web_server:
       sorting_group_id: grp_led
-
   - platform: template
     # https://esphome.io/components/number/template.html
     name: "LED Fade %"

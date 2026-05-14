@@ -1,0 +1,12 @@
+dist/
+site/
+.esphome/
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.yaml
+*.yml
+*.png
+LICENSE.txt
+.DS_Store

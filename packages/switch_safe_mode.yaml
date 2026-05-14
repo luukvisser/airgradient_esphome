@@ -1,3 +1,4 @@
+---
 switch:
   - platform: safe_mode
     # Create a switch for safe_mode in order to flash the device

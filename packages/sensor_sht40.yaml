@@ -1,7 +1,7 @@
 # Sensirion SHT40 temperature + humidity sensor with independent per-axis calibration controls.
 # Exposes raw (diagnostic) and corrected readings; provides scale + offset sliders and reset buttons.
 # Depends on: I2C bus (from board package).
-
+---
 sensor:
   - platform: sht4x
     # SHT40 https://esphome.io/components/sensor/sht4x.html
@@ -20,33 +20,30 @@ sensor:
       web_server:
         sorting_group_id: grp_temp
     address: 0x44
-
   - platform: copy
     source_id: temp_raw
     name: "Temperature"
     id: temp
     device_class: temperature
-    entity_category: "" 
+    entity_category: ""
     state_class: measurement
     # https://www.airgradient.com/documentation/correction-algorithms/
     filters:
       - lambda: return x * id(temp_scale).state + id(temp_offset).state;
     web_server:
       sorting_group_id: grp_sensors
-
   - platform: copy
     source_id: humidity_raw
     name: "Humidity"
     id: humidity
     device_class: humidity
-    entity_category: "" 
+    entity_category: ""
     state_class: measurement
     # https://www.airgradient.com/documentation/correction-algorithms/
     filters:
       - lambda: return x * id(humidity_scale).state + id(humidity_offset).state;
     web_server:
       sorting_group_id: grp_sensors
-
 number:
   - platform: template
     name: "SHT40 Temperature Scale"
@@ -61,7 +58,6 @@ number:
     entity_category: config
     web_server:
       sorting_group_id: grp_temp
-
   - platform: template
     name: "SHT40 Temperature Offset"
     id: temp_offset
@@ -76,7 +72,6 @@ number:
     unit_of_measurement: "°C"
     web_server:
       sorting_group_id: grp_temp
-
   - platform: template
     name: "SHT40 Humidity Scale"
     id: humidity_scale
@@ -90,7 +85,6 @@ number:
     entity_category: config
     web_server:
       sorting_group_id: grp_temp
-
   - platform: template
     name: "SHT40 Humidity Offset"
     id: humidity_offset
@@ -105,7 +99,6 @@ number:
     unit_of_measurement: "%"
     web_server:
       sorting_group_id: grp_temp
-
 button:
   - platform: template
     name: "SHT40 Reset Temperature Calibration"
@@ -119,7 +112,6 @@ button:
       - number.set:
           id: temp_offset
           value: 0.0
-
   - platform: template
     name: "SHT40 Reset Humidity Calibration"
     entity_category: config

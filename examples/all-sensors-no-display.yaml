@@ -10,10 +10,9 @@
 #   led / led_combo / led_*    — no LED strip
 #   config_button              — references display_in_f; needs display package
 #   airgradient_api            — requires AirGradient cloud registration
-
+---
 substitutions:
   config_version: "1.0.0"
-
 esphome:
   name: "ag-sensors"
   friendly_name: "AG Sensors"
@@ -21,34 +20,25 @@ esphome:
   project:
     name: "luukvisser.ag-sensors-example"
     version: $config_version
-
 logger:
-
 api:
-
 ota:
   - platform: esphome
   - platform: http_request
-
 http_request:
   verify_ssl: true
   timeout: 10s
   buffer_size_rx: 2048
-
 wifi:
   fast_connect: false
   ap:
     ap_timeout: 90s
     password: "cleanair"
-
 network:
   enable_ipv6: true
-
 esp32_improv:
   authorizer: none
-
 improv_serial:
-
 web_server:
   version: 3
   port: 80
@@ -71,22 +61,19 @@ web_server:
     - id: grp_system
       name: "System"
       sorting_weight: 70
-
 packages:
   # ── Hardware ────────────────────────────────────────────────────────────
-  board:         !include ../packages/airgradient_esp32-c3_board.yaml
-
+  board: !include ../packages/airgradient_esp32-c3_board.yaml
   # ── Sensors ─────────────────────────────────────────────────────────────
-  pm_2_5:        !include ../packages/sensor_pms5003.yaml
-  co2:           !include ../packages/sensor_s8.yaml
+  pm_2_5: !include ../packages/sensor_pms5003.yaml
+  co2: !include ../packages/sensor_s8.yaml
   temp_humidity: !include ../packages/sensor_sht40.yaml
-  tvoc:          !include ../packages/sensor_sgp41.yaml
-  nowcast_aqi:   !include ../packages/sensor_nowcast_aqi.yaml
-  wifi:          !include ../packages/sensor_wifi.yaml
-  uptime:        !include ../packages/sensor_uptime.yaml
-
+  tvoc: !include ../packages/sensor_sgp41.yaml
+  nowcast_aqi: !include ../packages/sensor_nowcast_aqi.yaml
+  wifi: !include ../packages/sensor_wifi.yaml
+  uptime: !include ../packages/sensor_uptime.yaml
   # ── System utilities ────────────────────────────────────────────────────
-  diagnostic:    !include ../packages/diagnostic_esp32.yaml
-  watchdog:      !include ../packages/watchdog.yaml
+  diagnostic: !include ../packages/diagnostic_esp32.yaml
+  watchdog: !include ../packages/watchdog.yaml
   captive_portal: !include ../packages/captive_portal.yaml
   factory_reset: !include ../packages/button_factory_reset.yaml
