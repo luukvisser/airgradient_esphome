@@ -7,18 +7,18 @@ from Home Assistant or the built-in web UI (default: **Combo**).
 
 ## Modes at a glance
 
-| Mode            | LED layout                                                       | Sensors         |
-| --------------- | ---------------------------------------------------------------- | --------------- |
-| **Combo** ★     | 5 LEDs CO₂ · 5 LEDs PM2.5 · 1 LED VOC                           | CO₂, PM2.5, VOC |
-| **Combo 5-3-1** | 5 CO₂ · 3 PM2.5 · 1 VOC · 2 off                                 | CO₂, PM2.5, VOC |
-| **CO2**         | All 11 LEDs reflect CO₂                                         | CO₂             |
-| **PM2.5**       | All 11 LEDs reflect PM2.5                                       | PM2.5           |
-| **VOC**         | All 11 LEDs reflect VOC index                                   | VOC             |
-| **CO2 Bar**     | Bar fills right→left; 1 LED at ≤ 500 ppm → 11 at ≥ 2 000 ppm   | CO₂             |
+| Mode            | LED layout                                                    | Sensors         |
+| --------------- | ------------------------------------------------------------- | --------------- |
+| **Combo** ★     | 5 LEDs CO₂ · 5 LEDs PM2.5 · 1 LED VOC                         | CO₂, PM2.5, VOC |
+| **Combo 5-3-1** | 5 CO₂ · 3 PM2.5 · 1 VOC · 2 off                               | CO₂, PM2.5, VOC |
+| **CO2**         | All 11 LEDs reflect CO₂                                       | CO₂             |
+| **PM2.5**       | All 11 LEDs reflect PM2.5                                     | PM2.5           |
+| **VOC**         | All 11 LEDs reflect VOC index                                 | VOC             |
+| **CO2 Bar**     | Bar fills right→left; 1 LED at ≤ 500 ppm → 11 at ≥ 2 000 ppm  | CO₂             |
 | **PM2.5 Bar**   | Bar fills right→left; 1 LED at ≤ 5 µg/m³ → 11 at ≥ ~150 µg/m³ | PM2.5           |
-| **GO IAQS**     | Bar fills right→left from score 0–10; LED 10 always off          | GO IAQS score   |
-| **Test**        | All 11 LEDs white at full brightness                            | —               |
-| **Off**         | Strip off                                                       | —               |
+| **GO IAQS**     | Bar fills right→left from score 0–10; LED 10 always off       | GO IAQS score   |
+| **Test**        | All 11 LEDs white at full brightness                          | —               |
+| **Off**         | Strip off                                                     | —               |
 
 ★ default on first boot
 
