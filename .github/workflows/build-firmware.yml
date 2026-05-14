@@ -40,7 +40,7 @@ jobs:
       node_name: ${{ steps.lookup.outputs.node_name }}
       is_tag_release: ${{ steps.parse.outputs.is_tag_release }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Parse tag / dispatch input
         id: parse
         run: |
@@ -138,8 +138,8 @@ jobs:
     needs: [resolve]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8
         with:
           python-version: "3.13"
           enable-caching: true
@@ -179,14 +179,14 @@ jobs:
             md5sum "${SLUG}.ota.bin" | awk '{print $1}' > "${SLUG}.ota.md5"
           )
           echo "md5=$(cat ${out}/${SLUG}.ota.md5)" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: firmware-${{ needs.resolve.outputs.slug }}
           path: dist/${{ needs.resolve.outputs.slug }}/
           retention-days: 30
       - name: Persist MD5 for downstream jobs
         run: echo "${{ steps.stage.outputs.md5 }}" > firmware.md5
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: md5-${{ needs.resolve.outputs.slug }}
           path: firmware.md5
@@ -208,18 +208,18 @@ jobs:
       == 'false'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8
         with:
           python-version: "3.13"
           enable-caching: true
       - name: Install deps
         run: uv pip install --system .
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: firmware-${{ needs.resolve.outputs.slug }}
           path: dist/${{ needs.resolve.outputs.slug }}/
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: md5-${{ needs.resolve.outputs.slug }}
           path: .
@@ -227,7 +227,7 @@ jobs:
       # previously-published device, not just this release's. If the
       # branch doesn't exist yet, start from an empty site.
       - name: Check out existing Pages content
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: gh-pages
           path: existing-pages
@@ -308,10 +308,10 @@ jobs:
     if: needs.resolve.outputs.is_tag_release == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # needed to look up previous tags for changelog
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: firmware-${{ needs.resolve.outputs.slug }}
           path: dist/
@@ -334,7 +334,7 @@ jobs:
             fi
           } > RELEASE_NOTES.md
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: "${{ needs.resolve.outputs.name }} v${{ needs.resolve.outputs.version }}"
