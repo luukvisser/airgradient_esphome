@@ -12,6 +12,26 @@ program requirements.
 
 ---
 
+## Documentation
+
+| Topic                      | File                                 |
+| -------------------------- | ------------------------------------ |
+| Installing firmware        | [docs/firmware.md](docs/firmware.md) |
+| LED indicator — all modes  | [docs/led.md](docs/led.md)           |
+| Display — all pages        | [docs/display.md](docs/display.md)   |
+| Contributing & development | [CONTRIBUTING.md](CONTRIBUTING.md)   |
+| Package reference          | [packages.md](packages.md)           |
+
+---
+
+## Supported devices
+
+Every device is declared in [`devices.yaml`](devices.yaml):
+
+- **AirGradient ONE** (`airgradient-one`) — ESP32-C3 indoor monitor
+
+---
+
 ## Architecture
 
 The firmware is assembled from small, single-responsibility YAML packages.
@@ -51,357 +71,24 @@ graph TD
     I --> i1[airgradient_api_esp32-c3]
 ```
 
-See [`packages.md`](packages.md) for a full description of every package and its
-configurable substitutions.
+---
+
+## Notable changes from upstream
+
+- **LED**: `led_co2` replaced by `led_combo` — ten selectable modes, health-based
+  thresholds, perceptual brightness correction, LED fade effect. See
+  [docs/led.md](docs/led.md).
+- **Display**: multi-page OLED with nine selectable pages plus a boot page. See
+  [docs/display.md](docs/display.md).
+- **CI/CD**: full automated release pipeline — `validate.yml`, `build-firmware.yml`,
+  `devices.yaml` registry, OTA via `update.http_request`. See
+  [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Scope**: D1 Mini / ESP8266 support removed; targets ESP32-C3 only.
+- **Identity**: `name_add_mac_suffix: true`; project name `luukvisser.airgradient-one`.
 
 ---
 
-## Changes from upstream
-
-### LED: combined multi-sensor indicator
-
-The upstream `led_co2` package drives all LEDs from CO2 alone. This fork replaces it
-with `led_combo`, a **ten-mode** indicator selectable from Home Assistant or the
-built-in web UI (default: **Combo**).
-
-#### Modes at a glance
-
-| Mode            | LED layout                                                    | Sensors         |
-| --------------- | ------------------------------------------------------------- | --------------- |
-| **Combo** ★     | 5 LEDs CO₂ · 5 LEDs PM2.5 · 1 LED VOC                         | CO₂, PM2.5, VOC |
-| **Combo 5-3-1** | 5 CO₂ · 3 PM2.5 · 1 VOC · 2 off                               | CO₂, PM2.5, VOC |
-| **CO2**         | All 11 LEDs reflect CO₂                                       | CO₂             |
-| **PM2.5**       | All 11 LEDs reflect PM2.5                                     | PM2.5           |
-| **VOC**         | All 11 LEDs reflect VOC index                                 | VOC             |
-| **CO2 Bar**     | Bar fills right→left; 1 LED at ≤ 500 ppm → 11 at ≥ 2 000 ppm  | CO₂             |
-| **PM2.5 Bar**   | Bar fills right→left; 1 LED at ≤ 5 µg/m³ → 11 at ≥ ~150 µg/m³ | PM2.5           |
-| **GO IAQS**     | Bar fills right→left from score 0–10; LED 10 always off       | GO IAQS score   |
-| **Test**        | All 11 LEDs white at full brightness                          | —               |
-| **Off**         | Strip off                                                     | —               |
-
-★ default on first boot
-
-#### LED layouts
-
-**Combo** — three sensors in three zones:
-
-```mermaid
-packet-beta
-    0-4: "CO₂  (LEDs 0–4)"
-    5-9: "PM2.5  (LEDs 5–9)"
-    10-10: "VOC  (LED 10)"
-```
-
-**Combo 5-3-1** — compact variant, LEDs 8 and 10 unused:
-
-```mermaid
-packet-beta
-    0-4: "CO₂  (LEDs 0–4)"
-    5-7: "PM2.5  (LEDs 5–7)"
-    8-8: "off"
-    9-9: "VOC  (LED 9)"
-    10-10: "off"
-```
-
-**CO2 / PM2.5 / VOC** — single sensor across all 11 LEDs:
-
-```mermaid
-packet-beta
-    0-10: "sensor color  (all 11 LEDs)"
-```
-
-**CO2 Bar / PM2.5 Bar** — quantity bar that grows right→left as the value rises:
-
-```mermaid
-packet-beta
-    0-5: "← increasingly lit as value rises"
-    6-10: "lit first →"
-```
-
-| Bar mode      | 1 LED lit (right) | All 11 LEDs lit | Step per LED |
-| ------------- | ----------------- | --------------- | ------------ |
-| **CO2 Bar**   | ≤ 500 ppm         | ≥ 2 000 ppm     | 150 ppm      |
-| **PM2.5 Bar** | ≤ 5 µg/m³         | ≥ ~150 µg/m³    | 14.5 µg/m³   |
-
-**GO IAQS** — score bar, LED 10 always off:
-
-```mermaid
-packet-beta
-    0-9: "bar fills right→left  (score 10 = 0 LEDs lit · score 0 = 10 LEDs lit)"
-    10-10: "always off"
-```
-
-| GO IAQS score | LEDs lit | Color  |
-| ------------- | -------- | ------ |
-| 8 – 10        | 0 – 2    | Green  |
-| 4 – 7         | 3 – 6    | Orange |
-| 0 – 3         | 7 – 10   | Red    |
-
-**Test** — all 11 LEDs white at full brightness (hardware check). **Off** — strip off.
-
-#### Color thresholds
-
-Colors transition smoothly between steps. Thresholds follow published health guidelines.
-
-| Color  | CO₂ (ppm)     | PM2.5 (µg/m³) | VOC index |
-| ------ | ------------- | ------------- | --------- |
-| Green  | < 600         | < 5           | < 100     |
-| Yellow | 600 – 900     | 5 – 15        | 100 – 200 |
-| Orange | 900 – 1 000   | 15 – 25       | 200 – 300 |
-| Red    | 1 000 – 1 200 | 25 – 35       | 300 – 400 |
-| Purple | > 1 200       | > 35          | > 400     |
-
-CO2 thresholds follow ASHRAE/UBA indoor ventilation guidance. PM2.5 thresholds follow
-the 2021 WHO global air quality guidelines. VOC thresholds follow Sensirion SGP41 index
-interpretation (100 = learned baseline).
-
-#### Brightness and effects
-
-**Perceptual brightness correction** — a gamma ~2.0 curve is applied to the brightness
-slider so the low end of the range produces visibly distinct levels instead of spending
-most of the range near-off.
-
-**LED fade** — outer LEDs in each group are dimmed relative to the centre LED, giving
-the bar a soft edge.
-
-### Display: multi-page OLED with per-page switches
-
-The active display package is `display_sh1106_multi_page`. Nine pages are selectable via
-the **Display Page** dropdown in Home Assistant or the web UI, plus a boot page shown
-automatically at startup:
-
-| Page (option name)      | Contents                                                                 |
-| ----------------------- | ------------------------------------------------------------------------ |
-| AirGradient Default ★   | Compact all-in-one: temp, humidity, CO2 (large), PM2.5 (large), VOC, NOx |
-| Env Summary             | CO2 · PM2.5 · Temperature · Humidity                                     |
-| VOC Summary             | CO2 · PM2.5 · VOC · NOx                                                  |
-| CO2 & PM2.5             | CO2 and PM2.5 in large type                                              |
-| Temp & Humidity         | Temperature and humidity in large type                                   |
-| VOC & NOx               | VOC index and NOx in large type                                          |
-| Combo                   | Temp, humidity, PM2.5, CO2, VOC, NOx, AQI                                |
-| Large Numbers           | CO2, humidity, PM2.5, temp in the largest font (no units)                |
-| Off                     | Turns the display off                                                    |
-| _(Boot — startup only)_ | Device name, MAC address, firmware version; auto-dismissed after 10 s    |
-
-★ default on first boot
-
-A **Display Contrast %** slider (0–100) controls screen brightness.
-
-### CI/CD release pipeline
-
-The upstream repo provides YAML packages for manual inclusion. This fork adds a full
-automated release pipeline:
-
-- **`devices.yaml`** — device registry; adding a device here is the only change needed
-  to enable its CI path.
-- **`validate.yml`** — compiles every registered device on every PR.
-- **`build-firmware.yml`** — tag-driven: validates version, compiles firmware, publishes
-  to GitHub Pages, and cuts a GitHub Release with binaries attached.
-- **Python scripts** (`scripts/`) — generate per-device `manifest.json` and a GitHub
-  Pages landing page with ESP Web Tools install buttons.
-- **OTA via `update.http_request`** — the device polls `/<slug>/manifest.json` on GitHub
-  Pages every 6 hours and installs updates automatically.
-
-### Other changes
-
-- **Scope**: D1 Mini / ESP8266 support removed; this repo targets ESP32-C3 only.
-- **`name_add_mac_suffix: true`**: device names are suffixed with the last bytes of the
-  MAC address so multiple units are distinguishable in Home Assistant out of the box.
-- **Project name**: `luukvisser.airgradient-one` (used by HA for adoption and update
-  tracking).
-
----
-
-## Supported devices
-
-Every device that ships from this repo is declared in [`devices.yaml`](devices.yaml). At
-the time of writing that's:
-
-- **AirGradient ONE** (`airgradient-one`) — ESP32-C3 indoor monitor
-
----
-
-## Installing firmware
-
-The easiest way to flash firmware is directly from the browser — no ESPHome or Python
-installation required.
-
-1. Open
-   **[luukvisser.github.io/airgradient_esphome](https://luukvisser.github.io/airgradient_esphome/)**
-   in a Chromium-based browser (Chrome or Edge — Firefox does not support Web Serial).
-2. The page lists all supported devices, each with an **Install** button.
-
-   ![GitHub Pages install page](docs/images/esphome_flash.png)
-
-3. Plug your device into your computer via USB.
-4. Click **Install** next to your device.
-5. The browser will prompt you to select a serial port — choose the one that corresponds
-   to your device (typically listed as `USB Serial` or similar).
-6. Follow the on-screen prompts. The installer will erase and flash the latest released
-   firmware automatically.
-
-> **Note:** The install page is only live after the first release has been published via
-> the CI/CD pipeline (see [How a release works](#how-a-release-works) below). If the
-> page returns a 404, no release has been tagged yet.
-
----
-
-## How a release works
-
-Tags are scoped per device: **`<slug>/v<semver>`**. That means each device has its own
-version history, release notes, and manifest URL — bumping one board never triggers a
-rebuild of another.
-
-```bash
-# Cut a stable release for the ONE
-git tag airgradient-one/v1.2.3
-git push origin airgradient-one/v1.2.3
-
-# Cut a pre-release (skipped from the Pages manifest, listed as
-# pre-release on GitHub so fielded devices ignore it)
-git tag airgradient-one/v1.3.0-rc.1
-git push origin airgradient-one/v1.3.0-rc.1
-```
-
-```mermaid
-graph TD
-    TAG["git tag slug/vX.Y.Z\ngit push origin slug/vX.Y.Z"]
-
-    TAG --> resolve
-
-    subgraph resolve["1 · Resolve"]
-        R1["Parse slug + version from tag"]
-        R2["Look up device in devices.yaml"]
-        R3["Assert YAML project.version == tag version"]
-    end
-
-    resolve --> build
-
-    subgraph build["2 · Build"]
-        B1["esphome compile device.yaml"]
-        B2["Stage factory.bin + ota.bin + MD5"]
-    end
-
-    build --> publish
-    build --> release
-
-    subgraph publish["3 · Publish  (stable tags only)"]
-        P1["Overlay manifest.json → gh-pages/slug/"]
-        P2["Versioned + latest firmware binaries"]
-        P3["Rebuild index.html landing page"]
-    end
-
-    subgraph release["4 · GitHub Release  (all tags)"]
-        RL1["Generate changelog since last slug tag"]
-        RL2["Create Release + attach binaries"]
-    end
-```
-
-**OTA update flow** — the device polls its manifest autonomously and installs updates in
-the background:
-
-```mermaid
-sequenceDiagram
-    participant D as Device (every 6 h)
-    participant P as GitHub Pages
-
-    D->>P: GET /slug/manifest.json
-    P-->>D: { version, ota_url, md5 }
-    D->>D: Compare to installed version
-    alt New version available
-        D->>P: Download OTA binary
-        D->>D: Verify MD5, flash, reboot
-    end
-```
-
-Manual builds are also available via the **Run workflow** button on Actions — pick a
-device from the dropdown to smoke-test a branch without cutting a release.
-
----
-
-## Published URLs
-
-After the first release, every device has:
-
-```
-https://luukvisser.github.io/airgradient_esphome/                         # landing page
-https://luukvisser.github.io/airgradient_esphome/<slug>/manifest.json     # update manifest
-https://luukvisser.github.io/airgradient_esphome/<slug>/firmware/latest/  # latest binaries
-https://luukvisser.github.io/airgradient_esphome/<slug>/firmware/<ver>/   # pinned version
-```
-
----
-
-## Local development
-
-```bash
-uv sync
-source .venv/bin/activate
-esphome config airgradient-one.yaml       # validate
-esphome compile airgradient-one.yaml      # build
-esphome run airgradient-one.yaml          # build + upload (wired or OTA)
-```
-
----
-
-## Adding a new device
-
-1. Add a block to `devices.yaml` with the slug, name, YAML path, chip family, and node
-   name.
-2. Create `<slug>.yaml` alongside `airgradient-one.yaml`. The easiest route is copying
-   the ONE config and editing:
-   - `substitutions.name` (must match `node_name` in `devices.yaml`)
-   - `substitutions.friendly_name`
-   - `esphome.project.name` (unique per device)
-   - `update.http_request.source` (point at `/<slug>/manifest.json`)
-   - `dashboard_import.package_import_url` (point at the new YAML)
-   - The `packages:` block for the new hardware.
-3. Open a PR. The `Validate configs` workflow compiles every device in `devices.yaml` on
-   every PR, so a broken new device fails fast.
-4. After merge, tag the first release: `<slug>/v1.0.0`.
-
----
-
-## Repository layout
-
-```
-.
-├── devices.yaml                    # registry: one entry per releasable device
-├── airgradient-one.yaml            # ESPHome config for the ONE
-├── packages/
-│   ├── airgradient_esp32-c3_board.yaml    # ESP32-C3 board + UART/I2C pin config
-│   ├── led.yaml                           # WS2812 LED strip base (brightness, fade)
-│   ├── led_combo.yaml                     # 11-LED strip: CO2 + PM2.5 + VOC modes
-│   ├── display_sh1106_multi_page.yaml     # multi-page OLED with per-page HA switches
-│   ├── sensor_pms5003.yaml                # PM2.5 (PMS5003, with EPA correction)
-│   ├── sensor_pms5003t.yaml               # PM2.5 + temp/humidity variant (PMS5003T)
-│   ├── sensor_s8.yaml                     # CO2 (SenseAir S8)
-│   ├── sensor_sgp41.yaml                  # VOC + NOx (SGP41)
-│   ├── sensor_sht40.yaml                  # Temperature + humidity (SHT40)
-│   ├── sensor_go_iaqs.yaml                # GO IAQS score (0–10) from CO2 + PM2.5
-│   ├── sensor_nowcast_aqi.yaml            # On-device EPA AQI + NowCast calculation
-│   ├── airgradient_api_esp32-c3.yaml      # AirGradient dashboard upload
-│   ├── diagnostic_esp32.yaml              # Free memory, CPU temp, loop time
-│   ├── watchdog.yaml                      # Hardware watchdog pulse
-│   ├── config_button.yaml                 # GPIO button: temp unit + CO2 calibration
-│   ├── captive_portal.yaml                # Fallback Wi-Fi AP + captive portal
-│   ├── button_factory_reset.yaml          # Factory-reset button
-│   ├── switch_safe_mode.yaml              # Safe-mode OTA switch
-│   ├── sensor_wifi.yaml                   # Wi-Fi RSSI sensor
-│   └── sensor_uptime.yaml                 # Device uptime sensor
-├── scripts/
-│   ├── build_manifest.py           # writes per-device manifest.json
-│   └── build_landing_page.py       # rebuilds the Pages index listing every device
-├── pyproject.toml                  # pins esphome + pyyaml
-├── .github/workflows/
-│   ├── build-firmware.yml          # tag-driven build + release + Pages
-│   └── validate.yml                # PR-time config validation, matrixed
-└── README.md
-```
-
----
-
-## Made for ESPHome compliance (per device)
+## Made for ESPHome compliance
 
 | Requirement               | Where it's satisfied                               |
 | ------------------------- | -------------------------------------------------- |
