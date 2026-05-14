@@ -142,7 +142,7 @@ jobs:
       - uses: astral-sh/setup-uv@v8.1.0
         with:
           python-version: "3.13"
-          enable-caching: true
+          enable-cache: true
       - name: Install ESPHome
         run: |
           uv sync
@@ -212,7 +212,7 @@ jobs:
       - uses: astral-sh/setup-uv@v8.1.0
         with:
           python-version: "3.13"
-          enable-caching: true
+          enable-cache: true
       - name: Install deps
         run: |
           uv sync
