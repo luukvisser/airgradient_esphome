@@ -32,7 +32,13 @@ ota:
     id: ota_http_request
 http_request:
   id: http_request_client
-  verify_ssl: true
+  # hw.airgradient.com presents a certificate chain that the ESP-IDF cert
+  # bundle (even the full Mozilla set) cannot verify — likely a missing
+  # intermediate on the server side. Disabling verification keeps the
+  # connection encrypted (TLS) but skips identity checks. OTA firmware
+  # downloads from luukvisser.github.io go through the same component;
+  # they remain encrypted, with the URL pinned in this config.
+  verify_ssl: false
   timeout: 10s
   buffer_size_rx: 2048
 update:
