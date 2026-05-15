@@ -10,6 +10,10 @@ esphome:
           condition:
             switch.is_on: upload_airgradient
           then:
+            - wait_until:
+                condition:
+                  wifi.connected:
+                timeout: 30s
             - http_request.post:
                 # Return wifi signal -50 as soon as device boots to show activity on AirGradient Dashboard site
                 # Using -50 instead of actual value as the wifi_signal sensor has not reported a value at this point in boot process
