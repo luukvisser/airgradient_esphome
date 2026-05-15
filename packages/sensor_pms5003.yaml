@@ -94,11 +94,8 @@ sensor:
       } else {
         result = 2.966 + (0.69 * pm_2_5_calibrated) + (8.84e-4 * pow(pm_2_5_calibrated, 2.0));
       }
-      if (result <= 0.0) {
-        return NAN; // EPA correction formula gives unphysical result (low PM + high humidity)
-      } else {
-        return result;
-      }
+      // EPA formula can go negative at high humidity + low PM; clamp to physical floor.
+      return result < 0.0 ? 0.0 : result;
   - platform: template
     # Depends on another sensor providing an ID of pm_2_5 such as a pms5003
     name: "PM2.5 AQI"
