@@ -15,6 +15,10 @@ sensor:
     id: go_iaqs_score
     name: "GO IAQS Score"
     icon: "mdi:air-filter"
+    # state_class is required for Home Assistant to honour
+    # accuracy_decimals (suggested_display_precision); without it HA falls back
+    # to raw float formatting and shows integers as e.g. "9.0".
+    state_class: measurement
     accuracy_decimals: 0
     update_interval: 60s
     web_server:
@@ -51,7 +55,11 @@ sensor:
       return (float)combined;
     on_value:
       - lambda: |-
-          if (isnan(x))       id(go_iaqs_summary).publish_state("NaN");
+          // ESPHome's API doesn't expose a way to mark a text_sensor as
+          // "missing state" (which HA would render as Unknown) once it has
+          // been published. Publish the literal string "Unknown" so HA's UI
+          // visually matches the score sensor's Unknown state when NaN.
+          if (isnan(x))       id(go_iaqs_summary).publish_state("Unknown");
           else if (x >= 8.0f) id(go_iaqs_summary).publish_state("Good");
           else if (x >= 4.0f) id(go_iaqs_summary).publish_state("Moderate");
           else                id(go_iaqs_summary).publish_state("Unhealthy");
