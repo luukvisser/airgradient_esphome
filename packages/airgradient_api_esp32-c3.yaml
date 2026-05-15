@@ -25,7 +25,7 @@ esphome:
     - priority: 600 # Increment before any other on_boot handler reads it.
       then:
         - lambda: id(boot_count) += 1;
-        - lambda: id(boot_count_sensor).publish_state(to_string(id(boot_count)));
+        - lambda: id(boot_count_sensor).publish_state(id(boot_count));
     - priority: 200 # Network connections setup
       then:
         if:
@@ -50,12 +50,15 @@ esphome:
 http_request:
   # https://esphome.io/components/http_request.html
   watchdog_timeout: 30s
-text_sensor:
+sensor:
   - platform: template
     name: "Boot Count"
     id: boot_count_sensor
+    accuracy_decimals: 0
+    state_class: total_increasing
     icon: mdi:counter
     entity_category: diagnostic
+    update_interval: never
     web_server:
       sorting_group_id: grp_system
 switch:
