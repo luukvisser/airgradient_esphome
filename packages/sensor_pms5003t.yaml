@@ -112,8 +112,6 @@ sensor:
     device_class: aqi
     icon: "mdi:air-filter"
     accuracy_decimals: 0
-    filters:
-      - skip_initial: 1 # Need valid data from PM 2.5 sensor before able to calculate
     lambda: |-
       // 2024 update from EPA https://www.epa.gov/system/files/documents/2024-02/pm-naaqs-air-quality-index-fact-sheet.pdf
       // https://en.wikipedia.org/wiki/Air_quality_index#Computing_the_AQI
