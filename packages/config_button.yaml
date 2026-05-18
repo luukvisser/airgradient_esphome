@@ -1,8 +1,26 @@
 # Physical config button (GPIO9) on AirGradient ONE hardware.
 # Depends on: display_in_f (from display_sh1106_multi_page package) for short-press toggle,
-#             senseair_co2 (from sensor_s8 package) for long-press CO2 calibration.
-# Cannot be used without both the display and CO2 sensor packages.
+#             senseair_co2 (from sensor_s8 package) for long-press CO2 calibration,
+#             factory_reset_btn (from button_factory_reset package) for 8s-hold factory reset.
+# Cannot be used without those packages.
 ---
+script:
+  # Mirrors the AirGradient OneOpenAir Arduino firmware behavior: at ~2s
+  # held the user is warned that continuing to hold will factory-reset; at
+  # 8s held the device wipes preferences and restarts. Cancelled by
+  # on_release before either deadline fires.
+  - id: config_button_factory_reset_hold
+    mode: single
+    then:
+      - delay: 2s
+      - logger.log:
+          level: WARN
+          format: "Factory reset: keep config button pressed for 6 more seconds"
+      - delay: 6s
+      - logger.log:
+          level: WARN
+          format: "Config button held 8s — performing factory reset"
+      - button.press: factory_reset_btn
 binary_sensor:
   - platform: gpio
     # Binary sensor to perform action when physical config button is pressed
@@ -14,6 +32,12 @@ binary_sensor:
     internal: true # Hide from displaying in HomeAssistant
     name: "Configuration Button"
     id: config_button
+    on_press:
+      then:
+        - script.execute: config_button_factory_reset_hold
+    on_release:
+      then:
+        - script.stop: config_button_factory_reset_hold
     on_multi_click:
       - timing: # Short Click
           - ON for at most 1s

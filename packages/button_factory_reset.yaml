@@ -2,6 +2,7 @@
 # https://esphome.io/components/button/factory_reset.html
 button:
   - platform: factory_reset
+    id: factory_reset_btn
     name: Restart with Factory Default Settings
     entity_category: diagnostic
     web_server:
