@@ -1,24 +1,25 @@
 # LED indicator
 
-The `led_combo` package drives a WS2812 11-LED strip (GPIO10). Ten modes are selectable
-from Home Assistant or the built-in web UI (default: **Combo**).
+The `led_combo` package drives a WS2812 11-LED strip (GPIO10). Eleven modes are
+selectable from Home Assistant or the built-in web UI (default: **5CO2+5PM2.5+1VOC**).
 
 ---
 
 ## Modes at a glance
 
-| Mode            | LED layout                                                    | Sensors         |
-| --------------- | ------------------------------------------------------------- | --------------- |
-| **Combo** ★     | 5 LEDs CO₂ · 5 LEDs PM2.5 · 1 LED VOC                         | CO₂, PM2.5, VOC |
-| **Combo 5-3-1** | 5 CO₂ · 3 PM2.5 · 1 VOC · 2 off                               | CO₂, PM2.5, VOC |
-| **CO2**         | All 11 LEDs reflect CO₂                                       | CO₂             |
-| **PM2.5**       | All 11 LEDs reflect PM2.5                                     | PM2.5           |
-| **VOC**         | All 11 LEDs reflect VOC index                                 | VOC             |
-| **CO2 Bar**     | Bar fills right→left; 1 LED at ≤ 500 ppm → 11 at ≥ 2 000 ppm  | CO₂             |
-| **PM2.5 Bar**   | Bar fills right→left; 1 LED at ≤ 5 µg/m³ → 11 at ≥ ~150 µg/m³ | PM2.5           |
-| **GO IAQS**     | Bar fills right→left from score 0–10; LED 10 always off       | GO IAQS score   |
-| **Test**        | All 11 LEDs white at full brightness                          | —               |
-| **Off**         | Strip off                                                     | —               |
+| Mode                   | LED layout                                                    | Sensors         |
+| ---------------------- | ------------------------------------------------------------- | --------------- |
+| **5CO2+5PM2.5+1VOC** ★ | 5 LEDs CO₂ · 5 LEDs PM2.5 · 1 LED VOC                         | CO₂, PM2.5, VOC |
+| **5CO2+5PM2.5**        | 5 LEDs CO₂ · 5 LEDs PM2.5 · LED 10 off                        | CO₂, PM2.5      |
+| **5CO2+3PM25+1VOC**    | 5 CO₂ · 3 PM2.5 · 1 VOC · 2 off                               | CO₂, PM2.5, VOC |
+| **CO2**                | All 11 LEDs reflect CO₂                                       | CO₂             |
+| **PM2.5**              | All 11 LEDs reflect PM2.5                                     | PM2.5           |
+| **VOC**                | All 11 LEDs reflect VOC index                                 | VOC             |
+| **CO2 Bar**            | Bar fills right→left; 1 LED at ≤ 500 ppm → 11 at ≥ 2 000 ppm  | CO₂             |
+| **PM2.5 Bar**          | Bar fills right→left; 1 LED at ≤ 5 µg/m³ → 11 at ≥ ~150 µg/m³ | PM2.5           |
+| **GO IAQS**            | Bar fills right→left from score 0–10; LED 10 always off       | GO IAQS score   |
+| **Test**               | All 11 LEDs white at full brightness                          | —               |
+| **Off**                | Strip off                                                     | —               |
 
 ★ default on first boot
 
@@ -26,7 +27,7 @@ from Home Assistant or the built-in web UI (default: **Combo**).
 
 ## LED layouts
 
-**Combo** — three sensors in three zones:
+**5CO2+5PM2.5+1VOC** — three sensors in three zones:
 
 ```mermaid
 packet-beta
@@ -35,7 +36,16 @@ packet-beta
     10-10: "VOC  (LED 10)"
 ```
 
-**Combo 5-3-1** — compact variant, LEDs 8 and 10 unused:
+**5CO2+5PM2.5** — same layout, LED 10 off:
+
+```mermaid
+packet-beta
+    0-4: "CO₂  (LEDs 0–4)"
+    5-9: "PM2.5  (LEDs 5–9)"
+    10-10: "off"
+```
+
+**5CO2+3PM25+1VOC** — compact variant, LEDs 8 and 10 unused:
 
 ```mermaid
 packet-beta
