@@ -138,8 +138,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -156,8 +157,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -173,8 +175,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -212,8 +215,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
@@ -230,8 +234,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
@@ -247,8 +252,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
@@ -286,8 +292,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(voc).state;
-                        if (x < $voc_yellow) return 1.0f;
-                        if (x <= $voc_orange) return 1.0f - 0.5f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
+                        if (x < $voc_green)  return 1.0f;
+                        if (x < $voc_yellow) return 1.0f - 0.25f * (x - $voc_green) / ($voc_yellow - $voc_green);
+                        if (x <= $voc_orange) return 0.75f - 0.25f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
                         if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state
@@ -304,8 +311,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(voc).state;
-                        if (x < $voc_yellow) return 1.0f;
-                        if (x <= $voc_orange) return 1.0f - 0.5f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
+                        if (x < $voc_green)  return 1.0f;
+                        if (x < $voc_yellow) return 1.0f - 0.25f * (x - $voc_green) / ($voc_yellow - $voc_green);
+                        if (x <= $voc_orange) return 0.75f - 0.25f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
                         if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state
@@ -321,8 +329,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(voc).state;
-                        if (x < $voc_yellow) return 1.0f;
-                        if (x <= $voc_orange) return 1.0f - 0.5f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
+                        if (x < $voc_green)  return 1.0f;
+                        if (x < $voc_yellow) return 1.0f - 0.25f * (x - $voc_green) / ($voc_yellow - $voc_green);
+                        if (x <= $voc_orange) return 0.75f - 0.25f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
                         if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state
@@ -401,8 +410,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -419,8 +429,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -436,8 +447,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -471,8 +483,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
@@ -489,8 +502,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
@@ -506,8 +520,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
@@ -540,8 +555,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(voc).state;
-                        if (x < $voc_yellow) return 1.0f;
-                        if (x <= $voc_orange) return 1.0f - 0.5f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
+                        if (x < $voc_green)  return 1.0f;
+                        if (x < $voc_yellow) return 1.0f - 0.25f * (x - $voc_green) / ($voc_yellow - $voc_green);
+                        if (x <= $voc_orange) return 0.75f - 0.25f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
                         if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state
@@ -581,8 +597,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -599,8 +616,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -616,8 +634,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -651,8 +670,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
@@ -669,8 +689,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
@@ -686,8 +707,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
@@ -755,8 +777,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -773,8 +796,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -790,8 +814,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -825,8 +850,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
@@ -842,8 +868,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
@@ -876,8 +903,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(voc).state;
-                        if (x < $voc_yellow) return 1.0f;
-                        if (x <= $voc_orange) return 1.0f - 0.5f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
+                        if (x < $voc_green)  return 1.0f;
+                        if (x < $voc_yellow) return 1.0f - 0.25f * (x - $voc_green) / ($voc_yellow - $voc_green);
+                        if (x <= $voc_orange) return 0.75f - 0.25f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
                         if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state
@@ -927,8 +955,9 @@ script:
                         : 1;'
                       green: !lambda |-
                         float x = id(co2).state;
-                        if (x < $co2_yellow) return 1.0f;
-                        if (x <= $co2_orange) return 1.0f - 0.5f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
+                        if (x < $co2_green)  return 1.0f;
+                        if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
+                        if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                         if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(co2).state < $co2_red) ? 0 : (id(co2).state
@@ -978,8 +1007,9 @@ script:
                         - $pm_2_5_green) : 1;'
                       green: !lambda |-
                         float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_yellow) return 1.0f;
-                        if (x <= $pm_2_5_orange) return 1.0f - 0.5f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                        if (x < $pm_2_5_green)  return 1.0f;
+                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
                         if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
                         return 0.0f;
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
