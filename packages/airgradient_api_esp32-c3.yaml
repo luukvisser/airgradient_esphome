@@ -75,7 +75,11 @@ interval:
     then:
       if:
         condition:
-          switch.is_on: upload_airgradient
+          and:
+            - switch.is_on: upload_airgradient
+            # Skip when WiFi is down — avoids a failed TCP attempt that would
+            # block the loop for up to 7 s and burn a watchdog extension.
+            - wifi.connected:
         then:
           - http_request.post:
               # https://api.airgradient.com/public/docs/api/v1/
@@ -84,19 +88,35 @@ interval:
                 return "https://hw.airgradient.com/sensors/airgradient:" + get_mac_address() + "/measures";
               request_headers:
                 Content-Type: application/json
-              json:
-                wifi: !lambda return to_string(id(wifi_dbm).state);
-                rco2: !lambda return to_string(id(co2).state);
-                pm01: !lambda return to_string(id(pm_1_0).state);
-                pm02: !lambda return to_string(id(pm_2_5_raw).state);
-                pm10: !lambda return to_string(id(pm_10_0).state);
-                pm003Count: !lambda return to_string(id(pm_0_3um).state);
-                atmp: !lambda return to_string(id(temp_raw).state);
-                rhum: !lambda return to_string(id(humidity_raw).state);
-                tvocIndex: !lambda return to_string(id(voc).state);
-                # tvocRaw: requires custom SGP4x component exposing SRAW_VOC ticks
-                noxIndex: !lambda return to_string(id(nox).state);
-                # noxRaw: requires custom SGP4x component exposing SRAW_NOX ticks
-                boot: !lambda return to_string(id(boot_count));
-                resetReason: !lambda return to_string((int) esp_reset_reason());
-                freeHeap: !lambda return to_string((int) heap_caps_get_free_size(MALLOC_CAP_8BIT));
+              # Build JSON manually so NaN sensor values (sensor not yet ready
+              # or a transient read error) are omitted rather than sent as the
+              # string "nan", which the API rejects with a 4xx error.
+              # wifi always present: use -50 placeholder if the 60 s WiFi-signal
+              # update hasn't fired yet (matches boot-ping behaviour).
+              body: !lambda |-
+                std::string j = "{";
+                j += "\"wifi\":" + to_string(isnan(id(wifi_dbm).state) ? -50 : (int)id(wifi_dbm).state);
+                if (!isnan(id(co2).state)) j += ",\"rco2\":" + to_string((int)id(co2).state);
+                if (!isnan(id(pm_1_0).state)) j += ",\"pm01\":" + to_string((int)id(pm_1_0).state);
+                if (!isnan(id(pm_2_5_raw).state)) j += ",\"pm02\":" + to_string(id(pm_2_5_raw).state);
+                if (!isnan(id(pm_10_0).state)) j += ",\"pm10\":" + to_string((int)id(pm_10_0).state);
+                if (!isnan(id(pm_0_3um).state)) j += ",\"pm003Count\":" + to_string((int)id(pm_0_3um).state);
+                if (!isnan(id(temp_raw).state)) j += ",\"atmp\":" + to_string(id(temp_raw).state);
+                if (!isnan(id(humidity_raw).state)) j += ",\"rhum\":" + to_string(id(humidity_raw).state);
+                if (!isnan(id(voc).state)) j += ",\"tvocIndex\":" + to_string((int)id(voc).state);
+                if (!isnan(id(nox).state)) j += ",\"noxIndex\":" + to_string((int)id(nox).state);
+                j += ",\"boot\":" + to_string(id(boot_count));
+                j += ",\"resetReason\":" + to_string((int)esp_reset_reason());
+                j += ",\"freeHeap\":" + to_string((int)heap_caps_get_free_size(MALLOC_CAP_8BIT));
+                j += "}";
+                return j;
+              on_response:
+                then:
+                  - lambda: |-
+                      if (response->status_code < 200 || response->status_code >= 300)
+                        ESP_LOGW("airgradient", "AG upload failed: HTTP %d", response->status_code);
+              on_error:
+                then:
+                  - logger.log:
+                      level: WARN
+                      format: "AirGradient upload: network error"
