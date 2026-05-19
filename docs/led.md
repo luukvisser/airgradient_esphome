@@ -73,7 +73,7 @@ packet-beta
 
 | Bar mode      | 1 LED lit (right) | All 11 LEDs lit | Step per LED |
 | ------------- | ----------------- | --------------- | ------------ |
-| **CO2 Bar**   | ≤ 500 ppm         | ≥ 2 000 ppm     | 150 ppm      |
+| **CO2 Bar**   | < 600 ppm         | ≥ 1 500 ppm     | 100 ppm      |
 | **PM2.5 Bar** | ≤ 5 µg/m³         | ≥ ~150 µg/m³    | 14.5 µg/m³   |
 
 **GO IAQS** — score bar, LED 10 always off:
