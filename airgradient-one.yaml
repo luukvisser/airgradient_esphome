@@ -58,8 +58,6 @@ wifi:
   ap:
     ap_timeout: 90s
     password: "cleanair"
-network:
-  enable_ipv6: true
 captive_portal:
   id: captive_portal_web
 esp32_improv:
