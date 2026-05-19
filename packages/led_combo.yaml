@@ -7,7 +7,7 @@
 #   CO2        — All 11 LEDs: CO2
 #   PM2.5      — All 11 LEDs: PM2.5
 #   VOC        — All 11 LEDs: VOC index
-#   CO2 Bar    — Bar fills right→left: right LED on at <500 ppm, all on at 2000 ppm
+#   CO2 Bar    — Bar fills right→left: 1 LED below 600 ppm, 2 LEDs at 600 ppm, all 11 at ≥1500 ppm
 #   PM2.5 Bar  — Bar fills right→left: right LED on at <5 µg/m³, all on at ~150 µg/m³
 #   Test       — All LEDs on at full brightness (for testing)
 #   Off        — All LEDs off
@@ -924,8 +924,8 @@ script:
                       green: 0%
                       blue: 0%
       # ── CO2 Bar ──────────────────────────────────────────────────────────
-      # Bar fills right-to-left: rightmost LED on below 500 ppm,
-      # leftmost LED lights up at 2000 ppm (150 ppm per step).
+      # Bar fills right-to-left: 1 LED below 600 ppm, 2 LEDs at 600 ppm,
+      # all 11 LEDs at ≥ 1500 ppm (100 ppm per step).
       # All lit LEDs share the same CO2 color.
       - if:
           condition:
@@ -946,7 +946,7 @@ script:
                   - light.addressable_set:
                       id: led_strip
                       range_from: !lambda |-
-                        int n = std::max(1, std::min(11, 1 + (int)((id(co2).state - 500.0f) / 150.0f)));
+                        int n = std::max(1, std::min(11, 2 + (int)((id(co2).state - 600.0f) / 100.0f)));
                         return 11 - n;
                       range_to: 10
                       color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
