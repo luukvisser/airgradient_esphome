@@ -1074,3 +1074,40 @@ interval:
   - interval: 60s
     then:
       - script.execute: update_leds
+sensor:
+  - platform: copy
+    source_id: co2
+    internal: true
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(leds_ready);'
+          then:
+            - script.execute: update_leds
+  - platform: copy
+    source_id: voc
+    internal: true
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(leds_ready);'
+          then:
+            - script.execute: update_leds
+  - platform: copy
+    source_id: pm_2_5
+    internal: true
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(leds_ready);'
+          then:
+            - script.execute: update_leds
+  - platform: copy
+    source_id: go_iaqs_score
+    internal: true
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(leds_ready);'
+          then:
+            - script.execute: update_leds
