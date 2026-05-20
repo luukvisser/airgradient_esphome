@@ -135,11 +135,11 @@ script:
                       range_to: 10
                       red: !lambda |-
                         float raw = id(co2).state;
-                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
+                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
                         return (x < $co2_green) ? 0.0f : (x <= $co2_yellow) ? (x - $co2_green) / ($co2_yellow - $co2_green) : 1.0f;
                       green: !lambda |-
                         float x = id(co2).state;
-                        x = (x < $co2_green) ? x : $co2_green + floorf((x - $co2_green) / 100.0f) * 100.0f;
+                        x = (x < $co2_green) ? x : $co2_green + floorf((x - $co2_green) / 50.0f) * 50.0f;
                         if (x < $co2_green)  return 1.0f;
                         if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
                         if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
@@ -147,7 +147,7 @@ script:
                         return 0.0f;
                       blue: !lambda |-
                         float raw = id(co2).state;
-                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
+                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
                         return (x < $co2_red) ? 0.0f : (x <= $co2_purple) ? (x - $co2_red) / ($co2_purple - $co2_red) : 1.0f;
                   - light.addressable_set:
                       id: led_strip
@@ -157,11 +157,11 @@ script:
                       range_to: 9
                       red: !lambda |-
                         float raw = id(co2).state;
-                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
+                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
                         return (x < $co2_green) ? 0.0f : (x <= $co2_yellow) ? (x - $co2_green) / ($co2_yellow - $co2_green) : 1.0f;
                       green: !lambda |-
                         float x = id(co2).state;
-                        x = (x < $co2_green) ? x : $co2_green + floorf((x - $co2_green) / 100.0f) * 100.0f;
+                        x = (x < $co2_green) ? x : $co2_green + floorf((x - $co2_green) / 50.0f) * 50.0f;
                         if (x < $co2_green)  return 1.0f;
                         if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
                         if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
@@ -169,7 +169,7 @@ script:
                         return 0.0f;
                       blue: !lambda |-
                         float raw = id(co2).state;
-                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
+                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
                         return (x < $co2_red) ? 0.0f : (x <= $co2_purple) ? (x - $co2_red) / ($co2_purple - $co2_red) : 1.0f;
                   - light.addressable_set:
                       id: led_strip
@@ -178,11 +178,11 @@ script:
                       range_to: 5
                       red: !lambda |-
                         float raw = id(co2).state;
-                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
+                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
                         return (x < $co2_green) ? 0.0f : (x <= $co2_yellow) ? (x - $co2_green) / ($co2_yellow - $co2_green) : 1.0f;
                       green: !lambda |-
                         float x = id(co2).state;
-                        x = (x < $co2_green) ? x : $co2_green + floorf((x - $co2_green) / 100.0f) * 100.0f;
+                        x = (x < $co2_green) ? x : $co2_green + floorf((x - $co2_green) / 50.0f) * 50.0f;
                         if (x < $co2_green)  return 1.0f;
                         if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
                         if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
@@ -190,7 +190,7 @@ script:
                         return 0.0f;
                       blue: !lambda |-
                         float raw = id(co2).state;
-                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
+                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
                         return (x < $co2_red) ? 0.0f : (x <= $co2_purple) ? (x - $co2_red) / ($co2_purple - $co2_red) : 1.0f;
             - if:
                 condition:
@@ -961,11 +961,11 @@ script:
                       color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
                       red: !lambda |-
                         float raw = id(co2).state;
-                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
+                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
                         return (x < $co2_green) ? 0.0f : (x <= $co2_yellow) ? (x - $co2_green) / ($co2_yellow - $co2_green) : 1.0f;
                       green: !lambda |-
                         float x = id(co2).state;
-                        x = (x < $co2_green) ? x : $co2_green + floorf((x - $co2_green) / 100.0f) * 100.0f;
+                        x = (x < $co2_green) ? x : $co2_green + floorf((x - $co2_green) / 50.0f) * 50.0f;
                         if (x < $co2_green)  return 1.0f;
                         if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
                         if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
@@ -973,7 +973,7 @@ script:
                         return 0.0f;
                       blue: !lambda |-
                         float raw = id(co2).state;
-                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
+                        float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
                         return (x < $co2_red) ? 0.0f : (x <= $co2_purple) ? (x - $co2_red) / ($co2_purple - $co2_red) : 1.0f;
                   - if:
                       condition:
@@ -992,11 +992,11 @@ script:
                             color_brightness: !lambda 'return id(led_brightness).state / 200.0f;'
                             red: !lambda |-
                               float raw = id(co2).state;
-                              float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
+                              float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
                               return (x < $co2_green) ? 0.0f : (x <= $co2_yellow) ? (x - $co2_green) / ($co2_yellow - $co2_green) : 1.0f;
                             green: !lambda |-
                               float x = id(co2).state;
-                              x = (x < $co2_green) ? x : $co2_green + floorf((x - $co2_green) / 100.0f) * 100.0f;
+                              x = (x < $co2_green) ? x : $co2_green + floorf((x - $co2_green) / 50.0f) * 50.0f;
                               if (x < $co2_green)  return 1.0f;
                               if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
                               if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
@@ -1004,7 +1004,7 @@ script:
                               return 0.0f;
                             blue: !lambda |-
                               float raw = id(co2).state;
-                              float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
+                              float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
                               return (x < $co2_red) ? 0.0f : (x <= $co2_purple) ? (x - $co2_red) / ($co2_purple - $co2_red) : 1.0f;
             - if:
                 condition:
