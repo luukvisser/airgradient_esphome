@@ -991,17 +991,20 @@ script:
                               return 11 - n - 1;
                             color_brightness: !lambda 'return id(led_brightness).state / 200.0f;'
                             red: !lambda |-
-                              float x = id(co2).state;
+                              float raw = id(co2).state;
+                              float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
                               return (x < $co2_green) ? 0.0f : (x <= $co2_yellow) ? (x - $co2_green) / ($co2_yellow - $co2_green) : 1.0f;
                             green: !lambda |-
                               float x = id(co2).state;
+                              x = (x < $co2_green) ? x : $co2_green + floorf((x - $co2_green) / 100.0f) * 100.0f;
                               if (x < $co2_green)  return 1.0f;
                               if (x < $co2_yellow) return 1.0f - 0.25f * (x - $co2_green) / ($co2_yellow - $co2_green);
                               if (x <= $co2_orange) return 0.75f - 0.25f * (x - $co2_yellow) / ($co2_orange - $co2_yellow);
                               if (x <= $co2_red)    return 0.5f - 0.5f * (x - $co2_orange) / ($co2_red - $co2_orange);
                               return 0.0f;
                             blue: !lambda |-
-                              float x = id(co2).state;
+                              float raw = id(co2).state;
+                              float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 100.0f) * 100.0f;
                               return (x < $co2_red) ? 0.0f : (x <= $co2_purple) ? (x - $co2_red) / ($co2_purple - $co2_red) : 1.0f;
             - if:
                 condition:
