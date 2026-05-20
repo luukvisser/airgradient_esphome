@@ -1077,6 +1077,7 @@ interval:
 sensor:
   - platform: copy
     source_id: co2
+    id: co2_led_trigger
     internal: true
     on_value:
       - if:
@@ -1086,6 +1087,7 @@ sensor:
             - script.execute: update_leds
   - platform: copy
     source_id: voc
+    id: voc_led_trigger
     internal: true
     on_value:
       - if:
@@ -1095,6 +1097,7 @@ sensor:
             - script.execute: update_leds
   - platform: copy
     source_id: pm_2_5
+    id: pm_2_5_led_trigger
     internal: true
     on_value:
       - if:
@@ -1104,6 +1107,7 @@ sensor:
             - script.execute: update_leds
   - platform: copy
     source_id: go_iaqs_score
+    id: go_iaqs_score_led_trigger
     internal: true
     on_value:
       - if:
