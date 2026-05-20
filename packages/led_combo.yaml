@@ -989,7 +989,11 @@ script:
                             range_to: !lambda |-
                               int n = std::max(1, std::min(11, 2 + (int)floorf((id(co2).state - 600.0f) / 100.0f)));
                               return 11 - n - 1;
-                            color_brightness: !lambda 'return id(led_brightness).state / 200.0f;'
+                            color_brightness: !lambda |-
+                              float b = id(led_brightness).state;
+                              if (b < 25.0f) return 0.0f;
+                              if (b <= 42.0f) return 0.21f;
+                              return b / 200.0f;
                             red: !lambda |-
                               float raw = id(co2).state;
                               float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
@@ -1071,6 +1075,47 @@ script:
                       green: 0%
                       blue: 0%
 interval:
-  - interval: 5s
+  - interval: 60s
     then:
       - script.execute: update_leds
+sensor:
+  - platform: copy
+    source_id: co2
+    id: co2_led_trigger
+    internal: true
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(leds_ready);'
+          then:
+            - script.execute: update_leds
+  - platform: copy
+    source_id: voc
+    id: voc_led_trigger
+    internal: true
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(leds_ready);'
+          then:
+            - script.execute: update_leds
+  - platform: copy
+    source_id: pm_2_5
+    id: pm_2_5_led_trigger
+    internal: true
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(leds_ready);'
+          then:
+            - script.execute: update_leds
+  - platform: copy
+    source_id: go_iaqs_score
+    id: go_iaqs_score_led_trigger
+    internal: true
+    on_value:
+      - if:
+          condition:
+            lambda: 'return id(leds_ready);'
+          then:
+            - script.execute: update_leds
