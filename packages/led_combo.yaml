@@ -978,8 +978,10 @@ script:
                   - if:
                       condition:
                         lambda: |-
-                          int n = std::max(1, std::min(11, 2 + (int)floorf((id(co2).state - 600.0f) / 100.0f)));
-                          return n < 11;
+                          float relative = id(co2).state - 600.0f;
+                          int n = std::max(1, std::min(11, 2 + (int)floorf(relative / 100.0f)));
+                          float band_pos = relative - floorf(relative / 100.0f) * 100.0f;
+                          return n < 11 && band_pos >= 50.0f;
                       then:
                         - light.addressable_set:
                             id: led_strip
@@ -991,8 +993,8 @@ script:
                               return 11 - n - 1;
                             color_brightness: !lambda |-
                               float b = id(led_brightness).state;
-                              if (b < 25.0f) return 0.0f;
-                              if (b <= 42.0f) return 0.21f;
+                              if (b < 30.0f) return 0.0f;
+                              if (b <= 50.0f) return 0.25f;
                               return b / 200.0f;
                             red: !lambda |-
                               float raw = id(co2).state;
