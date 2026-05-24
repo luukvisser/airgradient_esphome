@@ -1025,8 +1025,9 @@ script:
                       green: 0%
                       blue: 0%
       # ── PM2.5 Bar ────────────────────────────────────────────────────────
-      # Bar fills right-to-left: rightmost LED on below 5 µg/m³,
-      # leftmost LED lights up at ~150 µg/m³ (14.5 µg/m³ per step).
+      # Bar fills right-to-left: 1 LED on below 1 µg/m³, all 11 at ≥ 25 µg/m³.
+      # Step size: 2.5 µg/m³ per full LED. Half-power preview LED lights at
+      # the midpoint of each band (every 1.25 µg/m³) — matching the CO2 Bar.
       # All lit LEDs share the same PM2.5 color.
       - if:
           condition:
@@ -1047,7 +1048,8 @@ script:
                   - light.addressable_set:
                       id: led_strip
                       range_from: !lambda |-
-                        int n = std::max(1, std::min(11, 1 + (int)((id(pm_2_5).state - 5.0f) / 14.5f)));
+                        float pm = std::max(0.0f, id(pm_2_5).state);
+                        int n = std::max(1, std::min(11, 1 + (int)floorf(pm / 2.5f)));
                         return 11 - n;
                       range_to: 10
                       color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
@@ -1064,6 +1066,42 @@ script:
                       blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
                         <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple
                         - $pm_2_5_red) : 1;'
+                  - if:
+                      condition:
+                        lambda: |-
+                          float pm = std::max(0.0f, id(pm_2_5).state);
+                          int n = std::max(1, std::min(11, 1 + (int)floorf(pm / 2.5f)));
+                          float band_pos = pm - floorf(pm / 2.5f) * 2.5f;
+                          return n < 11 && band_pos >= 1.25f;
+                      then:
+                        - light.addressable_set:
+                            id: led_strip
+                            range_from: !lambda |-
+                              float pm = std::max(0.0f, id(pm_2_5).state);
+                              int n = std::max(1, std::min(11, 1 + (int)floorf(pm / 2.5f)));
+                              return 11 - n - 1;
+                            range_to: !lambda |-
+                              float pm = std::max(0.0f, id(pm_2_5).state);
+                              int n = std::max(1, std::min(11, 1 + (int)floorf(pm / 2.5f)));
+                              return 11 - n - 1;
+                            color_brightness: !lambda |-
+                              float b = id(led_brightness).state;
+                              if (b < 30.0f) return 0.0f;
+                              if (b <= 50.0f) return 0.25f;
+                              return b / 200.0f;
+                            red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 :
+                              (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green)
+                              / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
+                            green: !lambda |-
+                              float x = id(pm_2_5).state;
+                              if (x < $pm_2_5_green)  return 1.0f;
+                              if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
+                              if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
+                              if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
+                              return 0.0f;
+                            blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
+                              <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple
+                              - $pm_2_5_red) : 1;'
             - if:
                 condition:
                   lambda: 'return isnan(id(pm_2_5).state);'
