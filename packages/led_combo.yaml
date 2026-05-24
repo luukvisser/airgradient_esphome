@@ -212,6 +212,8 @@ script:
                       green: 0%
                       blue: 0%
       # ── PM2.5 (all 11 LEDs) ──────────────────────────────────────────────
+      # Colors use the bar-scale thresholds (0–25 µg/m³, green→purple) and
+      # snap at 1.25 µg/m³ boundaries — identical to the PM2.5 Bar mode.
       - if:
           condition:
             lambda: 'return id(led_mode).current_option() == "PM2.5";'
@@ -226,56 +228,68 @@ script:
                         * 2) / 100.0f;'
                       range_from: 0
                       range_to: 10
-                      red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state
-                        <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow
-                        - $pm_2_5_green) : 1;'
+                      red: !lambda |-
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x <= $pm_2_5_bar_green) return 0.0f;
+                        if (x <= $pm_2_5_bar_yellow) return (x - $pm_2_5_bar_green) / ($pm_2_5_bar_yellow - $pm_2_5_bar_green);
+                        return 1.0f;
                       green: !lambda |-
-                        float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_green)  return 1.0f;
-                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
-                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
-                        if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x <= $pm_2_5_bar_green)  return 1.0f;
+                        if (x < $pm_2_5_bar_yellow)  return 1.0f - 0.25f * (x - $pm_2_5_bar_green) / ($pm_2_5_bar_yellow - $pm_2_5_bar_green);
+                        if (x <= $pm_2_5_bar_orange) return 0.75f - 0.25f * (x - $pm_2_5_bar_yellow) / ($pm_2_5_bar_orange - $pm_2_5_bar_yellow);
+                        if (x <= $pm_2_5_bar_red)    return 0.5f - 0.5f * (x - $pm_2_5_bar_orange) / ($pm_2_5_bar_red - $pm_2_5_bar_orange);
                         return 0.0f;
-                      blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
-                        <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple
-                        - $pm_2_5_red) : 1;'
+                      blue: !lambda |-
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x < $pm_2_5_bar_red) return 0.0f;
+                        if (x <= $pm_2_5_bar_purple) return (x - $pm_2_5_bar_red) / ($pm_2_5_bar_purple - $pm_2_5_bar_red);
+                        return 1.0f;
                   - light.addressable_set:
                       id: led_strip
                       color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state)
                         / 100.0f;'
                       range_from: 1
                       range_to: 9
-                      red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state
-                        <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow
-                        - $pm_2_5_green) : 1;'
+                      red: !lambda |-
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x <= $pm_2_5_bar_green) return 0.0f;
+                        if (x <= $pm_2_5_bar_yellow) return (x - $pm_2_5_bar_green) / ($pm_2_5_bar_yellow - $pm_2_5_bar_green);
+                        return 1.0f;
                       green: !lambda |-
-                        float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_green)  return 1.0f;
-                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
-                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
-                        if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x <= $pm_2_5_bar_green)  return 1.0f;
+                        if (x < $pm_2_5_bar_yellow)  return 1.0f - 0.25f * (x - $pm_2_5_bar_green) / ($pm_2_5_bar_yellow - $pm_2_5_bar_green);
+                        if (x <= $pm_2_5_bar_orange) return 0.75f - 0.25f * (x - $pm_2_5_bar_yellow) / ($pm_2_5_bar_orange - $pm_2_5_bar_yellow);
+                        if (x <= $pm_2_5_bar_red)    return 0.5f - 0.5f * (x - $pm_2_5_bar_orange) / ($pm_2_5_bar_red - $pm_2_5_bar_orange);
                         return 0.0f;
-                      blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
-                        <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple
-                        - $pm_2_5_red) : 1;'
+                      blue: !lambda |-
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x < $pm_2_5_bar_red) return 0.0f;
+                        if (x <= $pm_2_5_bar_purple) return (x - $pm_2_5_bar_red) / ($pm_2_5_bar_purple - $pm_2_5_bar_red);
+                        return 1.0f;
                   - light.addressable_set:
                       id: led_strip
                       color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
                       range_from: 5
                       range_to: 5
-                      red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state
-                        <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow
-                        - $pm_2_5_green) : 1;'
+                      red: !lambda |-
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x <= $pm_2_5_bar_green) return 0.0f;
+                        if (x <= $pm_2_5_bar_yellow) return (x - $pm_2_5_bar_green) / ($pm_2_5_bar_yellow - $pm_2_5_bar_green);
+                        return 1.0f;
                       green: !lambda |-
-                        float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_green)  return 1.0f;
-                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
-                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
-                        if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x <= $pm_2_5_bar_green)  return 1.0f;
+                        if (x < $pm_2_5_bar_yellow)  return 1.0f - 0.25f * (x - $pm_2_5_bar_green) / ($pm_2_5_bar_yellow - $pm_2_5_bar_green);
+                        if (x <= $pm_2_5_bar_orange) return 0.75f - 0.25f * (x - $pm_2_5_bar_yellow) / ($pm_2_5_bar_orange - $pm_2_5_bar_yellow);
+                        if (x <= $pm_2_5_bar_red)    return 0.5f - 0.5f * (x - $pm_2_5_bar_orange) / ($pm_2_5_bar_red - $pm_2_5_bar_orange);
                         return 0.0f;
-                      blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
-                        <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple
-                        - $pm_2_5_red) : 1;'
+                      blue: !lambda |-
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x < $pm_2_5_bar_red) return 0.0f;
+                        if (x <= $pm_2_5_bar_purple) return (x - $pm_2_5_bar_red) / ($pm_2_5_bar_purple - $pm_2_5_bar_red);
+                        return 1.0f;
             - if:
                 condition:
                   lambda: 'return isnan(id(pm_2_5).state);'
