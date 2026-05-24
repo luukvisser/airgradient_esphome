@@ -26,6 +26,13 @@ substitutions:
   pm_2_5_orange: '25' # Old WHO annual guideline (pre-2021)
   pm_2_5_red: '35' # US EPA 24h PM2.5 NAAQS standard
   pm_2_5_purple: '55' # US EPA AQI "unhealthy for sensitive groups" boundary
+  # Bar-specific thresholds: compressed to 0–25 µg/m³ so the full green→purple
+  # gradient is visible within the bar's display range.
+  pm_2_5_bar_green: '0' # Bar start (rightmost LED): very clean air
+  pm_2_5_bar_yellow: '5' # WHO annual guideline
+  pm_2_5_bar_orange: '10' # Midrange
+  pm_2_5_bar_red: '15' # WHO 24-hour guideline
+  pm_2_5_bar_purple: '25' # Bar end (all LEDs on): all LEDs lit
   voc_green: '100' # Baseline for this environment (or better)
   voc_yellow: '200' # Normal day-to-day variation
   voc_orange: '300' # Notable VOC event in progress
@@ -1053,19 +1060,23 @@ script:
                         return 11 - n;
                       range_to: 10
                       color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
-                      red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 : (id(pm_2_5).state
-                        <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green) / ($pm_2_5_yellow
-                        - $pm_2_5_green) : 1;'
+                      red: !lambda |-
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x <= $pm_2_5_bar_green) return 0.0f;
+                        if (x <= $pm_2_5_bar_yellow) return (x - $pm_2_5_bar_green) / ($pm_2_5_bar_yellow - $pm_2_5_bar_green);
+                        return 1.0f;
                       green: !lambda |-
-                        float x = id(pm_2_5).state;
-                        if (x < $pm_2_5_green)  return 1.0f;
-                        if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
-                        if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
-                        if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x <= $pm_2_5_bar_green)  return 1.0f;
+                        if (x < $pm_2_5_bar_yellow)  return 1.0f - 0.25f * (x - $pm_2_5_bar_green) / ($pm_2_5_bar_yellow - $pm_2_5_bar_green);
+                        if (x <= $pm_2_5_bar_orange) return 0.75f - 0.25f * (x - $pm_2_5_bar_yellow) / ($pm_2_5_bar_orange - $pm_2_5_bar_yellow);
+                        if (x <= $pm_2_5_bar_red)    return 0.5f - 0.5f * (x - $pm_2_5_bar_orange) / ($pm_2_5_bar_red - $pm_2_5_bar_orange);
                         return 0.0f;
-                      blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
-                        <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple
-                        - $pm_2_5_red) : 1;'
+                      blue: !lambda |-
+                        float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                        if (x < $pm_2_5_bar_red) return 0.0f;
+                        if (x <= $pm_2_5_bar_purple) return (x - $pm_2_5_bar_red) / ($pm_2_5_bar_purple - $pm_2_5_bar_red);
+                        return 1.0f;
                   - if:
                       condition:
                         lambda: |-
@@ -1089,19 +1100,23 @@ script:
                               if (b < 30.0f) return 0.0f;
                               if (b <= 50.0f) return 0.25f;
                               return b / 200.0f;
-                            red: !lambda 'return (id(pm_2_5).state < $pm_2_5_green) ? 0 :
-                              (id(pm_2_5).state <= $pm_2_5_yellow) ? (id(pm_2_5).state - $pm_2_5_green)
-                              / ($pm_2_5_yellow - $pm_2_5_green) : 1;'
+                            red: !lambda |-
+                              float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                              if (x <= $pm_2_5_bar_green) return 0.0f;
+                              if (x <= $pm_2_5_bar_yellow) return (x - $pm_2_5_bar_green) / ($pm_2_5_bar_yellow - $pm_2_5_bar_green);
+                              return 1.0f;
                             green: !lambda |-
-                              float x = id(pm_2_5).state;
-                              if (x < $pm_2_5_green)  return 1.0f;
-                              if (x < $pm_2_5_yellow) return 1.0f - 0.25f * (x - $pm_2_5_green) / ($pm_2_5_yellow - $pm_2_5_green);
-                              if (x <= $pm_2_5_orange) return 0.75f - 0.25f * (x - $pm_2_5_yellow) / ($pm_2_5_orange - $pm_2_5_yellow);
-                              if (x <= $pm_2_5_red)    return 0.5f - 0.5f * (x - $pm_2_5_orange) / ($pm_2_5_red - $pm_2_5_orange);
+                              float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                              if (x <= $pm_2_5_bar_green)  return 1.0f;
+                              if (x < $pm_2_5_bar_yellow)  return 1.0f - 0.25f * (x - $pm_2_5_bar_green) / ($pm_2_5_bar_yellow - $pm_2_5_bar_green);
+                              if (x <= $pm_2_5_bar_orange) return 0.75f - 0.25f * (x - $pm_2_5_bar_yellow) / ($pm_2_5_bar_orange - $pm_2_5_bar_yellow);
+                              if (x <= $pm_2_5_bar_red)    return 0.5f - 0.5f * (x - $pm_2_5_bar_orange) / ($pm_2_5_bar_red - $pm_2_5_bar_orange);
                               return 0.0f;
-                            blue: !lambda 'return (id(pm_2_5).state < $pm_2_5_red) ? 0 : (id(pm_2_5).state
-                              <= $pm_2_5_purple) ? (id(pm_2_5).state - $pm_2_5_red) / ($pm_2_5_purple
-                              - $pm_2_5_red) : 1;'
+                            blue: !lambda |-
+                              float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
+                              if (x < $pm_2_5_bar_red) return 0.0f;
+                              if (x <= $pm_2_5_bar_purple) return (x - $pm_2_5_bar_red) / ($pm_2_5_bar_purple - $pm_2_5_bar_red);
+                              return 1.0f;
             - if:
                 condition:
                   lambda: 'return isnan(id(pm_2_5).state);'
