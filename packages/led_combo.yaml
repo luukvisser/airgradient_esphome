@@ -33,11 +33,11 @@ substitutions:
   pm_2_5_bar_orange: '10' # Midrange
   pm_2_5_bar_red: '15' # WHO 24-hour guideline
   pm_2_5_bar_purple: '25' # Bar end (all LEDs on): all LEDs lit
-  voc_green: '100' # Baseline for this environment (or better)
-  voc_yellow: '200' # Normal day-to-day variation
+  voc_green: '150' # Baseline — clean indoor air
+  voc_yellow: '225' # Slight VOC elevation
   voc_orange: '300' # Notable VOC event in progress
-  voc_red: '400' # Sustained VOC event; ventilate
-  voc_purple: '500' # Extreme (top of SGP41 scale)
+  voc_red: '375' # Sustained VOC event; ventilate
+  voc_purple: '475' # Extreme (near top of SGP41 scale)
 esphome:
   on_boot:
     - priority: -100
@@ -317,56 +317,65 @@ script:
                         * 2) / 100.0f;'
                       range_from: 0
                       range_to: 10
-                      red: !lambda 'return (id(voc).state < $voc_green) ? 0 : (id(voc).state
-                        <= $voc_yellow) ? (id(voc).state - $voc_green) / ($voc_yellow - $voc_green)
-                        : 1;'
+                      red: !lambda |-
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
+                        return (x < $voc_green) ? 0.0f : (x <= $voc_yellow) ? (x - $voc_green) / ($voc_yellow - $voc_green) : 1.0f;
                       green: !lambda |-
-                        float x = id(voc).state;
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
                         if (x < $voc_green)  return 1.0f;
                         if (x < $voc_yellow) return 1.0f - 0.25f * (x - $voc_green) / ($voc_yellow - $voc_green);
                         if (x <= $voc_orange) return 0.75f - 0.25f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
                         if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
                         return 0.0f;
-                      blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state
-                        <= $voc_purple) ? (id(voc).state - $voc_red) / ($voc_purple - $voc_red)
-                        : 1;'
+                      blue: !lambda |-
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
+                        return (x < $voc_red) ? 0.0f : (x <= $voc_purple) ? (x - $voc_red) / ($voc_purple - $voc_red) : 1.0f;
                   - light.addressable_set:
                       id: led_strip
                       color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state)
                         / 100.0f;'
                       range_from: 1
                       range_to: 9
-                      red: !lambda 'return (id(voc).state < $voc_green) ? 0 : (id(voc).state
-                        <= $voc_yellow) ? (id(voc).state - $voc_green) / ($voc_yellow - $voc_green)
-                        : 1;'
+                      red: !lambda |-
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
+                        return (x < $voc_green) ? 0.0f : (x <= $voc_yellow) ? (x - $voc_green) / ($voc_yellow - $voc_green) : 1.0f;
                       green: !lambda |-
-                        float x = id(voc).state;
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
                         if (x < $voc_green)  return 1.0f;
                         if (x < $voc_yellow) return 1.0f - 0.25f * (x - $voc_green) / ($voc_yellow - $voc_green);
                         if (x <= $voc_orange) return 0.75f - 0.25f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
                         if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
                         return 0.0f;
-                      blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state
-                        <= $voc_purple) ? (id(voc).state - $voc_red) / ($voc_purple - $voc_red)
-                        : 1;'
+                      blue: !lambda |-
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
+                        return (x < $voc_red) ? 0.0f : (x <= $voc_purple) ? (x - $voc_red) / ($voc_purple - $voc_red) : 1.0f;
                   - light.addressable_set:
                       id: led_strip
                       color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
                       range_from: 5
                       range_to: 5
-                      red: !lambda 'return (id(voc).state < $voc_green) ? 0 : (id(voc).state
-                        <= $voc_yellow) ? (id(voc).state - $voc_green) / ($voc_yellow - $voc_green)
-                        : 1;'
+                      red: !lambda |-
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
+                        return (x < $voc_green) ? 0.0f : (x <= $voc_yellow) ? (x - $voc_green) / ($voc_yellow - $voc_green) : 1.0f;
                       green: !lambda |-
-                        float x = id(voc).state;
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
                         if (x < $voc_green)  return 1.0f;
                         if (x < $voc_yellow) return 1.0f - 0.25f * (x - $voc_green) / ($voc_yellow - $voc_green);
                         if (x <= $voc_orange) return 0.75f - 0.25f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
                         if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
                         return 0.0f;
-                      blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state
-                        <= $voc_purple) ? (id(voc).state - $voc_red) / ($voc_purple - $voc_red)
-                        : 1;'
+                      blue: !lambda |-
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
+                        return (x < $voc_red) ? 0.0f : (x <= $voc_purple) ? (x - $voc_red) / ($voc_purple - $voc_red) : 1.0f;
             - if:
                 condition:
                   lambda: 'return isnan(id(voc).state);'
@@ -601,19 +610,22 @@ script:
                       color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
                       range_from: 10
                       range_to: 10
-                      red: !lambda 'return (id(voc).state < $voc_green) ? 0 : (id(voc).state
-                        <= $voc_yellow) ? (id(voc).state - $voc_green) / ($voc_yellow - $voc_green)
-                        : 1;'
+                      red: !lambda |-
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
+                        return (x < $voc_green) ? 0.0f : (x <= $voc_yellow) ? (x - $voc_green) / ($voc_yellow - $voc_green) : 1.0f;
                       green: !lambda |-
-                        float x = id(voc).state;
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
                         if (x < $voc_green)  return 1.0f;
                         if (x < $voc_yellow) return 1.0f - 0.25f * (x - $voc_green) / ($voc_yellow - $voc_green);
                         if (x <= $voc_orange) return 0.75f - 0.25f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
                         if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
                         return 0.0f;
-                      blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state
-                        <= $voc_purple) ? (id(voc).state - $voc_red) / ($voc_purple - $voc_red)
-                        : 1;'
+                      blue: !lambda |-
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
+                        return (x < $voc_red) ? 0.0f : (x <= $voc_purple) ? (x - $voc_red) / ($voc_purple - $voc_red) : 1.0f;
             - if:
                 condition:
                   lambda: 'return isnan(id(voc).state);'
@@ -987,19 +999,22 @@ script:
                       color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
                       range_from: 9
                       range_to: 9
-                      red: !lambda 'return (id(voc).state < $voc_green) ? 0 : (id(voc).state
-                        <= $voc_yellow) ? (id(voc).state - $voc_green) / ($voc_yellow - $voc_green)
-                        : 1;'
+                      red: !lambda |-
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
+                        return (x < $voc_green) ? 0.0f : (x <= $voc_yellow) ? (x - $voc_green) / ($voc_yellow - $voc_green) : 1.0f;
                       green: !lambda |-
-                        float x = id(voc).state;
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
                         if (x < $voc_green)  return 1.0f;
                         if (x < $voc_yellow) return 1.0f - 0.25f * (x - $voc_green) / ($voc_yellow - $voc_green);
                         if (x <= $voc_orange) return 0.75f - 0.25f * (x - $voc_yellow) / ($voc_orange - $voc_yellow);
                         if (x <= $voc_red)    return 0.5f - 0.5f * (x - $voc_orange) / ($voc_red - $voc_orange);
                         return 0.0f;
-                      blue: !lambda 'return (id(voc).state < $voc_red) ? 0 : (id(voc).state
-                        <= $voc_purple) ? (id(voc).state - $voc_red) / ($voc_purple - $voc_red)
-                        : 1;'
+                      blue: !lambda |-
+                        float raw = id(voc).state;
+                        float x = (raw < $voc_green) ? raw : $voc_green + floorf((raw - $voc_green) / 25.0f) * 25.0f;
+                        return (x < $voc_red) ? 0.0f : (x <= $voc_purple) ? (x - $voc_red) / ($voc_purple - $voc_red) : 1.0f;
             - if:
                 condition:
                   lambda: 'return isnan(id(voc).state);'
