@@ -33,7 +33,7 @@ substitutions:
   pm_2_5_bar_orange: '10' # Midrange
   pm_2_5_bar_red: '15' # WHO 24-hour guideline
   pm_2_5_bar_purple: '25' # Bar end (all LEDs on): all LEDs lit
-  voc_green: '150' # Baseline — clean indoor air
+  voc_green: '200' # Baseline — clean indoor air
   voc_yellow: '225' # Slight VOC elevation
   voc_orange: '300' # Notable VOC event in progress
   voc_red: '375' # Sustained VOC event; ventilate
