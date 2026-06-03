@@ -59,7 +59,7 @@ select:
     icon: "mdi:led-strip-variant"
     optimistic: true
     restore_value: true
-    initial_option: "5CO2+5PM2.5+1VOC"
+    initial_option: "CO2 Bar"
     options:
       - "5CO2+5PM2.5+1VOC"
       - "5CO2+5PM2.5"

@@ -21,7 +21,7 @@ number:
     min_value: 0
     max_value: 100
     step: 1
-    initial_value: 100
+    initial_value: 35
     optimistic: true
     restore_value: true
     mode: slider
@@ -36,7 +36,7 @@ number:
     min_value: 0
     max_value: 100
     step: 1
-    initial_value: 20
+    initial_value: 15
     optimistic: true
     restore_value: true
     mode: box

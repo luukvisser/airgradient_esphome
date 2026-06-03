@@ -42,7 +42,7 @@ number:
     min_value: 0
     max_value: 100
     step: 1
-    initial_value: 100
+    initial_value: 35
     optimistic: true
     restore_value: true
     mode: slider
