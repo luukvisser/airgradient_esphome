@@ -1,4 +1,14 @@
 ---
+globals:
+  - id: g_total_uptime_h
+    type: float
+    restore_value: true
+    initial_value: "0.0"
+  - id: g_uptime_at_save
+    # Not restored — resets to 0 each boot so the lambda delta is correct.
+    type: float
+    restore_value: false
+    initial_value: "0.0"
 sensor:
   - platform: uptime
     name: "Uptime"
@@ -6,3 +16,26 @@ sensor:
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
+  - platform: template
+    name: "Total Uptime"
+    id: total_uptime
+    unit_of_measurement: "h"
+    accuracy_decimals: 1
+    state_class: total_increasing
+    entity_category: diagnostic
+    icon: "mdi:clock-outline"
+    update_interval: 10min
+    lambda: return id(g_total_uptime_h) + (id(device_uptime).state - id(g_uptime_at_save))
+      / 3600.0;
+    web_server:
+      sorting_group_id: grp_system
+interval:
+  - interval: 1h
+    then:
+      - globals.set:
+          id: g_total_uptime_h
+          value: !lambda 'return id(g_total_uptime_h) + (id(device_uptime).state - id(g_uptime_at_save))
+            / 3600.0;'
+      - globals.set:
+          id: g_uptime_at_save
+          value: !lambda 'return id(device_uptime).state;'
