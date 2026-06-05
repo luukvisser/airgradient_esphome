@@ -102,6 +102,7 @@ display:
     model: "SH1106 128x64"
     id: oled_display
     address: 0x3C
+    update_interval: never
     pages:
       - id: airgradient_default
         # https://forum.airgradient.com/t/airgradient-one-customized-mallocarray-esphome-display/1328
