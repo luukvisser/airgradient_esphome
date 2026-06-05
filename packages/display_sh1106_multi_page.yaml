@@ -68,6 +68,7 @@ select:
     web_server:
       sorting_group_id: grp_display
     set_action:
+      - delay: 0ms
       - script.execute: update_display_page
   - platform: template
     name: "Display Page"
@@ -90,6 +91,7 @@ select:
     web_server:
       sorting_group_id: grp_display
     set_action:
+      - delay: 0ms
       - script.execute: update_display_page
 switch:
   - platform: template
