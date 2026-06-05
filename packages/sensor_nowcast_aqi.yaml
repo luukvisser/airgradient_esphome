@@ -22,7 +22,7 @@ globals:
     restore_value: false
 sensor:
   - platform: template
-    id: aqi
+    id: aqi_epa_outdoor
     name: "AQI"
     device_class: aqi
     icon: "mdi:weather-windy-variant"
@@ -195,7 +195,7 @@ script:
 
           int aqi_calc = std::max(aqi_2_5, aqi_10_0);
           if (aqi_calc >= 0) {
-            id(aqi).publish_state(aqi_calc);
+            id(aqi_epa_outdoor).publish_state(aqi_calc);
             // Just in case we're counting down, make sure we set to zero
             if (isnan(id(aqi_delay_mins)) || id(aqi_delay_mins) > 0) {
               id(aqi_delay_mins) = 0;
@@ -357,7 +357,7 @@ script:
   - id: calculate_categories
     then:
       - lambda: |
-          float aqi_calc = id(aqi).state;
+          float aqi_calc = id(aqi_epa_outdoor).state;
           if (isnan(aqi_calc) || aqi_calc < 0.0) {
             // if (id(aqi_category).state != "Calculating") {
             //   id(aqi_category).publish_state("Calculating");
