@@ -295,6 +295,32 @@ interval:
         then:
           switch.turn_off: display_boot_page
   - interval: 5s
-    # Refresh the display with current sensor values
+    # Refresh the display — covers VOC/NOx (which update ~1 s and are excluded from the
+    # copy-sensor triggers below to avoid flicker) and acts as a safety-net fallback.
     then:
+      - script.execute: update_display_page
+sensor:
+  - platform: copy
+    source_id: co2
+    id: co2_display_trigger
+    internal: true
+    on_value:
+      - script.execute: update_display_page
+  - platform: copy
+    source_id: pm_2_5
+    id: pm_2_5_display_trigger
+    internal: true
+    on_value:
+      - script.execute: update_display_page
+  - platform: copy
+    source_id: temp
+    id: temp_display_trigger
+    internal: true
+    on_value:
+      - script.execute: update_display_page
+  - platform: copy
+    source_id: humidity
+    id: humidity_display_trigger
+    internal: true
+    on_value:
       - script.execute: update_display_page
