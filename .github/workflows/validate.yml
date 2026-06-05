@@ -48,26 +48,3 @@ jobs:
           echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
       - name: Validate ${{ matrix.device.yaml }}
         run: esphome config "${{ matrix.device.yaml }}"
-  # Early-warning job: validates devices against the latest unpinned ESPHome.
-  # Uses continue-on-error so breaking changes in a new release are surfaced
-  # without blocking PRs — fix before upgrading pyproject.toml.
-  validate-upcoming:
-    name: "Validate (latest ESPHome)"
-    needs: [discover]
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
-    steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8.1.0
-        with:
-          python-version: "3.14"
-      - name: Install latest ESPHome (no version pin)
-        run: |
-          uv venv
-          uv pip install esphome
-          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
-      - name: Validate ${{ matrix.device.yaml }}
-        run: esphome config "${{ matrix.device.yaml }}"
