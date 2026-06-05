@@ -295,11 +295,23 @@ interval:
         then:
           switch.turn_off: display_boot_page
   - interval: 5s
-    # Refresh the display — covers VOC/NOx (which update ~1 s and are excluded from the
-    # copy-sensor triggers below to avoid flicker) and acts as a safety-net fallback.
+    # Safety-net fallback — ensures the display stays current even if a sensor
+    # on_value trigger is missed.
     then:
       - script.execute: update_display_page
 sensor:
+  - platform: copy
+    source_id: voc
+    id: voc_display_trigger
+    internal: true
+    on_value:
+      - script.execute: update_display_page
+  - platform: copy
+    source_id: nox
+    id: nox_display_trigger
+    internal: true
+    on_value:
+      - script.execute: update_display_page
   - platform: copy
     source_id: co2
     id: co2_display_trigger
