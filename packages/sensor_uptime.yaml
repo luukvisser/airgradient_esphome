@@ -1,12 +1,4 @@
 ---
-esphome:
-  on_boot:
-    # Publish total_uptime immediately after the uptime sensor has had its first
-    # reading, so HA sees a valid state within seconds of boot rather than waiting
-    # for the 10-minute polling interval.
-    - priority: -100
-      then:
-        - component.update: total_uptime
 globals:
   - id: g_total_uptime_h
     type: float
@@ -24,6 +16,8 @@ sensor:
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
+    on_value:
+      - component.update: total_uptime
   - platform: template
     name: "Total Uptime"
     id: total_uptime
@@ -32,7 +26,7 @@ sensor:
     state_class: total_increasing
     entity_category: diagnostic
     icon: "mdi:clock-outline"
-    update_interval: 10min
+    update_interval: never
     lambda: |-
       if (!id(device_uptime).has_state()) return id(g_total_uptime_h);
       return id(g_total_uptime_h) + (id(device_uptime).state - id(g_uptime_at_save)) / 3600.0;

@@ -12,7 +12,7 @@
 #     on GitHub Pages, and attaches binaries to a GitHub Release.
 ---
 substitutions:
-  config_version: "1.4.5" # keep in sync with esphome.project.version below
+  config_version: "1.4.6" # keep in sync with esphome.project.version below
 esphome:
   name: "airgradient-one"
   friendly_name: "AG ONE"
@@ -22,7 +22,7 @@ esphome:
   # the device slug so multiple products from the same org don't collide.
   project:
     name: "luukvisser.airgradient-one"
-    version: "1.4.5"
+    version: "1.4.6"
 logger:
 api:
 ota:
@@ -106,6 +106,14 @@ button:
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
+  - platform: template
+    id: check_firmware_update_button
+    name: "Check for Firmware Update"
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system
+    on_press:
+      - update.check: firmware_update
 packages:
   # ── Hardware ────────────────────────────────────────────────────────────
   board: !include packages/airgradient_esp32-c3_board.yaml
