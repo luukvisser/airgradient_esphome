@@ -67,6 +67,8 @@ select:
     icon: "mdi:thermometer"
     web_server:
       sorting_group_id: grp_display
+    on_value:
+      - script.execute: update_display_page
   - platform: template
     name: "Display Page"
     id: display_page_select
@@ -87,7 +89,7 @@ select:
     icon: "mdi:monitor"
     web_server:
       sorting_group_id: grp_display
-    set_action:
+    on_value:
       - script.execute: update_display_page
 switch:
   - platform: template
