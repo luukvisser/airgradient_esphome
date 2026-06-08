@@ -16,8 +16,6 @@ sensor:
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
-    on_value:
-      - component.update: total_uptime
   - platform: template
     name: "Total Uptime"
     id: total_uptime
@@ -26,19 +24,34 @@ sensor:
     state_class: total_increasing
     entity_category: diagnostic
     icon: "mdi:clock-outline"
-    update_interval: never
+    # Self-driven so the value publishes reliably (~60s after boot and every
+    # 60s after), independent of any other sensor's trigger firing.
+    update_interval: 60s
     lambda: |-
-      if (!id(device_uptime).has_state()) return id(g_total_uptime_h);
-      return id(g_total_uptime_h) + (id(device_uptime).state - id(g_uptime_at_save)) / 3600.0;
+      // Self-heal: a persisted NaN (e.g. from a past corrupted save) would
+      // otherwise be restored every boot and show as "unknown" in HA forever.
+      float base = id(g_total_uptime_h);
+      if (std::isnan(base)) { base = 0.0f; id(g_total_uptime_h) = 0.0f; }
+      if (!id(device_uptime).has_state()) return base;
+      return base + (id(device_uptime).state - id(g_uptime_at_save)) / 3600.0f;
     web_server:
       sorting_group_id: grp_system
 interval:
   - interval: 1h
+    # Only fold the running session into the persisted total when uptime has a
+    # real reading. Saving while device_uptime.state is NaN would corrupt
+    # g_total_uptime_h, and restore_value would persist that NaN across reboots.
     then:
-      - globals.set:
-          id: g_total_uptime_h
-          value: !lambda 'return id(g_total_uptime_h) + (id(device_uptime).state - id(g_uptime_at_save))
-            / 3600.0;'
-      - globals.set:
-          id: g_uptime_at_save
-          value: !lambda 'return id(device_uptime).state;'
+      - if:
+          condition:
+            lambda: "return id(device_uptime).has_state();"
+          then:
+            - globals.set:
+                id: g_total_uptime_h
+                value: !lambda |-
+                  float base = id(g_total_uptime_h);
+                  if (std::isnan(base)) base = 0.0f;
+                  return base + (id(device_uptime).state - id(g_uptime_at_save)) / 3600.0f;
+            - globals.set:
+                id: g_uptime_at_save
+                value: !lambda "return id(device_uptime).state;"
