@@ -5,9 +5,16 @@
 # Depends on: pms5003_uart (UART bus from board package).
 ---
 substitutions:
+  # Hardware readout interval — how often the PMS is polled over UART.
   pm_update_interval: "30s"
+  # HA publish/update interval — throttle_average filters average the 30s readouts
+  # and emit every 60s, so PM state updates are halved without slowing the readout.
+  pm_publish_interval: "60s"
 sensor:
   - platform: pmsx003
+    # Readout stays at 30s ($pm_update_interval) to keep the fan spinning; PM publishing is
+    # decoupled to 60s ($pm_publish_interval) via throttle_average filters on each PM output.
+    # Temperature/humidity are left at the 30s readout cadence.
     # PMS5003T https://esphome.io/components/sensor/pmsx003.html
     type: PMS5003T
     uart_id: pms5003_uart
@@ -21,6 +28,8 @@ sensor:
       entity_category: diagnostic
       web_server:
         sorting_group_id: grp_sensors
+      filters:
+        - throttle_average: $pm_publish_interval
     pm_1_0:
       name: "PM1.0"
       id: pm_1_0
@@ -29,6 +38,8 @@ sensor:
       device_class: pm1
       web_server:
         sorting_group_id: grp_sensors
+      filters:
+        - throttle_average: $pm_publish_interval
     pm_10_0:
       name: "PM10.0"
       id: pm_10_0
@@ -37,6 +48,8 @@ sensor:
       device_class: pm10
       web_server:
         sorting_group_id: grp_sensors
+      filters:
+        - throttle_average: $pm_publish_interval
     pm_0_3um:
       name: "PM0.3"
       id: pm_0_3um
@@ -44,6 +57,8 @@ sensor:
       accuracy_decimals: 0
       web_server:
         sorting_group_id: grp_sensors
+      filters:
+        - throttle_average: $pm_publish_interval
     temperature:
       name: "Temperature Raw"
       id: temp_raw
@@ -61,7 +76,8 @@ sensor:
     # https://document.airnow.gov/airnow-fire-and-smoke-map-questions-and-answers.pdf
     name: "PM2.5"
     id: pm_2_5
-    update_interval: $pm_update_interval
+    # Reads the 60s-averaged raw values, so compute the correction once per publish window.
+    update_interval: $pm_publish_interval
     device_class: pm25
     unit_of_measurement: µg/m³
     icon: mdi:molecule
@@ -108,7 +124,8 @@ sensor:
     name: "PM2.5 AQI"
     id: pm_2_5_aqi
     device_class: aqi
-    update_interval: $pm_update_interval
+    # Derived from the corrected PM2.5; follow the same 60s publish cadence.
+    update_interval: $pm_publish_interval
     icon: "mdi:air-filter"
     accuracy_decimals: 0
     web_server:
