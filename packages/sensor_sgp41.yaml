@@ -54,11 +54,12 @@ sensor:
       humidity_source: humidity
 select:
   - platform: template
-    name: "SGP41 VOC Learning Time Offset (days)"
+    name: "SGP41 VOC Learning Time Offset"
     id: voc_learning_time_offset
-    # Days, converted to Sensirion's learning_time_offset_hours (× 24) in set_action.
-    options: ["0.5", "1", "7", "14", "30"]
-    initial_option: "1"
+    # Option labels are days; set_action parses the leading number and converts
+    # to Sensirion's learning_time_offset_hours (× 24).
+    options: ["0.5 days", "1 day", "7 days", "14 days", "30 days"]
+    initial_option: "1 day"
     restore_value: true
     optimistic: true
     entity_category: config
@@ -72,11 +73,12 @@ select:
       - lambda: |-
           id(sgp4x_sensor).set_voc_algorithm_tuning(100, (uint16_t)(atof(x.c_str()) * 24), 12, 180, 50, 230);
   - platform: template
-    name: "SGP41 NOx Learning Time Offset (days)"
+    name: "SGP41 NOx Learning Time Offset"
     id: nox_learning_time_offset
-    # Days, converted to Sensirion's learning_time_offset_hours (× 24) in set_action.
-    options: ["0.5", "1", "7", "14", "30"]
-    initial_option: "1"
+    # Option labels are days; set_action parses the leading number and converts
+    # to Sensirion's learning_time_offset_hours (× 24).
+    options: ["0.5 days", "1 day", "7 days", "14 days", "30 days"]
+    initial_option: "1 day"
     restore_value: true
     optimistic: true
     entity_category: config
