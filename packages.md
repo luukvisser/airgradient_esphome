@@ -101,8 +101,10 @@ Reports CO2 concentration. Exposes controls for:
   substitutions:
     co2_offset: "0"
   ```
-- **ABC interval** — Automatic Baseline Correction period (1, 8, 30, or 90 days; default
-  8).
+- **ABC interval** — Automatic Baseline Correction period (7, 14, 30, 90, or 180 days;
+  default 14). The sensor re-zeros to the lowest reading seen each period, so a
+  weekly/fortnightly cadence matches when a typical home sees fresh air. Use a longer
+  interval (or the ABC on/off switch) for rooms that rarely reach outdoor CO2 levels.
 - **Manual calibration button** — triggers a background calibration and logs the result
   70 s later.
 - **ABC on/off switch** — disable ABC entirely if the device rarely sees
