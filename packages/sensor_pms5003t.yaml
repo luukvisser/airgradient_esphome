@@ -93,7 +93,7 @@ sensor:
       const double pm_0_3um_raw = id(pm_0_3um).state;
       const double pm_2_5_sensor = id(pm_2_5_raw).state;
       const double humidity = id(humidity_raw).state;
-      const double scaling = id(pm_2_5_scaling_factor).state;
+      const double scaling = id(pm_2_5_scaling_factor).state / 100.0;  // stored ×100 for UI display
       const double intercept = id(pm_2_5_intercept).state;
       double pm_2_5_calibrated_low = scaling * pm_0_3um_raw + intercept;
       double pm_2_5_calibrated = 0;
@@ -182,15 +182,18 @@ sensor:
       sorting_group_id: grp_sensors
 number:
   - platform: template
-    # Sentinel: 1.0 (with intercept 0.0) disables batch calibration — raw PM2.5 is used.
-    # For AirGradient batch-specific calibration (post-2023-10-30), use the Batch Preset
-    # select below instead of entering manually; factors are ~0.02–0.04 (pm_0_3um → µg/m³).
-    name: "PMS5003 PM2.5 Scaling Factor"
+    # Stored as the calibration factor × 100 so the web UI shows all significant digits
+    # (ESPHome derives display decimals from `step` via %.5g, which collapses to 0 below
+    # 1e-4 — see esphome/esphome#10637). The lambda divides by 100 on read.
+    # Sentinel: 100 (factor 1.0, intercept 0.0) disables batch calibration — raw PM2.5 is
+    # used. For AirGradient batch calibration (post-2023-10-30) use the Batch Preset select
+    # below; raw factors are ~0.02–0.04 (pm_0_3um → µg/m³), i.e. ~2–4 in this ×100 scale.
+    name: "PMS5003 PM2.5 Scaling Factor (×100)"
     id: pm_2_5_scaling_factor
-    min_value: 0.00001
-    max_value: 2.0
-    step: 0.00001
-    initial_value: 1.0
+    min_value: 0.001
+    max_value: 200.0
+    step: 0.001
+    initial_value: 100.0
     restore_value: true
     optimistic: true
     mode: box
@@ -233,12 +236,12 @@ select:
       sorting_group_id: grp_pm25
     set_action:
       - lambda: |-
-          float s = 1.0f;
-          if (x == "PMS5003_20231030")      s = 0.02838f;
-          else if (x == "PMS5003_20231218") s = 0.03525f;
-          else if (x == "PMS5003_20240104") s = 0.02896f;
-          else if (x == "PMS5003_20240826") s = 0.03863f;
-          else if (x == "PMS5003_20250116") s = 0.02983f;
-          else if (x == "PMS5003_20250530") s = 0.02411f;
+          float s = 100.0f;  // sentinel: factor 1.0 (× 100) = no batch calibration
+          if (x == "PMS5003_20231030")      s = 2.838f;
+          else if (x == "PMS5003_20231218") s = 3.525f;
+          else if (x == "PMS5003_20240104") s = 2.896f;
+          else if (x == "PMS5003_20240826") s = 3.863f;
+          else if (x == "PMS5003_20250116") s = 2.983f;
+          else if (x == "PMS5003_20250530") s = 2.411f;
           id(pm_2_5_scaling_factor).make_call().set_value(s).perform();
           id(pm_2_5_intercept).make_call().set_value(0.0f).perform();
