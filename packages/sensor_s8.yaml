@@ -63,8 +63,9 @@ select:
   - platform: template
     name: "SenseAir S8 CO2 ABC Interval"
     id: co2_abc_interval_select
-    options: ["1", "8", "30", "90"]
-    initial_option: "8"
+    # Option labels are days; set_action parses the leading number and converts to hours (× 24).
+    options: ["7 days", "14 days", "30 days", "90 days", "180 days"]
+    initial_option: "14 days"
     restore_value: true
     optimistic: true
     entity_category: config

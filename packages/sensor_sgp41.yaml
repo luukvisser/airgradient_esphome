@@ -56,8 +56,10 @@ select:
   - platform: template
     name: "SGP41 VOC Learning Time Offset"
     id: voc_learning_time_offset
-    options: ["12", "24", "60", "120", "360", "720"]
-    initial_option: "24"
+    # Option labels are days; set_action parses the leading number and converts
+    # to Sensirion's learning_time_offset_hours (× 24).
+    options: ["0.5 days", "1 day", "7 days", "14 days", "30 days"]
+    initial_option: "1 day"
     restore_value: true
     optimistic: true
     entity_category: config
@@ -67,14 +69,16 @@ select:
     set_action:
       - globals.set:
           id: g_voc_learning_time
-          value: !lambda 'return atoi(x.c_str());'
+          value: !lambda 'return (int)(atof(x.c_str()) * 24);'
       - lambda: |-
-          id(sgp4x_sensor).set_voc_algorithm_tuning(100, (uint16_t)atoi(x.c_str()), 12, 180, 50, 230);
+          id(sgp4x_sensor).set_voc_algorithm_tuning(100, (uint16_t)(atof(x.c_str()) * 24), 12, 180, 50, 230);
   - platform: template
     name: "SGP41 NOx Learning Time Offset"
     id: nox_learning_time_offset
-    options: ["12", "24", "60", "120", "360", "720"]
-    initial_option: "24"
+    # Option labels are days; set_action parses the leading number and converts
+    # to Sensirion's learning_time_offset_hours (× 24).
+    options: ["0.5 days", "1 day", "7 days", "14 days", "30 days"]
+    initial_option: "1 day"
     restore_value: true
     optimistic: true
     entity_category: config
@@ -84,6 +88,6 @@ select:
     set_action:
       - globals.set:
           id: g_nox_learning_time
-          value: !lambda 'return atoi(x.c_str());'
+          value: !lambda 'return (int)(atof(x.c_str()) * 24);'
       - lambda: |-
-          id(sgp4x_sensor).set_nox_algorithm_tuning(100, (uint16_t)atoi(x.c_str()), 12, 180, 230);
+          id(sgp4x_sensor).set_nox_algorithm_tuning(100, (uint16_t)(atof(x.c_str()) * 24), 12, 180, 230);
