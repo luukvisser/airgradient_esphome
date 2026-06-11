@@ -112,6 +112,12 @@ number:
 script:
   - id: update_leds
     then:
+      # ── Off ──────────────────────────────────────────────────────────────
+      - if:
+          condition:
+            lambda: 'return id(led_mode).current_option() == "Off";'
+          then:
+            - light.turn_off: led_strip
       # ── Test ─────────────────────────────────────────────────────────────
       - if:
           condition:
