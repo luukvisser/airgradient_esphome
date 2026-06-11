@@ -22,14 +22,12 @@ environment, conventions, and the process for common contribution types.
 │   ├── sensor_sgp41.yaml                  # VOC + NOx (SGP41)
 │   ├── sensor_sht40.yaml                  # Temperature + humidity (SHT40)
 │   ├── sensor_go_iaqs.yaml                # GO IAQS score (0–10) from CO2 + PM2.5
-│   ├── sensor_nowcast_aqi.yaml            # On-device EPA AQI + NowCast calculation
 │   ├── airgradient_api_esp32-c3.yaml      # AirGradient dashboard upload
 │   ├── diagnostic_esp32.yaml              # Free memory, CPU temp, loop time
 │   ├── watchdog.yaml                      # Hardware watchdog pulse
 │   ├── config_button.yaml                 # GPIO button: temp unit + CO2 calibration
 │   ├── captive_portal.yaml                # Fallback Wi-Fi AP + captive portal
 │   ├── button_factory_reset.yaml          # Factory-reset button
-│   ├── switch_safe_mode.yaml              # Safe-mode OTA switch
 │   ├── sensor_wifi.yaml                   # Wi-Fi RSSI sensor
 │   └── sensor_uptime.yaml                 # Device uptime sensor
 ├── docs/
