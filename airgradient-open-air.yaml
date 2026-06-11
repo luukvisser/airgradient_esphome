@@ -1,30 +1,129 @@
 # AirGradient Open Air — Outdoor Monitor
 # Model: O-1PST
 # https://www.airgradient.com/open-airgradient/instructions/overview/
+# This configuration targets the "Made for ESPHome" program:
+# https://esphome.io/guides/made_for_esphome/
 #
-# STATUS: Work in progress — not yet released.
-# This file still references upstream MallocArray packages and has not been
-# migrated to local packages. It is excluded from devices.yaml and CI until
-# the migration is complete.
+# Release workflow:
+#   - Update `config_version` and `esphome.project.version` below.
+#   - Tag the commit as `airgradient-open-air/v<version>` (the slug before /v
+#     must match the filename / devices.yaml slug).
+#   - CI validates, builds, publishes the manifest under /airgradient-open-air/
+#     on GitHub Pages, and attaches binaries to a GitHub Release.
 ---
 substitutions:
+  config_version: "1.0.0" # keep in sync with esphome.project.version below
+esphome:
   name: "airgradient-open-air"
-  friendly_name: "AirGradient Open Air"
-  name_add_mac_suffix: false
+  friendly_name: "AG Open Air"
+  name_add_mac_suffix: true
+  # `project.name` must be globally unique and stable: devices keyed on it
+  # for update checks and Home Assistant adoption. Use reverse-domain +
+  # the device slug so multiple products from the same org don't collide.
+  project:
+    name: "luukvisser.airgradient-open-air"
+    version: "1.0.0"
+logger:
 api:
 ota:
   - platform: esphome
+    id: ota_esphome
+  - platform: http_request
+    id: ota_http_request
+http_request:
+  id: http_request_client
+  # hw.airgradient.com presents a certificate chain that the ESP-IDF cert
+  # bundle (even the full Mozilla set) cannot verify — likely a missing
+  # intermediate on the server side. Disabling verification keeps the
+  # connection encrypted (TLS) but skips identity checks. OTA firmware
+  # downloads from luukvisser.github.io go through the same component;
+  # they remain encrypted, with the URL pinned in this config.
+  verify_ssl: false
+  timeout: 10s
+  buffer_size_rx: 2048
+update:
+  - platform: http_request
+    id: firmware_update
+    name: "Firmware Update"
+    # Per-device manifest URL. Must match the Pages path the release
+    # workflow publishes to (site/<slug>/manifest.json).
+    source: "https://luukvisser.github.io/airgradient_esphome/airgradient-open-air/manifest.json"
+    update_interval: 6h
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system
 wifi:
+  id: wifi_client
+  fast_connect: false
+  ap:
+    ap_timeout: 90s
+    password: "cleanair"
+captive_portal:
+  id: captive_portal_web
+esp32_improv:
+  id: improv_ble
+  authorizer: none
+improv_serial:
+  id: improv_serial_provisioner
+web_server:
+  version: 3
+  port: 80
+  sorting_groups:
+    - id: grp_sensors
+      name: "Sensors"
+      sorting_weight: 5
+    - id: grp_co2
+      name: "CO₂ (SenseAir S8)"
+      sorting_weight: 30
+    - id: grp_pm25
+      name: "PM2.5 & Temperature & Humidity(PMS5003T)"
+      sorting_weight: 40
+    - id: grp_voc
+      name: "VOC / NOx (SGP41)"
+      sorting_weight: 60
+    - id: grp_system
+      name: "System"
+      sorting_weight: 70
 dashboard_import:
-  package_import_url: github://MallocArray/airgradient_esphome/airgradient-open-air-o-1pst.yaml
+  # Per-device import URL. The @main ref means users always adopt the
+  # latest version of the config from the default branch; switch to a
+  # tag (e.g. @airgradient-open-air/v1.0.0) if you want adoption pinned.
+  package_import_url: "github://luukvisser/airgradient-esphome/airgradient-open-air.yaml@main"
   import_full_config: false
+button:
+  - platform: safe_mode
+    id: safe_mode_button
+    name: "Safe Mode Boot"
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system
+  - platform: template
+    id: check_firmware_update_button
+    name: "Check for Firmware Update"
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system
+    on_press:
+      - update.check: firmware_update
 packages:
-  board: github://MallocArray/airgradient_esphome/packages/airgradient_esp32-c3_board.yaml
-  captive_portal: github://MallocArray/airgradient_esphome/packages/captive_portal.yaml
-  pm_2.5: github://MallocArray/airgradient_esphome/packages/sensor_pms5003t.yaml
-  co2: github://MallocArray/airgradient_esphome/packages/sensor_s8.yaml
-  tvoc: github://MallocArray/airgradient_esphome/packages/sensor_sgp41.yaml
-  airgradient_api: github://MallocArray/airgradient_esphome/packages/airgradient_api_esp32-c3.yaml
-  hardware_watchdog: github://MallocArray/airgradient_esphome/packages/watchdog.yaml
-  wifi: github://MallocArray/airgradient_esphome/packages/sensor_wifi.yaml
-  uptime: github://MallocArray/airgradient_esphome/packages/sensor_uptime.yaml
+  # ── Hardware ────────────────────────────────────────────────────────────
+  board: !include packages/airgradient_esp32-c3_board.yaml
+  # ── Sensors ─────────────────────────────────────────────────────────────
+  pm_2.5: !include packages/sensor_pms5003t.yaml
+  co2: !include packages/sensor_s8.yaml
+  tvoc: !include packages/sensor_sgp41.yaml
+  wifi: !include packages/sensor_wifi.yaml
+  uptime: !include packages/sensor_uptime.yaml
+  go_iaqs: !include packages/sensor_go_iaqs.yaml
+  # ── Integrations ────────────────────────────────────────────────────────
+  airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
+  # ── System utilities ────────────────────────────────────────────────────
+  diagnostic_esp32: !include packages/diagnostic_esp32.yaml
+  hardware_watchdog: !include packages/watchdog.yaml
+  button_factory_reset: !include packages/button_factory_reset.yaml
+  captive_portal: !include packages/captive_portal.yaml
+  config_button: !include packages/config_button.yaml
+binary_sensor:
+  - id: !extend config_button
+    pin:
+      ignore_strapping_warning: true # Acknowledging that this is a strapping pin and should not have external pullup/down resistors  https://esphome.io/guides/faq.html#why-am-i-getting-a-warning-about-strapping-pins

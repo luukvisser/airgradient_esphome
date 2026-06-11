@@ -1,6 +1,5 @@
-# Physical config button (GPIO9) on AirGradient ONE hardware.
-# Depends on: display_in_f (from display_sh1106_multi_page package) for short-press toggle,
-#             senseair_co2 (from sensor_s8 package) for long-press CO2 calibration,
+# Physical config button (GPIO9) on AirGradient ONE / Open Air hardware.
+# Depends on: senseair_co2 (from sensor_s8 package) for long-press CO2 calibration,
 #             factory_reset_btn (from button_factory_reset package) for 8s-hold factory reset.
 # Cannot be used without those packages.
 ---
@@ -39,12 +38,6 @@ binary_sensor:
       then:
         - script.stop: config_button_factory_reset_hold
     on_multi_click:
-      - timing: # Short Click
-          - ON for at most 1s
-          - OFF for at least 0.5s
-        then:
-          - logger.log: "Toggling display between C and F"
-          - select.next: display_in_f
       - timing: # Press and hold up to 5 seconds
           - ON for 1s to 5s
           - OFF for at least 0.5s
