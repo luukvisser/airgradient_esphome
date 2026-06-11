@@ -1,0 +1,23 @@
+{
+  "name": "AirGradient Open Air",
+  "version": "1.0.0",
+  "home_assistant_domain": "esphome",
+  "new_install_prompt_erase": false,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "parts": [
+        {
+          "path": "firmware/latest/airgradient-open-air.factory.bin",
+          "offset": 0
+        }
+      ],
+      "ota": {
+        "path": "firmware/latest/airgradient-open-air.ota.bin",
+        "md5": "40c235ba996a71328d12ee059b1cfbc2",
+        "release_url": "https://github.com/luukvisser/airgradient_esphome/releases/tag/airgradient-open-air%2Fv1.0.0",
+        "summary": "AirGradient Open Air firmware v1.0.0"
+      }
+    }
+  ]
+}
