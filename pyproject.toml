@@ -5,10 +5,7 @@ description = "ESPHome firmware build pipeline for AirGradient devices (Made for
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
 
-# ESPHome is the one required runtime dep for building firmware. The `==`
-# (exact version) specifier pins to the 2026.4.x line and ensures
-# reproducible builds. Bump deliberately after verifying a new minor
-# release compiles every device in devices.yaml.
+# ESPHome is the one required runtime dep for building firmware. 
 dependencies = [
     "esphome==2026.5.3",
     # Used by scripts/ to parse devices.yaml and build the landing page.
@@ -16,7 +13,7 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["setuptools>=82.0.1"]
+requires = ["setuptools==82.0.1"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
