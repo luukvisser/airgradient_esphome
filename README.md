@@ -48,47 +48,6 @@ Every device is declared in [`devices.yaml`](devices.yaml):
 
 ---
 
-## Architecture
-
-The firmware is assembled from small, single-responsibility YAML packages.
-`airgradient-one.yaml` is the entry point — it declares project identity and
-connectivity, then pulls in packages by category:
-
-```mermaid
-graph TD
-    one["airgradient-one.yaml\n(ESP32-C3)"]
-
-    one --> B["Board & System"]
-    one --> S["Sensors"]
-    one --> D["Display"]
-    one --> L["LED Indicators"]
-    one --> I["Integrations"]
-
-    B --> b1[airgradient_esp32-c3_board]
-    B --> b2[diagnostic_esp32]
-    B --> b3[watchdog]
-    B --> b4[button_factory_reset]
-    B --> b5[captive_portal]
-    B --> b6[config_button]
-
-    S --> s1[sensor_pms5003]
-    S --> s2[sensor_s8]
-    S --> s3[sensor_sht40]
-    S --> s4[sensor_sgp41]
-    S --> s5[sensor_wifi]
-    S --> s6[sensor_uptime]
-    S --> s7[sensor_go_iaqs]
-
-    D --> d1[display_sh1106_multi_page]
-
-    L --> l1[led]
-    L --> l2[led_combo]
-
-    I --> i1[airgradient_api_esp32-c3]
-```
-
----
-
 ## Notable changes from upstream
 
 - **LED**: `led_co2` replaced by `led_combo` — eleven selectable modes, health-based
