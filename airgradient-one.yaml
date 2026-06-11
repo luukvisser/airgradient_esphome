@@ -25,6 +25,10 @@ esphome:
     version: "1.4.10"
 logger:
 api:
+  # Disable the API connection watchdog. By default the device reboots after
+  # 15 min without an API client (Home Assistant). This unit can run standalone
+  # (web UI + AirGradient cloud), so the watchdog would reboot it every 15 min.
+  reboot_timeout: 0s
 ota:
   - platform: esphome
     id: ota_esphome
