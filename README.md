@@ -7,11 +7,21 @@
 [![Made for ESPHome](https://img.shields.io/badge/Made_for-ESPHome-blue?logo=esphome)](https://esphome.io/guides/made_for_esphome/)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE.txt)
 
-ESPHome firmware for the **AirGradient ONE** (v9, ESP32-C3 indoor monitor), built on top
-of
+ESPHome firmware for **AirGradient** air-quality monitors (ESP32-C3), built on top of
 [MallocArray/airgradient_esphome](https://github.com/MallocArray/airgradient_esphome).
 Designed to meet the [Made for ESPHome](https://esphome.io/guides/made_for_esphome/)
 program requirements.
+
+---
+
+## Install firmware
+
+Flash directly from the browser — no ESPHome or Python installation required:
+
+**<https://luukvisser.github.io/airgradient_esphome/>**
+
+Open the link in Chrome or Edge, plug in your device via USB, and click **Install**. See
+[docs/firmware.md](docs/firmware.md) for full instructions and OTA update details.
 
 ---
 
@@ -31,7 +41,10 @@ program requirements.
 
 Every device is declared in [`devices.yaml`](devices.yaml):
 
-- **AirGradient ONE** (`airgradient-one`) — ESP32-C3 indoor monitor
+- **AirGradient ONE** (`airgradient-one`) — ESP32-C3 indoor monitor (I-9PSL): PM2.5,
+  CO₂, VOC/NOx, temperature/humidity, OLED display, RGB LED strip
+- **AirGradient Open Air** (`airgradient-open-air`) — ESP32-C3 outdoor monitor (O-1PST):
+  PM2.5, CO₂, VOC/NOx, temperature/humidity (via PMS5003T)
 
 ---
 
@@ -78,7 +91,7 @@ graph TD
 
 ## Notable changes from upstream
 
-- **LED**: `led_co2` replaced by `led_combo` — ten selectable modes, health-based
+- **LED**: `led_co2` replaced by `led_combo` — eleven selectable modes, health-based
   thresholds, perceptual brightness correction, LED fade effect. See
   [docs/led.md](docs/led.md).
 - **Display**: multi-page OLED with nine selectable pages plus a boot page. See

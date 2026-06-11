@@ -1,25 +1,25 @@
 # LED indicator
 
 The `led_combo` package drives a WS2812 11-LED strip (GPIO10). Eleven modes are
-selectable from Home Assistant or the built-in web UI (default: **5CO2+5PM2.5+1VOC**).
+selectable from Home Assistant or the built-in web UI (default: **CO2 Bar**).
 
 ---
 
 ## Modes at a glance
 
-| Mode                   | LED layout                                                    | Sensors         |
-| ---------------------- | ------------------------------------------------------------- | --------------- |
-| **5CO2+5PM2.5+1VOC** ★ | 5 LEDs CO₂ · 5 LEDs PM2.5 · 1 LED VOC                         | CO₂, PM2.5, VOC |
-| **5CO2+5PM2.5**        | 5 LEDs CO₂ · 5 LEDs PM2.5 · LED 10 off                        | CO₂, PM2.5      |
-| **5CO2+3PM25+1VOC**    | 5 CO₂ · 3 PM2.5 · 1 VOC · 2 off                               | CO₂, PM2.5, VOC |
-| **CO2**                | All 11 LEDs reflect CO₂                                       | CO₂             |
-| **PM2.5**              | All 11 LEDs reflect PM2.5                                     | PM2.5           |
-| **VOC**                | All 11 LEDs reflect VOC index                                 | VOC             |
-| **CO2 Bar**            | Bar fills right→left; 1 LED at ≤ 500 ppm → 11 at ≥ 2 000 ppm  | CO₂             |
-| **PM2.5 Bar**          | Bar fills right→left; 1 LED at ≤ 5 µg/m³ → 11 at ≥ ~150 µg/m³ | PM2.5           |
-| **GO IAQS**            | Bar fills right→left from score 0–10; LED 10 always off       | GO IAQS score   |
-| **Test**               | All 11 LEDs white at full brightness                          | —               |
-| **Off**                | Strip off                                                     | —               |
+| Mode                 | LED layout                                                    | Sensors         |
+| -------------------- | ------------------------------------------------------------- | --------------- |
+| **5CO2+5PM2.5+1VOC** | 5 LEDs CO₂ · 5 LEDs PM2.5 · 1 LED VOC                         | CO₂, PM2.5, VOC |
+| **5CO2+5PM2.5**      | 5 LEDs CO₂ · 5 LEDs PM2.5 · LED 10 off                        | CO₂, PM2.5      |
+| **5CO2+3PM25+1VOC**  | 5 CO₂ · 3 PM2.5 · 1 VOC · 2 off                               | CO₂, PM2.5, VOC |
+| **CO2**              | All 11 LEDs reflect CO₂                                       | CO₂             |
+| **PM2.5**            | All 11 LEDs reflect PM2.5                                     | PM2.5           |
+| **VOC**              | All 11 LEDs reflect VOC index                                 | VOC             |
+| **CO2 Bar** ★        | Bar fills right→left; 1 LED at < 600 ppm → 11 at ≥ 1 500 ppm  | CO₂             |
+| **PM2.5 Bar**        | Bar fills right→left; 1 LED at < 2.5 µg/m³ → 11 at ≥ 25 µg/m³ | PM2.5           |
+| **GO IAQS**          | Bar fills right→left from score 0–10; LED 10 always off       | GO IAQS score   |
+| **Test**             | All 11 LEDs white at full brightness                          | —               |
+| **Off**              | Strip off                                                     | —               |
 
 ★ default on first boot
 
@@ -74,7 +74,7 @@ packet-beta
 | Bar mode      | 1 LED lit (right) | All 11 LEDs lit | Step per LED |
 | ------------- | ----------------- | --------------- | ------------ |
 | **CO2 Bar**   | < 600 ppm         | ≥ 1 500 ppm     | 100 ppm      |
-| **PM2.5 Bar** | ≤ 5 µg/m³         | ≥ ~150 µg/m³    | 14.5 µg/m³   |
+| **PM2.5 Bar** | < 2.5 µg/m³       | ≥ 25 µg/m³      | 2.5 µg/m³    |
 
 **GO IAQS** — score bar, LED 10 always off:
 
@@ -100,15 +100,16 @@ Colors transition smoothly between steps. Thresholds follow published health gui
 
 | Color  | CO₂ (ppm)     | PM2.5 (µg/m³) | VOC index |
 | ------ | ------------- | ------------- | --------- |
-| Green  | < 600         | < 5           | < 100     |
-| Yellow | 600 – 900     | 5 – 15        | 100 – 200 |
-| Orange | 900 – 1 000   | 15 – 25       | 200 – 300 |
-| Red    | 1 000 – 1 200 | 25 – 35       | 300 – 400 |
-| Purple | > 1 200       | > 35          | > 400     |
+| Green  | < 600         | < 5           | < 175     |
+| Yellow | 600 – 900     | 5 – 15        | 175 – 225 |
+| Orange | 900 – 1 000   | 15 – 25       | 225 – 300 |
+| Red    | 1 000 – 1 200 | 25 – 35       | 300 – 375 |
+| Purple | > 1 200       | > 35          | > 375     |
 
 CO₂ thresholds follow ASHRAE/UBA indoor ventilation guidance. PM2.5 thresholds follow
-the 2021 WHO global air quality guidelines. VOC thresholds follow Sensirion SGP41 index
-interpretation (100 = learned baseline for this environment).
+the 2021 WHO global air quality guidelines. VOC thresholds are calibrated around the
+SGP41 baseline: 175 is typical clean indoor air; values above 200 indicate increasing
+VOC events.
 
 All thresholds are configurable via `substitutions` in `packages/led_combo.yaml`.
 
