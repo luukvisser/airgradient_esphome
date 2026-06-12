@@ -90,21 +90,6 @@ dashboard_import:
   # tag (e.g. @airgradient-open-air/v1.0.0) if you want adoption pinned.
   package_import_url: "github://luukvisser/airgradient-esphome/airgradient-open-air.yaml@main"
   import_full_config: false
-button:
-  - platform: safe_mode
-    id: safe_mode_button
-    name: "Safe Mode Boot"
-    entity_category: diagnostic
-    web_server:
-      sorting_group_id: grp_system
-  - platform: template
-    id: check_firmware_update_button
-    name: "Firmware Update Check"
-    entity_category: diagnostic
-    web_server:
-      sorting_group_id: grp_system
-    on_press:
-      - update.check: firmware_update
 packages:
   # ── Hardware ────────────────────────────────────────────────────────────
   board: !include packages/airgradient_esp32-c3_board.yaml
