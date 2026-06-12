@@ -12,7 +12,7 @@
 #     on GitHub Pages, and attaches binaries to a GitHub Release.
 ---
 substitutions:
-  config_version: "1.0.0" # keep in sync with esphome.project.version below
+  config_version: "1.0.1" # keep in sync with esphome.project.version below
 esphome:
   name: "airgradient-open-air"
   friendly_name: "AG Open Air"
@@ -22,7 +22,7 @@ esphome:
   # the device slug so multiple products from the same org don't collide.
   project:
     name: "luukvisser.airgradient-open-air"
-    version: "1.0.0"
+    version: "1.0.1"
 logger:
 api:
 ota:
@@ -87,7 +87,7 @@ web_server:
 dashboard_import:
   # Per-device import URL. The @main ref means users always adopt the
   # latest version of the config from the default branch; switch to a
-  # tag (e.g. @airgradient-open-air/v1.0.0) if you want adoption pinned.
+  # tag (e.g. @airgradient-open-air/v1.0.1) if you want adoption pinned.
   package_import_url: "github://luukvisser/airgradient_esphome/airgradient-open-air.yaml@main"
   import_full_config: true
 packages:
