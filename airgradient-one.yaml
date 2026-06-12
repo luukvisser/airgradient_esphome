@@ -12,7 +12,7 @@
 #     on GitHub Pages, and attaches binaries to a GitHub Release.
 ---
 substitutions:
-  config_version: "1.4.11" # keep in sync with esphome.project.version below
+  config_version: "1.4.12" # keep in sync with esphome.project.version below
 esphome:
   name: "airgradient-one"
   friendly_name: "AG ONE"
@@ -22,7 +22,7 @@ esphome:
   # the device slug so multiple products from the same org don't collide.
   project:
     name: "luukvisser.airgradient-one"
-    version: "1.4.11"
+    version: "1.4.12"
 logger:
 api:
 ota:
@@ -97,23 +97,8 @@ dashboard_import:
   # Per-device import URL. The @main ref means users always adopt the
   # latest version of the config from the default branch; switch to a
   # tag (e.g. @airgradient-one/v1.0.0) if you want adoption pinned.
-  package_import_url: "github://luukvisser/airgradient-esphome/airgradient-one.yaml@main"
-  import_full_config: false
-button:
-  - platform: safe_mode
-    id: safe_mode_button
-    name: "Safe Mode Boot"
-    entity_category: diagnostic
-    web_server:
-      sorting_group_id: grp_system
-  - platform: template
-    id: check_firmware_update_button
-    name: "Check for Firmware Update"
-    entity_category: diagnostic
-    web_server:
-      sorting_group_id: grp_system
-    on_press:
-      - update.check: firmware_update
+  package_import_url: "github://luukvisser/airgradient_esphome/airgradient-one.yaml@main"
+  import_full_config: true
 packages:
   # ── Hardware ────────────────────────────────────────────────────────────
   board: !include packages/airgradient_esp32-c3_board.yaml
@@ -137,7 +122,3 @@ packages:
   button_factory_reset: !include packages/button_factory_reset.yaml
   captive_portal: !include packages/captive_portal.yaml
   config_button: !include packages/config_button.yaml
-binary_sensor:
-  - id: !extend config_button
-    pin:
-      ignore_strapping_warning: true # Acknowledging that this is a strapping pin and should not have external pullup/down resistors  https://esphome.io/guides/faq.html#why-am-i-getting-a-warning-about-strapping-pins

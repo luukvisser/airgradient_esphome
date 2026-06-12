@@ -40,3 +40,17 @@ button:
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
+  - platform: safe_mode
+    id: safe_mode_button
+    name: "Restart Device in Safe Mode"
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system
+  - platform: template
+    id: check_firmware_update_button
+    name: "Firmware Update Check"
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: grp_system
+    on_press:
+      - update.check: firmware_update

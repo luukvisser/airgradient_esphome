@@ -132,10 +132,10 @@ display:
           }
           it.printf(56, 50, id(open_sans_10), "µg/m³");
           it.line(97,19-4,97,64-4);
-          it.printf(101,19-4, id(open_sans_10), "VOC");
-          it.printf(101,29-4, id(open_sans_bold_10), isnan(id(voc).state) ? "-" : "%.0f", id(voc).state);
-          it.printf(101,43-4, id(open_sans_10), "NOx");
-          it.printf(101,54-4, id(open_sans_bold_10), isnan(id(nox).state) ? "-" : "%.0f", id(nox).state);
+          it.printf(101, 15, id(open_sans_10), "VOC");
+          it.printf(101, 27, id(open_sans_bold_10), isnan(id(voc).state) ? "-" : "%.0f", id(voc).state);
+          it.printf(101, 38, id(open_sans_10), "NOx");
+          it.printf(101, 50, id(open_sans_bold_10), isnan(id(nox).state) ? "-" : "%.0f", id(nox).state);
       - id: boot
         lambda: |-
           it.printf(0, 0, id(open_sans_bold_14), "AirGradient ONE");
