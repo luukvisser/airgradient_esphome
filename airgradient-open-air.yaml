@@ -99,7 +99,7 @@ button:
       sorting_group_id: grp_system
   - platform: template
     id: check_firmware_update_button
-    name: "Check for Firmware Update"
+    name: "Firmware Update Check"
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
