@@ -28,6 +28,7 @@ binary_sensor:
       number: GPIO9
       mode: INPUT_PULLUP
       inverted: true
+      ignore_strapping_warning: true # GPIO9 is a strapping pin on ESP32-C3; no external pull-up/down resistors https://esphome.io/guides/faq.html#why-am-i-getting-a-warning-about-strapping-pins
     internal: true # Hide from displaying in HomeAssistant
     name: "Configuration Button"
     id: config_button

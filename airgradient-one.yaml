@@ -122,7 +122,3 @@ packages:
   button_factory_reset: !include packages/button_factory_reset.yaml
   captive_portal: !include packages/captive_portal.yaml
   config_button: !include packages/config_button.yaml
-binary_sensor:
-  - id: !extend config_button
-    pin:
-      ignore_strapping_warning: true # Acknowledging that this is a strapping pin and should not have external pullup/down resistors  https://esphome.io/guides/faq.html#why-am-i-getting-a-warning-about-strapping-pins
