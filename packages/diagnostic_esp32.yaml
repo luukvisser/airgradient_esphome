@@ -42,7 +42,7 @@ button:
       sorting_group_id: grp_system
   - platform: safe_mode
     id: safe_mode_button
-    name: "Safe Mode Boot"
+    name: "Restart Device in Safe Mode"
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
