@@ -121,7 +121,7 @@ display:
           it.printf(0,19-4, id(open_sans_10), "CO2");
           it.printf(0,27, id(open_sans_bold_18), isnan(id(co2).state) ? "-" : "%.0f", id(co2).state);
           it.printf(0,50, id(open_sans_10), "ppm");
-          it.line(52,19-4,52,64-4);
+          it.line(52,19-4,52,64);
           it.printf(56, 19-4, id(open_sans_10), "PM2.5");
           if (isnan(id(pm_2_5).state)) {
             it.printf(56, 27, id(open_sans_bold_18), "-");
@@ -131,7 +131,7 @@ display:
             it.printf(56, 27, id(open_sans_bold_18), "%.1f", id(pm_2_5).state);
           }
           it.printf(56, 50, id(open_sans_10), "µg/m³");
-          it.line(97,19-4,97,64-4);
+          it.line(97,19-4,97,64);
           it.printf(101, 15, id(open_sans_10), "VOC");
           it.printf(101, 26, id(open_sans_bold_10), isnan(id(voc).state) ? "-" : "%.0f", id(voc).state);
           it.printf(101, 39, id(open_sans_10), "NOx");
