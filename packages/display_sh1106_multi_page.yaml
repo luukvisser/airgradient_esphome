@@ -117,7 +117,7 @@ display:
             it.printf(0, -4, id(open_sans_14), "%.1f°C", id(temp).state);
           }
           it.printf(128, -4, id(open_sans_14), TextAlign::TOP_RIGHT, isnan(id(humidity).state) ? "-" : "%.0f%%", id(humidity).state);
-          it.line(0,17-4,128,17-4);
+          it.line(0,18-4,128,18-4);
           it.printf(0,19-4, id(open_sans_10), "CO2");
           it.printf(0,27, id(open_sans_bold_18), isnan(id(co2).state) ? "-" : "%.0f", id(co2).state);
           it.printf(0,50, id(open_sans_10), "ppm");
@@ -133,8 +133,8 @@ display:
           it.printf(56, 50, id(open_sans_10), "µg/m³");
           it.line(97,19-4,97,64-4);
           it.printf(101, 15, id(open_sans_10), "VOC");
-          it.printf(101, 27, id(open_sans_bold_10), isnan(id(voc).state) ? "-" : "%.0f", id(voc).state);
-          it.printf(101, 38, id(open_sans_10), "NOx");
+          it.printf(101, 26, id(open_sans_bold_10), isnan(id(voc).state) ? "-" : "%.0f", id(voc).state);
+          it.printf(101, 39, id(open_sans_10), "NOx");
           it.printf(101, 50, id(open_sans_bold_10), isnan(id(nox).state) ? "-" : "%.0f", id(nox).state);
       - id: boot
         lambda: |-
