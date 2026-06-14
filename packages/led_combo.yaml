@@ -1093,10 +1093,15 @@ script:
                               int n = std::max(1, std::min(11, 2 + (int)floorf((id(co2).state - 600.0f) / 100.0f)));
                               return 11 - n - 1;
                             color_brightness: !lambda |-
+                              // Half the *perceived* brightness of a full LED.
+                              // The strip applies gamma correction (default 2.8),
+                              // so a naive 0.25 color_brightness lands at only
+                              // ~14% of a full LED's output — effectively
+                              // invisible. Scale by 0.5^(1/2.8) ≈ 0.781 so the
+                              // preview reads as a true perceptual half.
                               float b = id(led_brightness).state;
                               if (b < 30.0f) return 0.0f;
-                              if (b <= 50.0f) return 0.25f;
-                              return b / 200.0f;
+                              return (b / 100.0f) * 0.781f;
                             red: !lambda |-
                               float raw = id(co2).state;
                               float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
@@ -1190,10 +1195,15 @@ script:
                               int n = std::max(1, std::min(11, 1 + (int)floorf(pm / 2.5f)));
                               return 11 - n - 1;
                             color_brightness: !lambda |-
+                              // Half the *perceived* brightness of a full LED.
+                              // The strip applies gamma correction (default 2.8),
+                              // so a naive 0.25 color_brightness lands at only
+                              // ~14% of a full LED's output — effectively
+                              // invisible. Scale by 0.5^(1/2.8) ≈ 0.781 so the
+                              // preview reads as a true perceptual half.
                               float b = id(led_brightness).state;
                               if (b < 30.0f) return 0.0f;
-                              if (b <= 50.0f) return 0.25f;
-                              return b / 200.0f;
+                              return (b / 100.0f) * 0.781f;
                             red: !lambda |-
                               float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
                               if (x <= $pm_2_5_bar_green) return 0.0f;
