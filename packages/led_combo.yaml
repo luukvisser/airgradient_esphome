@@ -1093,10 +1093,12 @@ script:
                               int n = std::max(1, std::min(11, 2 + (int)floorf((id(co2).state - 600.0f) / 100.0f)));
                               return 11 - n - 1;
                             color_brightness: !lambda |-
+                              // Half-power preview LED. Off below 30% brightness;
+                              // from 30% to 100% the preview's color_brightness
+                              // scales linearly from 0.25 up to 0.60.
                               float b = id(led_brightness).state;
                               if (b < 30.0f) return 0.0f;
-                              if (b <= 50.0f) return 0.25f;
-                              return b / 200.0f;
+                              return 0.25f + (b - 30.0f) * (0.60f - 0.25f) / (100.0f - 30.0f);
                             red: !lambda |-
                               float raw = id(co2).state;
                               float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
@@ -1190,10 +1192,12 @@ script:
                               int n = std::max(1, std::min(11, 1 + (int)floorf(pm / 2.5f)));
                               return 11 - n - 1;
                             color_brightness: !lambda |-
+                              // Half-power preview LED. Off below 30% brightness;
+                              // from 30% to 100% the preview's color_brightness
+                              // scales linearly from 0.25 up to 0.60.
                               float b = id(led_brightness).state;
                               if (b < 30.0f) return 0.0f;
-                              if (b <= 50.0f) return 0.25f;
-                              return b / 200.0f;
+                              return 0.25f + (b - 30.0f) * (0.60f - 0.25f) / (100.0f - 30.0f);
                             red: !lambda |-
                               float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
                               if (x <= $pm_2_5_bar_green) return 0.0f;
