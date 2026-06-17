@@ -1093,21 +1093,12 @@ script:
                               int n = std::max(1, std::min(11, 2 + (int)floorf((id(co2).state - 600.0f) / 100.0f)));
                               return 11 - n - 1;
                             color_brightness: !lambda |-
-                              // Half-power preview that stays a clear, visible
-                              // "half" across the whole brightness range.
-                              // gamma 2.8 makes color_brightness ~perceptual, so
-                              // 0.5x reads as a true half — but at low settings
-                              // that sinks below the strip's visibility floor
-                              // (~0.22, where a full LED goes dark). So aim for
-                              // 0.5x, never drop below the floor, and turn off
-                              // only when there's no room to sit both above the
-                              // floor and clearly dimmer than the full LEDs.
-                              float full = id(led_brightness).state / 100.0f;
-                              const float floor_cb = 0.22f;
-                              if (0.75f * full < floor_cb) return 0.0f;
-                              float half = 0.5f * full;
-                              if (half < floor_cb) half = floor_cb;
-                              return half;
+                              // Half-power preview LED. Off below 30% brightness;
+                              // from 30% to 100% the preview's color_brightness
+                              // scales linearly from 0.25 up to 0.50.
+                              float b = id(led_brightness).state;
+                              if (b < 30.0f) return 0.0f;
+                              return 0.25f + (b - 30.0f) * (0.50f - 0.25f) / (100.0f - 30.0f);
                             red: !lambda |-
                               float raw = id(co2).state;
                               float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
@@ -1201,21 +1192,12 @@ script:
                               int n = std::max(1, std::min(11, 1 + (int)floorf(pm / 2.5f)));
                               return 11 - n - 1;
                             color_brightness: !lambda |-
-                              // Half-power preview that stays a clear, visible
-                              // "half" across the whole brightness range.
-                              // gamma 2.8 makes color_brightness ~perceptual, so
-                              // 0.5x reads as a true half — but at low settings
-                              // that sinks below the strip's visibility floor
-                              // (~0.22, where a full LED goes dark). So aim for
-                              // 0.5x, never drop below the floor, and turn off
-                              // only when there's no room to sit both above the
-                              // floor and clearly dimmer than the full LEDs.
-                              float full = id(led_brightness).state / 100.0f;
-                              const float floor_cb = 0.22f;
-                              if (0.75f * full < floor_cb) return 0.0f;
-                              float half = 0.5f * full;
-                              if (half < floor_cb) half = floor_cb;
-                              return half;
+                              // Half-power preview LED. Off below 30% brightness;
+                              // from 30% to 100% the preview's color_brightness
+                              // scales linearly from 0.25 up to 0.50.
+                              float b = id(led_brightness).state;
+                              if (b < 30.0f) return 0.0f;
+                              return 0.25f + (b - 30.0f) * (0.50f - 0.25f) / (100.0f - 30.0f);
                             red: !lambda |-
                               float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
                               if (x <= $pm_2_5_bar_green) return 0.0f;
