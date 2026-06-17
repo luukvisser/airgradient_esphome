@@ -1093,19 +1093,10 @@ script:
                               int n = std::max(1, std::min(11, 2 + (int)floorf((id(co2).state - 600.0f) / 100.0f)));
                               return 11 - n - 1;
                             color_brightness: !lambda |-
-                              // Half-power "next level" preview LED.
-                              // Aim for half a full bar LED (0.5x) for clear
-                              // contrast, but clamp to 0.25 — the lowest
-                              // color_brightness that still lights visibly on this
-                              // strip (~0.22 and below render dark). Below 30%
-                              // brightness the full LEDs themselves sit near that
-                              // floor, leaving no room for a dimmer-yet-visible
-                              // preview, so turn it off.
-                              float full = id(led_brightness).state / 100.0f;
-                              if (full < 0.30f) return 0.0f;
-                              float half = 0.5f * full;
-                              if (half < 0.25f) half = 0.25f;
-                              return half;
+                              float b = id(led_brightness).state;
+                              if (b < 30.0f) return 0.0f;
+                              if (b <= 50.0f) return 0.25f;
+                              return b / 200.0f;
                             red: !lambda |-
                               float raw = id(co2).state;
                               float x = (raw < $co2_green) ? raw : $co2_green + floorf((raw - $co2_green) / 50.0f) * 50.0f;
@@ -1199,19 +1190,10 @@ script:
                               int n = std::max(1, std::min(11, 1 + (int)floorf(pm / 2.5f)));
                               return 11 - n - 1;
                             color_brightness: !lambda |-
-                              // Half-power "next level" preview LED.
-                              // Aim for half a full bar LED (0.5x) for clear
-                              // contrast, but clamp to 0.25 — the lowest
-                              // color_brightness that still lights visibly on this
-                              // strip (~0.22 and below render dark). Below 30%
-                              // brightness the full LEDs themselves sit near that
-                              // floor, leaving no room for a dimmer-yet-visible
-                              // preview, so turn it off.
-                              float full = id(led_brightness).state / 100.0f;
-                              if (full < 0.30f) return 0.0f;
-                              float half = 0.5f * full;
-                              if (half < 0.25f) half = 0.25f;
-                              return half;
+                              float b = id(led_brightness).state;
+                              if (b < 30.0f) return 0.0f;
+                              if (b <= 50.0f) return 0.25f;
+                              return b / 200.0f;
                             red: !lambda |-
                               float x = floorf(std::max(0.0f, id(pm_2_5).state) / 1.25f) * 1.25f;
                               if (x <= $pm_2_5_bar_green) return 0.0f;
