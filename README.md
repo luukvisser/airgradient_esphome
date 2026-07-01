@@ -63,6 +63,155 @@ Every device is declared in [`devices.yaml`](devices.yaml):
 
 ---
 
+## Feature comparison
+
+An extensive comparison of every configurable feature, sensor, and toggle across the
+three firmwares an AirGradient ONE / Open Air owner is likely to choose between. The
+columns are pinned to specific released versions so it is clear what is being compared:
+
+| Column                  | Project                                                                               | Version compared                                         |
+| ----------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **AirGradient (stock)** | [airgradienthq/arduino](https://github.com/airgradienthq/arduino)                     | `3.6.x` (stable `3.6.2`; IAQS/SPS30 pre-releases 3.6.6)  |
+| **MallocArray**         | [MallocArray/airgradient_esphome](https://github.com/MallocArray/airgradient_esphome) | `5.3.7`                                                  |
+| **This repo**           | [luukvisser/airgradient_esphome](https://github.com/luukvisser/airgradient_esphome)   | `airgradient-one/v1.4.16`, `airgradient-open-air/v1.0.1` |
+
+**Legend for how a setting is changed:**
+
+- ✅ **Runtime** — live control exposed in Home Assistant **and** the ESPHome web server
+  (switch / select / number / button). No rebuild, no reflash.
+- ⚙️ **Compile-time** — a YAML substitution only. Changing it means editing the config
+  and reflashing/OTA.
+- 📱 **App / cloud** — set in the AirGradient mobile app, stored on the AirGradient
+  server, and pulled by the device on its periodic `GET /config` poll.
+- 🔧 **Local REST** — settable on-device via the firmware's `PUT /config` HTTP endpoint
+  (no cloud round-trip).
+- ❌ — not available. ➖ — not applicable.
+
+> The AirGradient (stock) column reflects settings the firmware reads from the
+> AirGradient server config document (the JSON returned by
+> `GET https://hw.airgradient.com/sensors/airgradient:<serial>/one/config`, mirrored by
+> the local `GET/PUT /config` endpoint). Most stock settings are therefore both 📱 and
+> 🔧. MallocArray runtime exposure varies by which optional package you include; cells
+> reflect the default device configs shipped in that repo.
+
+### Platform & build
+
+| Feature                      | AirGradient (stock) | MallocArray                 | This repo  |
+| ---------------------------- | ------------------- | --------------------------- | ---------- |
+| ESP32-C3 target              | ✅ native           | ✅                          | ✅         |
+| ESP8266 / D1 Mini support    | ✅ (older boards)   | ✅ board package            | ❌ removed |
+| Framework                    | Arduino             | ESP-IDF (C3) / Arduino      | ESP-IDF    |
+| CPU clock reduction (80 MHz) | ❌                  | ⚙️ `cpu_clock_speed_80_mhz` | ❌         |
+| Hardware watchdog            | ✅                  | ✅                          | ✅         |
+
+### Connectivity & integrations
+
+| Feature                                 | AirGradient (stock)          | MallocArray | This repo     |
+| --------------------------------------- | ---------------------------- | ----------- | ------------- |
+| AirGradient Dashboard upload            | 📱🔧 `postDataToAirGradient` | ✅ switch   | ✅ switch     |
+| Home Assistant native API               | ❌                           | ✅          | ✅            |
+| ESPHome web server                      | ❌                           | ✅          | ✅ (v3)       |
+| Local REST API (`/measures`, `/config`) | ✅ built-in                  | ❌          | ❌            |
+| MQTT                                    | 📱🔧 `mqttBrokerUrl`         | ❌          | ❌            |
+| Custom server / HTTP domain             | 📱🔧 `httpDomain`            | ❌          | ⚙️ URL pinned |
+| Offline mode                            | 📱🔧 `offlineMode`           | ➖ local    | ➖ local      |
+| Config source (`local`/`cloud`/`both`)  | 📱🔧 `configurationControl`  | ➖ local    | ➖ local      |
+| Country / locale                        | 📱🔧 `country`               | ❌          | ❌            |
+
+### Provisioning & updates
+
+| Feature                                 | AirGradient (stock) | MallocArray | This repo                            |
+| --------------------------------------- | ------------------- | ----------- | ------------------------------------ |
+| Wi-Fi AP fallback + captive portal      | ✅                  | ✅          | ✅                                   |
+| Improv BLE provisioning                 | ❌                  | ❌          | ✅ `esp32_improv`                    |
+| Improv Serial provisioning              | ❌                  | ❌          | ✅ `improv_serial`                   |
+| OTA firmware update                     | 📱 cloud OTA        | ✅ ESPHome  | ✅ `http_request` manifest + ESPHome |
+| Dashboard adoption (`dashboard_import`) | ➖                  | ✅          | ✅                                   |
+| Factory reset                           | 🔧 config / hold    | ✅ button   | ✅ button                            |
+| Safe-mode switch                        | ❌                  | ✅ switch   | ❌                                   |
+
+### Sensors reported
+
+| Feature                              | AirGradient (stock)    | MallocArray             | This repo             |
+| ------------------------------------ | ---------------------- | ----------------------- | --------------------- |
+| PM2.5 / PM10 / PM1.0                 | ✅                     | ✅                      | ✅                    |
+| PM0.3 particle count                 | ✅                     | ✅                      | ✅                    |
+| CO₂ (SenseAir S8)                    | ✅                     | ✅                      | ✅                    |
+| Temperature & humidity               | ✅                     | ✅                      | ✅                    |
+| VOC index / NOx index (SGP41)        | ✅                     | ✅                      | ✅                    |
+| PM2.5 AQI (US)                       | 📱 `pmStandard=us-aqi` | ⚙️ `sensor_nowcast_aqi` | ✅ PM2.5 AQI sensor   |
+| NowCast AQI                          | ❌                     | ⚙️ `sensor_nowcast_aqi` | ❌                    |
+| GO IAQS score (on-device)            | ✅ (3.6.6+)            | ❌                      | ✅ score + summary    |
+| Wi-Fi RSSI                           | ✅                     | ✅                      | ✅                    |
+| Uptime                               | ✅ boot count          | ✅                      | ✅                    |
+| Diagnostics (heap / CPU temp / loop) | limited                | ✅ `diagnostic_esp32`   | ✅ `diagnostic_esp32` |
+
+### Calibration & correction
+
+| Feature                                   | AirGradient (stock)                    | MallocArray                                   | This repo                                       |
+| ----------------------------------------- | -------------------------------------- | --------------------------------------------- | ----------------------------------------------- |
+| PM measurement standard (µg/m³ vs US AQI) | 📱🔧 `pmStandard`                      | ➖                                            | ➖                                              |
+| PM2.5 EPA 2021 correction                 | 📱🔧 `corrections.pm02=epa_2021`       | ✅ applied                                    | ✅ applied                                      |
+| PM2.5 batch-specific (SLR) correction     | 📱🔧 `corrections.pm02=slr_*`          | ⚙️ scaling/intercept substitution             | ✅ **Batch Preset** select                      |
+| PM2.5 custom intercept / scaling factor   | 📱🔧 `corrections.pm02.slr`            | ⚙️ substitution                               | ✅ runtime number ×2                            |
+| PM update / publish interval              | ⚙️ (fixed)                             | ⚙️ `pm_update_interval` (+ extended-life pkg) | ⚙️ `pm_update_interval` / `pm_publish_interval` |
+| CO₂ manual calibration (400 ppm)          | 📱🔧 `co2CalibrationRequested`         | ✅ button                                     | ✅ button                                       |
+| CO₂ ABC enable / disable                  | 🔧 (via `abcDays`)                     | ✅ switch                                     | ✅ switch                                       |
+| CO₂ ABC interval (days)                   | 📱🔧 `abcDays` (0–200, def 8)          | ❌ fixed default                              | ✅ select (7/14/30/90/180)                      |
+| CO₂ offset (ppm)                          | ❌                                     | ⚙️ `co2_offset`                               | ✅ runtime number                               |
+| Temp/humidity compensation algorithm      | 📱🔧 `corrections.atmp/rhum`           | ⚙️ (outdoor compensation applied)             | ✅ runtime scale + offset ×2                    |
+| Temp/humidity reset to defaults           | ➖                                     | ❌                                            | ✅ reset buttons                                |
+| Show compensated vs raw on device         | 📱🔧 `monitorDisplayCompensatedValues` | ➖ (both published)                           | ➖ (both published)                             |
+| VOC learning-time offset                  | 📱🔧 `tvocLearningOffset` (0–720 h)    | ⚙️ `voc_learning_time_offset_hours`           | ✅ select (days)                                |
+| NOx learning-time offset                  | 📱🔧 `noxLearningOffset` (0–720 h)     | ⚙️ `nox_learning_time_offset_hours`           | ✅ select (days)                                |
+
+### LED bar
+
+| Feature                                  | AirGradient (stock)             | MallocArray                       | This repo                   |
+| ---------------------------------------- | ------------------------------- | --------------------------------- | --------------------------- |
+| LED bar on / off                         | 📱🔧 `ledBarMode=off`           | ✅ toggle                         | ✅ **Off** mode             |
+| LED brightness                           | 📱🔧 `ledBarBrightness` (0–100) | ✅ slider                         | ✅ slider                   |
+| Perceptual (gamma) brightness correction | ❌                              | ❌                                | ✅                          |
+| Edge-fade / bar softening                | ❌                              | ✅ fade                           | ✅ **LED Fade %** slider    |
+| Mode selectable **at runtime**           | 📱🔧 `ledBarMode`               | ❌ fixed by which `led_*` package | ✅ **LED Mode** select (11) |
+| CO₂ mode                                 | 📱 `co2`                        | ⚙️ `led_co2.yaml`                 | ✅                          |
+| PM2.5 mode                               | 📱 `pm`                         | ⚙️ `led_pm25.yaml`                | ✅                          |
+| VOC mode                                 | ❌                              | ⚙️ `led_tvoc.yaml`                | ✅                          |
+| Combo (CO₂+PM2.5+VOC) modes              | ❌                              | ⚙️ `led_combo.yaml` (one layout)  | ✅ several layouts          |
+| Graduated single-metric bar (fill)       | ❌                              | ❌                                | ✅ CO₂ Bar / PM2.5 Bar      |
+| GO IAQS LED mode                         | 📱 `iaqs` (3.6.6+)              | ❌                                | ✅                          |
+| LED test sequence                        | 📱🔧 `ledBarTestRequested`      | ❌                                | ✅ **Test** mode            |
+| Color thresholds                         | ❌ fixed                        | ⚙️ substitutions                  | ⚙️ substitutions            |
+
+### Display
+
+| Feature                        | AirGradient (stock)              | MallocArray                 | This repo                    |
+| ------------------------------ | -------------------------------- | --------------------------- | ---------------------------- |
+| OLED display                   | ✅                               | ✅                          | ✅                           |
+| Brightness / contrast          | 📱🔧 `displayBrightness` (0–100) | ✅ contrast slider          | ✅ **Display Contrast %**    |
+| Page selectable **at runtime** | ❌ auto-cycle                    | ⚙️ single vs multi-page pkg | ✅ **Display Page** dropdown |
+| Number of pages                | fixed set                        | up to 7 (multi-page pkg)    | 9 pages + boot page          |
+| Display off / blank            | 📱 via automation                | ✅ blank page               | ✅ **Off** page              |
+| Boot / splash page             | ✅                               | limited                     | ✅ (name, MAC, firmware)     |
+| Temperature unit °C / °F       | 📱🔧 `temperatureUnit` + button  | ✅ button + runtime         | ✅ button + runtime          |
+
+### Physical button
+
+| Feature                       | AirGradient (stock) | MallocArray | This repo |
+| ----------------------------- | ------------------- | ----------- | --------- |
+| Short press → toggle °C / °F  | ✅                  | ✅          | ✅        |
+| Hold → CO₂ manual calibration | ✅                  | ✅          | ✅        |
+
+> **Where the versions diverge in one line:** stock AirGradient centralises
+> configuration in the app/cloud (with a local REST mirror) but exposes no Home
+> Assistant/web-server controls; MallocArray moves configuration into ESPHome but leaves
+> many knobs (LED mode, thresholds, CO₂ offset, learning offsets) as compile-time
+> substitutions; this repo promotes those same knobs to **runtime** Home Assistant / web
+> UI controls and adds an 11-mode LED selector, a 9-page display selector, and per-axis
+> temperature/humidity calibration.
+
+---
+
 ## Made for ESPHome compliance
 
 | Requirement               | Where it's satisfied                               |
