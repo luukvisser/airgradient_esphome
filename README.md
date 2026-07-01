@@ -215,6 +215,52 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | LED test sequence                        | 📱🔧 `ledBarTestRequested`      | ❌                                | ✅ **Test** mode                         |
 | Color thresholds                         | ❌ fixed                        | ⚙️ substitutions                  | ⚙️ substitutions                         |
 
+#### LED bar scale & colours
+
+The three firmwares treat the bar very differently:
+
+- **AirGradient (stock)** — the bar **fills** LED-by-LED and snaps through five discrete
+  colour bands.
+- **MallocArray** — **all LEDs are always lit**; the whole bar shifts colour along a
+  continuous gradient (there is no fill), with very loose default thresholds.
+- **This repo** — the bar **fills** (with half-LED sub-steps in the Bar modes) along a
+  continuous, tight health-based gradient.
+
+**Value at which the bar is fully lit / reaches its top (purple) colour:**
+
+| Metric | AirGradient (stock)                      | MallocArray                            | This repo                                     |
+| ------ | ---------------------------------------- | -------------------------------------- | --------------------------------------------- |
+| CO₂    | fills; fully lit in top band ≳ 2000 ppm  | always all lit — purple at ≥ 4000 ppm  | all 11 lit at **≥ 1500 ppm** (100 ppm/LED)    |
+| PM2.5  | fills; fully lit in top band ≳ 125 µg/m³ | always all lit — purple at ≥ 201 µg/m³ | all 11 lit at **≥ 25 µg/m³** (~2.3 µg/m³/LED) |
+
+**CO₂ colour scale (ppm):**
+
+| Colour      | AirGradient (stock) | MallocArray | This repo |
+| ----------- | ------------------- | ----------- | --------- |
+| 🟢 Green ≤  | 800                 | 400         | 600       |
+| 🟡 Yellow ≤ | 1000                | 1000        | 900       |
+| 🟠 Orange ≤ | 1500                | —           | 1000      |
+| 🔴 Red ≤    | 2000                | 2000        | 1200      |
+| 🟣 Purple ≥ | 2000                | 4000        | 1500      |
+
+**PM2.5 colour scale (µg/m³):**
+
+| Colour      | AirGradient (stock) | MallocArray | This repo (solid / Bar) |
+| ----------- | ------------------- | ----------- | ----------------------- |
+| 🟢 Green ≤  | 9                   | 0           | 5 / 0                   |
+| 🟡 Yellow ≤ | 35                  | 11          | 15 / 5                  |
+| 🟠 Orange ≤ | 55                  | —           | 25 / 10                 |
+| 🔴 Red ≤    | 125                 | 56          | 35 / 15                 |
+| 🟣 Purple ≥ | 125                 | 201         | 55 / 25                 |
+
+> Net effect: MallocArray's defaults only turn the bar red/purple in genuinely extreme
+> air (CO₂ 2000–4000 ppm), stock AirGradient reaches red around 1750–2000 ppm, while
+> this repo hits purple by 1500 ppm — so on the same air this repo shows the most
+> conservative (reddest) colour and MallocArray the most relaxed. AirGradient stock uses
+> fixed bands; both ESPHome firmwares interpolate continuously, and this repo's
+> thresholds are tunable via substitutions. Stock AirGradient figures are read from the
+> firmware source and are approximate discrete bands.
+
 ### Display
 
 | Feature                            | AirGradient (stock)                                 | MallocArray                                           | This repo                                             |
