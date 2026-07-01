@@ -116,15 +116,19 @@ same knobs to live entities (✅) you can change from Home Assistant or the web 
 
 Everything below repeats these in context alongside the stock-firmware equivalents.
 
-### Platform & build
+### Supported devices & build
 
-| Feature                      | AirGradient (stock) | MallocArray                 | This repo  |
-| ---------------------------- | ------------------- | --------------------------- | ---------- |
-| ESP32-C3 target              | ✅ native           | ✅                          | ✅         |
-| ESP8266 / D1 Mini support    | ✅ (older boards)   | ✅ board package            | ❌ removed |
-| Framework                    | Arduino             | ESP-IDF (C3) / Arduino      | ESP-IDF    |
-| CPU clock reduction (80 MHz) | ❌                  | ⚙️ `cpu_clock_speed_80_mhz` | ❌         |
-| Hardware watchdog            | ✅                  | ✅                          | ✅         |
+| Device / build option                       | AirGradient (stock) | MallocArray                      | This repo |
+| ------------------------------------------- | ------------------- | -------------------------------- | --------- |
+| AirGradient ONE — I-9PSL (indoor, ESP32-C3) | ✅                  | ✅                               | ✅        |
+| Open Air — O-1PST (outdoor, ESP32-C3)       | ✅                  | ✅                               | ✅        |
+| Open Air — O-1PPT (dual PMS5003T)           | ✅                  | ✅ dual-PMS package              | ❌        |
+| Open Air Max — O-M-1PPST (SPS30)            | ✅ (3.6.5+)         | ❌                               | ❌        |
+| DIY Pro (indoor kit, D1 Mini / Lolin C3)    | ✅ legacy           | ✅ board package                 | ❌        |
+| DIY Basic (ESP8266)                         | ✅ legacy           | ✅ `airgradient-basic`           | ❌        |
+| Framework                                   | Arduino             | ESP-IDF (C3) / Arduino (ESP8266) | ESP-IDF   |
+| CPU clock reduction (80 MHz)                | ❌                  | ⚙️ `cpu_clock_speed_80_mhz`      | ❌        |
+| Hardware watchdog                           | ✅                  | ✅                               | ✅        |
 
 ### Connectivity & integrations
 
