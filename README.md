@@ -217,15 +217,25 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 
 ### Display
 
-| Feature                        | AirGradient (stock)              | MallocArray                 | This repo                                             |
-| ------------------------------ | -------------------------------- | --------------------------- | ----------------------------------------------------- |
-| OLED display                   | ✅                               | ✅                          | ✅                                                    |
-| Brightness / contrast          | 📱🔧 `displayBrightness` (0–100) | ✅ contrast slider          | ✅ **Display Contrast %** 0–100, def 35               |
-| Page selectable **at runtime** | ❌ auto-cycle                    | ⚙️ single vs multi-page pkg | ✅ **Display Page** dropdown, def AirGradient Default |
-| Number of pages                | fixed set                        | up to 7 (multi-page pkg)    | 9 pages + boot page                                   |
-| Display off / blank            | 📱 via automation                | ✅ blank page               | ✅ **Off** page                                       |
-| Boot / splash page             | ✅                               | limited                     | ✅ (name, MAC, firmware)                              |
-| Temperature unit °C / °F       | 📱🔧 `temperatureUnit` + button  | ✅ button + runtime         | ✅ select °C / °F + button, def °C                    |
+| Feature                            | AirGradient (stock)                                 | MallocArray                                           | This repo                                             |
+| ---------------------------------- | --------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- |
+| OLED display                       | ✅                                                  | ✅                                                    | ✅                                                    |
+| Brightness / contrast              | 📱🔧 `displayBrightness` (0–100)                    | ✅ contrast slider                                    | ✅ **Display Contrast %** 0–100, def 35               |
+| Page selectable **at runtime**     | ❌ auto-cycle                                       | ⚙️ single vs multi-page pkg                           | ✅ **Display Page** dropdown, def AirGradient Default |
+| Number of pages                    | fixed set                                           | up to 7 (multi-page pkg)                              | 9 pages + boot page                                   |
+| Blank / off page (manual)          | 📱🔧 only `displayBrightness=0` (no blank page)     | ✅ selectable **blank** page                          | ✅ dedicated **Off** page (fills screen black)        |
+| Automatic display off (e.g. night) | 📱 cloud schedule — **online / server-driven only** | ✅ local — Home Assistant automation / ESPHome `time` | ✅ local — Home Assistant automation / ESPHome `time` |
+| Boot / splash page                 | ✅                                                  | limited                                               | ✅ (name, MAC, firmware)                              |
+| Temperature unit °C / °F           | 📱🔧 `temperatureUnit` + button                     | ✅ button + runtime                                   | ✅ select °C / °F + button, def °C                    |
+
+> **Blank vs off, and auto-off.** Stock AirGradient has no dedicated blank/off page —
+> the screen is only "hidden" by pushing `displayBrightness` to 0, and any _automatic_
+> switch-off (e.g. dimming overnight) is scheduled in the cloud and therefore works
+> **only while the monitor is online and talking to the AirGradient server**.
+> MallocArray exposes a selectable blank page and this repo adds a dedicated **Off**
+> page (it fills the panel black); in both ESPHome firmwares the display runs entirely
+> **locally**, so auto-off is driven by a Home Assistant automation or an on-device
+> ESPHome `time` schedule with no cloud dependency.
 
 ### Physical button
 
