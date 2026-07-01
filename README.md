@@ -156,7 +156,7 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | Automatic new-firmware check            | ✅ polls AirGradient server | ❌ manual (ESPHome dashboard) | ✅ polls manifest every 6 h          |
 | Dashboard adoption (`dashboard_import`) | ➖                          | ✅                            | ✅                                   |
 | Factory reset                           | 🔧 config / hold            | ✅ button                     | ✅ button                            |
-| Safe-mode switch                        | ❌                          | ✅ switch                     | ❌                                   |
+| Safe-mode reboot                        | ❌                          | ✅ switch                     | ✅ button (`safe_mode`)              |
 
 ### Sensors reported
 
