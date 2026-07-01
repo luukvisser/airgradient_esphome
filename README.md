@@ -140,7 +140,6 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | Custom server / HTTP domain               | 📱🔧 `httpDomain`            | ❌                                      | ⚙️ URL pinned                           |
 | Offline mode                              | 📱🔧 `offlineMode`           | ➖ local                                | ➖ local                                |
 | Config source (`local`/`cloud`/`both`)    | 📱🔧 `configurationControl`  | ➖ local                                | ➖ local                                |
-| Country / locale                          | 📱🔧 `country`               | ❌                                      | ❌                                      |
 
 ### Provisioning & updates
 
