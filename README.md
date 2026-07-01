@@ -156,19 +156,20 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 
 ### Sensors reported
 
-| Feature                              | AirGradient (stock)    | MallocArray             | This repo             |
-| ------------------------------------ | ---------------------- | ----------------------- | --------------------- |
-| PM2.5 / PM10 / PM1.0                 | ✅                     | ✅                      | ✅                    |
-| PM0.3 particle count                 | ✅                     | ✅                      | ✅                    |
-| CO₂ (SenseAir S8)                    | ✅                     | ✅                      | ✅                    |
-| Temperature & humidity               | ✅                     | ✅                      | ✅                    |
-| VOC index / NOx index (SGP41)        | ✅                     | ✅                      | ✅                    |
-| PM2.5 AQI (US)                       | 📱 `pmStandard=us-aqi` | ⚙️ `sensor_nowcast_aqi` | ✅ PM2.5 AQI sensor   |
-| NowCast AQI                          | ❌                     | ⚙️ `sensor_nowcast_aqi` | ❌                    |
-| GO IAQS score (on-device)            | ✅ (3.6.6+)            | ❌                      | ✅ score + summary    |
-| Wi-Fi RSSI                           | ✅                     | ✅                      | ✅                    |
-| Uptime                               | ✅ boot count          | ✅                      | ✅                    |
-| Diagnostics (heap / CPU temp / loop) | limited                | ✅ `diagnostic_esp32`   | ✅ `diagnostic_esp32` |
+| Feature                              | AirGradient (stock)    | MallocArray             | This repo              |
+| ------------------------------------ | ---------------------- | ----------------------- | ---------------------- |
+| PM2.5 / PM10 / PM1.0                 | ✅                     | ✅                      | ✅                     |
+| PM2.5 reading precision              | rounded to whole µg/m³ | rounded to whole µg/m³  | ✅ decimal (x.x µg/m³) |
+| PM0.3 particle count                 | ✅                     | ✅                      | ✅                     |
+| CO₂ (SenseAir S8)                    | ✅                     | ✅                      | ✅                     |
+| Temperature & humidity               | ✅                     | ✅                      | ✅                     |
+| VOC index / NOx index (SGP41)        | ✅                     | ✅                      | ✅                     |
+| PM2.5 AQI (US)                       | 📱 `pmStandard=us-aqi` | ⚙️ `sensor_nowcast_aqi` | ✅ PM2.5 AQI sensor    |
+| NowCast AQI                          | ❌                     | ⚙️ `sensor_nowcast_aqi` | ❌                     |
+| GO IAQS score (on-device)            | ✅ (3.6.6+)            | ❌                      | ✅ score + summary     |
+| Wi-Fi RSSI                           | ✅                     | ✅                      | ✅                     |
+| Uptime                               | ✅ boot count          | ✅                      | ✅                     |
+| Diagnostics (heap / CPU temp / loop) | limited                | ✅ `diagnostic_esp32`   | ✅ `diagnostic_esp32`  |
 
 ### Calibration & correction
 
