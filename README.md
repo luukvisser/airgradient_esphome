@@ -167,6 +167,7 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | PM0.3 particle count                 | ✅                     | ✅                      | ✅                     |
 | CO₂ (SenseAir S8)                    | ✅                     | ✅                      | ✅                     |
 | Temperature & humidity               | ✅                     | ✅                      | ✅                     |
+| Humidity reading precision           | rounded to whole %     | 1 decimal (x.x %)       | rounded to whole %     |
 | VOC index / NOx index (SGP41)        | ✅                     | ✅                      | ✅                     |
 | PM2.5 AQI (US)                       | 📱 `pmStandard=us-aqi` | ⚙️ `sensor_nowcast_aqi` | ✅ PM2.5 AQI sensor    |
 | NowCast AQI                          | ❌                     | ⚙️ `sensor_nowcast_aqi` | ❌                     |
