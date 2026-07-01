@@ -197,6 +197,29 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | VOC learning-time offset                  | 📱🔧 `tvocLearningOffset` (0–720 h)    | ⚙️ `voc_learning_time_offset_hours`, def 12 h (range 1–1000) | ✅ select: 0.5 / 1 / 7 / 14 / 30 days, def 1                             |
 | NOx learning-time offset                  | 📱🔧 `noxLearningOffset` (0–720 h)     | ⚙️ `nox_learning_time_offset_hours`, def 12 h (range 1–1000) | ✅ select: 0.5 / 1 / 7 / 14 / 30 days, def 1                             |
 
+#### PM2.5 batch calibration presets
+
+AirGradient publishes SLR scaling factors for specific PMS5003 manufacturing batches
+(the factor multiplies the PM0.3 particle count for readings below 31 µg/m³, with EPA
+2021 layered on top). This repo bakes the same six batches into a runtime **Batch
+Preset** select; stock AirGradient applies them from the server `corrections.pm02`
+document; MallocArray has no batch list — you enter the scaling factor by hand as a
+substitution.
+
+| Batch (PMS5003)    | Scaling factor | AirGradient (stock)             | MallocArray      | This repo |
+| ------------------ | -------------- | ------------------------------- | ---------------- | --------- |
+| `PMS5003_20231030` | 0.02838        | ✅ `slr_PMS5003_20231030`       | ⚙️ enter by hand | ✅ preset |
+| `PMS5003_20231218` | 0.03525        | ✅ `slr_PMS5003_20231218`       | ⚙️ enter by hand | ✅ preset |
+| `PMS5003_20240104` | 0.02896        | ✅ `slr_PMS5003_20240104`       | ⚙️ enter by hand | ✅ preset |
+| `PMS5003_20240826` | 0.03863        | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+| `PMS5003_20250116` | 0.02983        | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+| `PMS5003_20250530` | 0.02411        | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+
+> Stock AirGradient's `local-server.md` only documents the first three
+> `slr_PMS5003_<date>` identifiers; the later batches are applied as dashboard/server
+> scaling-factor corrections. This repo stores each factor ×100 internally (e.g. `2.838`
+> → 0.02838) and also allows a fully manual **Intercept** + **Scaling Factor**.
+
 ### LED bar
 
 | Feature                                  | AirGradient (stock)                              | MallocArray                                    | This repo                                                                       |
