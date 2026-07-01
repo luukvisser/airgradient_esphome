@@ -198,22 +198,23 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 
 ### LED bar
 
-| Feature                                  | AirGradient (stock)             | MallocArray                       | This repo                                |
-| ---------------------------------------- | ------------------------------- | --------------------------------- | ---------------------------------------- |
-| LED bar on / off                         | 📱🔧 `ledBarMode=off`           | ✅ toggle                         | ✅ **Off** mode                          |
-| LED brightness                           | 📱🔧 `ledBarBrightness` (0–100) | ✅ slider                         | ✅ slider 0–100 %, def 35                |
-| Perceptual (gamma) brightness correction | ❌                              | ❌                                | ✅                                       |
-| Edge-fade / bar softening                | ❌                              | ✅ fade                           | ✅ **LED Fade %** 0–100, def 15          |
-| Mode selectable **at runtime**           | 📱🔧 `ledBarMode`               | ❌ fixed by which `led_*` package | ✅ **LED Mode** select (11), def CO₂ Bar |
-| CO₂ mode                                 | 📱 `co2`                        | ⚙️ `led_co2.yaml`                 | ✅                                       |
-| PM2.5 mode                               | 📱 `pm`                         | ⚙️ `led_pm25.yaml`                | ✅                                       |
-| VOC mode                                 | ❌                              | ⚙️ `led_tvoc.yaml`                | ✅                                       |
-| Combo (CO₂+PM2.5+VOC) modes              | ❌                              | ⚙️ `led_combo.yaml` (one layout)  | ✅ several layouts                       |
-| Graduated single-metric bar (fill)       | ❌                              | ❌                                | ✅ CO₂ Bar / PM2.5 Bar                   |
-| Half-lit LED for sub-step resolution     | ❌                              | ❌                                | ✅ CO₂ Bar / PM2.5 Bar                   |
-| GO IAQS LED mode                         | 📱 `iaqs` (3.6.6+)              | ❌                                | ✅                                       |
-| LED test sequence                        | 📱🔧 `ledBarTestRequested`      | ❌                                | ✅ **Test** mode                         |
-| Color thresholds                         | ❌ fixed                        | ⚙️ substitutions                  | ⚙️ substitutions                         |
+| Feature                                  | AirGradient (stock)                              | MallocArray                                    | This repo                                                                       |
+| ---------------------------------------- | ------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------- |
+| LED bar on / off                         | 📱🔧 `ledBarMode=off`                            | ✅ toggle                                      | ✅ **Off** mode                                                                 |
+| LED brightness                           | 📱🔧 `ledBarBrightness` (0–100)                  | ✅ slider                                      | ✅ slider 0–100 %, def 35                                                       |
+| Perceptual (gamma) brightness correction | ❌                                               | ❌                                             | ✅                                                                              |
+| Edge-fade / bar softening                | ❌                                               | ✅ fade                                        | ✅ **LED Fade %** 0–100, def 15                                                 |
+| Mode selectable **at runtime**           | 📱🔧 `ledBarMode`                                | ❌ fixed by which `led_*` package              | ✅ **LED Mode** select (11), def CO₂ Bar                                        |
+| CO₂ mode                                 | 📱 `co2`                                         | ⚙️ `led_co2.yaml`                              | ✅                                                                              |
+| PM2.5 mode                               | 📱 `pm`                                          | ⚙️ `led_pm25.yaml`                             | ✅                                                                              |
+| VOC mode                                 | ❌                                               | ⚙️ `led_tvoc.yaml`                             | ✅                                                                              |
+| Combo (CO₂+PM2.5+VOC) modes              | ❌                                               | ⚙️ `led_combo.yaml` (one layout)               | ✅ several layouts                                                              |
+| Graduated single-metric bar (fill)       | ❌                                               | ❌                                             | ✅ CO₂ Bar / PM2.5 Bar                                                          |
+| Half-lit LED for sub-step resolution     | ❌                                               | ❌                                             | ✅ CO₂ Bar / PM2.5 Bar                                                          |
+| GO IAQS LED mode                         | 📱 `iaqs` (3.6.6+)                               | ❌                                             | ✅                                                                              |
+| LED test sequence                        | 📱🔧 `ledBarTestRequested`                       | ❌                                             | ✅ **Test** mode                                                                |
+| Color thresholds                         | ❌ fixed                                         | ⚙️ substitutions                               | ⚙️ substitutions                                                                |
+| LED refresh cadence                      | firmware loop — repainted each measurement cycle | repainted on every sensor publish (`on_value`) | fixed **5 s tick, synced with the display** + instant repaint on control change |
 
 #### LED bar scale & colours
 
@@ -263,16 +264,17 @@ The three firmwares treat the bar very differently:
 
 ### Display
 
-| Feature                            | AirGradient (stock)                                 | MallocArray                                           | This repo                                             |
-| ---------------------------------- | --------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- |
-| OLED display                       | ✅                                                  | ✅                                                    | ✅                                                    |
-| Brightness / contrast              | 📱🔧 `displayBrightness` (0–100)                    | ✅ contrast slider                                    | ✅ **Display Contrast %** 0–100, def 35               |
-| Page selectable **at runtime**     | ❌ auto-cycle                                       | ⚙️ single vs multi-page pkg                           | ✅ **Display Page** dropdown, def AirGradient Default |
-| Number of pages                    | fixed set                                           | up to 7 (multi-page pkg)                              | 9 pages + boot page                                   |
-| Blank / off page (manual)          | 📱🔧 only `displayBrightness=0` (no blank page)     | ✅ selectable **blank** page                          | ✅ dedicated **Off** page (fills screen black)        |
-| Automatic display off (e.g. night) | 📱 cloud schedule — **online / server-driven only** | ✅ local — Home Assistant automation / ESPHome `time` | ✅ local — Home Assistant automation / ESPHome `time` |
-| Boot / splash page                 | ✅                                                  | limited                                               | ✅ (name, MAC, firmware)                              |
-| Temperature unit °C / °F           | 📱🔧 `temperatureUnit` + button                     | ✅ button + runtime                                   | ✅ select °C / °F + button, def °C                    |
+| Feature                            | AirGradient (stock)                                 | MallocArray                                                        | This repo                                                                                                           |
+| ---------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| OLED display                       | ✅                                                  | ✅                                                                 | ✅                                                                                                                  |
+| Brightness / contrast              | 📱🔧 `displayBrightness` (0–100)                    | ✅ contrast slider                                                 | ✅ **Display Contrast %** 0–100, def 35                                                                             |
+| Page selectable **at runtime**     | ❌ auto-cycle                                       | ⚙️ single vs multi-page pkg                                        | ✅ **Display Page** dropdown, def AirGradient Default                                                               |
+| Number of pages                    | fixed set                                           | up to 7 (multi-page pkg)                                           | 9 pages + boot page                                                                                                 |
+| Display refresh cadence            | firmware loop; auto-cycles screens (~5 s)           | ~1 s auto-refresh + **auto-rotates** pages every 5 s (`show_next`) | `update_interval: never` — redrawn on the shared **5 s tick**, selected page only (no rotation) + instant on change |
+| Blank / off page (manual)          | 📱🔧 only `displayBrightness=0` (no blank page)     | ✅ selectable **blank** page                                       | ✅ dedicated **Off** page (fills screen black)                                                                      |
+| Automatic display off (e.g. night) | 📱 cloud schedule — **online / server-driven only** | ✅ local — Home Assistant automation / ESPHome `time`              | ✅ local — Home Assistant automation / ESPHome `time`                                                               |
+| Boot / splash page                 | ✅                                                  | limited                                                            | ✅ (name, MAC, firmware)                                                                                            |
+| Temperature unit °C / °F           | 📱🔧 `temperatureUnit` + button                     | ✅ button + runtime                                                | ✅ select °C / °F + button, def °C                                                                                  |
 
 > **Blank vs off, and auto-off.** Stock AirGradient has no dedicated blank/off page —
 > the screen is only "hidden" by pushing `displayBrightness` to 0, and any _automatic_
