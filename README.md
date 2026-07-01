@@ -136,7 +136,7 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | ----------------------------------------- | ---------------------------- | --------------------------------------- | --------------------------------------- |
 | AirGradient Dashboard upload              | 📱🔧 `postDataToAirGradient` | ✅ switch                               | ✅ switch                               |
 | Home Assistant native API                 | ❌                           | ✅                                      | ✅                                      |
-| ESPHome web server                        | ❌                           | ✅                                      | ✅ (v3)                                 |
+| ESPHome web server                        | ❌                           | ✅ (v2)                                 | ✅ (v3)                                 |
 | Read all values over HTTP (REST)          | ✅ `/measures/current`       | ✅ web-server REST (`GET /sensor/<id>`) | ✅ web-server REST (`GET /sensor/<id>`) |
 | Control entities over HTTP (REST)         | ✅ `PUT /config`             | ✅ web-server REST (`POST`)             | ✅ web-server REST (`POST`)             |
 | AirGradient `/config` schema (read/write) | ✅ built-in                  | ❌ (ESPHome entities instead)           | ❌ (ESPHome entities instead)           |
