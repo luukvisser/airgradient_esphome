@@ -204,6 +204,7 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | VOC mode                                 | ❌                              | ⚙️ `led_tvoc.yaml`                | ✅                          |
 | Combo (CO₂+PM2.5+VOC) modes              | ❌                              | ⚙️ `led_combo.yaml` (one layout)  | ✅ several layouts          |
 | Graduated single-metric bar (fill)       | ❌                              | ❌                                | ✅ CO₂ Bar / PM2.5 Bar      |
+| Half-lit LED for sub-step resolution     | ❌                              | ❌                                | ✅ CO₂ Bar / PM2.5 Bar      |
 | GO IAQS LED mode                         | 📱 `iaqs` (3.6.6+)              | ❌                                | ✅                          |
 | LED test sequence                        | 📱🔧 `ledBarTestRequested`      | ❌                                | ✅ **Test** mode            |
 | Color thresholds                         | ❌ fixed                        | ⚙️ substitutions                  | ⚙️ substitutions            |
