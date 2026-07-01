@@ -94,6 +94,28 @@ columns are pinned to specific released versions so it is clear what is being co
 > 🔧. MallocArray runtime exposure varies by which optional package you include; cells
 > reflect the default device configs shipped in that repo.
 
+### At a glance: compile-time (MallocArray) → runtime (this repo)
+
+The single biggest difference between MallocArray and this repo is **where** you change
+a setting. MallocArray exposes many knobs only as YAML substitutions (⚙️) — changing one
+means editing the config and **rebuilding + reflashing/OTA**. This repo promotes those
+same knobs to live entities (✅) you can change from Home Assistant or the web server
+**with no rebuild**. The settings that move from compile-time to runtime:
+
+| Setting                            | MallocArray (compile-time ⚙️)                      | This repo (runtime ✅)                          |
+| ---------------------------------- | -------------------------------------------------- | ----------------------------------------------- |
+| LED indicator mode                 | ⚙️ fixed by which `led_*.yaml` package you include | ✅ **LED Mode** select — 11 modes, live         |
+| CO₂ offset (ppm)                   | ⚙️ `co2_offset` substitution                       | ✅ **CO₂ Offset** number                        |
+| CO₂ ABC interval (days)            | ⚙️/❌ fixed default (only on/off exposed)          | ✅ **ABC Interval** select (7/14/30/90/180)     |
+| PM2.5 batch / SLR correction       | ⚙️ `pm_2_5_scaling_factor` / `pm_2_5_intercept`    | ✅ **Batch Preset** select                      |
+| PM2.5 custom intercept / scaling   | ⚙️ substitutions                                   | ✅ **Intercept** + **Scaling Factor** numbers   |
+| VOC learning-time offset           | ⚙️ `voc_learning_time_offset_hours`                | ✅ **VOC Learning Offset** select (days)        |
+| NOx learning-time offset           | ⚙️ `nox_learning_time_offset_hours`                | ✅ **NOx Learning Offset** select (days)        |
+| Temperature / humidity calibration | ⚙️/fixed (compensation baked in)                   | ✅ per-axis **scale + offset** numbers + resets |
+| Display page                       | ⚙️ single- vs multi-page package (auto-rotates)    | ✅ **Display Page** dropdown (9 pages)          |
+
+Everything below repeats these in context alongside the stock-firmware equivalents.
+
 ### Platform & build
 
 | Feature                      | AirGradient (stock) | MallocArray                 | This repo  |
@@ -106,17 +128,19 @@ columns are pinned to specific released versions so it is clear what is being co
 
 ### Connectivity & integrations
 
-| Feature                                 | AirGradient (stock)          | MallocArray | This repo     |
-| --------------------------------------- | ---------------------------- | ----------- | ------------- |
-| AirGradient Dashboard upload            | 📱🔧 `postDataToAirGradient` | ✅ switch   | ✅ switch     |
-| Home Assistant native API               | ❌                           | ✅          | ✅            |
-| ESPHome web server                      | ❌                           | ✅          | ✅ (v3)       |
-| Local REST API (`/measures`, `/config`) | ✅ built-in                  | ❌          | ❌            |
-| MQTT                                    | 📱🔧 `mqttBrokerUrl`         | ❌          | ❌            |
-| Custom server / HTTP domain             | 📱🔧 `httpDomain`            | ❌          | ⚙️ URL pinned |
-| Offline mode                            | 📱🔧 `offlineMode`           | ➖ local    | ➖ local      |
-| Config source (`local`/`cloud`/`both`)  | 📱🔧 `configurationControl`  | ➖ local    | ➖ local      |
-| Country / locale                        | 📱🔧 `country`               | ❌          | ❌            |
+| Feature                                   | AirGradient (stock)          | MallocArray                             | This repo                               |
+| ----------------------------------------- | ---------------------------- | --------------------------------------- | --------------------------------------- |
+| AirGradient Dashboard upload              | 📱🔧 `postDataToAirGradient` | ✅ switch                               | ✅ switch                               |
+| Home Assistant native API                 | ❌                           | ✅                                      | ✅                                      |
+| ESPHome web server                        | ❌                           | ✅                                      | ✅ (v3)                                 |
+| Read all values over HTTP (REST)          | ✅ `/measures/current`       | ✅ web-server REST (`GET /sensor/<id>`) | ✅ web-server REST (`GET /sensor/<id>`) |
+| Control entities over HTTP (REST)         | ✅ `PUT /config`             | ✅ web-server REST (`POST`)             | ✅ web-server REST (`POST`)             |
+| AirGradient `/config` schema (read/write) | ✅ built-in                  | ❌ (ESPHome entities instead)           | ❌ (ESPHome entities instead)           |
+| MQTT                                      | 📱🔧 `mqttBrokerUrl`         | ❌                                      | ❌                                      |
+| Custom server / HTTP domain               | 📱🔧 `httpDomain`            | ❌                                      | ⚙️ URL pinned                           |
+| Offline mode                              | 📱🔧 `offlineMode`           | ➖ local                                | ➖ local                                |
+| Config source (`local`/`cloud`/`both`)    | 📱🔧 `configurationControl`  | ➖ local                                | ➖ local                                |
+| Country / locale                          | 📱🔧 `country`               | ❌                                      | ❌                                      |
 
 ### Provisioning & updates
 
