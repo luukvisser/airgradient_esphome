@@ -177,53 +177,55 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 
 ### Calibration & correction
 
-| Feature                                   | AirGradient (stock)                    | MallocArray                                   | This repo                                       |
-| ----------------------------------------- | -------------------------------------- | --------------------------------------------- | ----------------------------------------------- |
-| PM measurement standard (µg/m³ vs US AQI) | 📱🔧 `pmStandard`                      | ➖                                            | ➖                                              |
-| PM2.5 EPA 2021 correction                 | 📱🔧 `corrections.pm02=epa_2021`       | ✅ applied                                    | ✅ applied                                      |
-| PM2.5 batch-specific (SLR) correction     | 📱🔧 `corrections.pm02=slr_*`          | ⚙️ scaling/intercept substitution             | ✅ **Batch Preset** select                      |
-| PM2.5 custom intercept / scaling factor   | 📱🔧 `corrections.pm02.slr`            | ⚙️ substitution                               | ✅ runtime number ×2                            |
-| PM update / publish interval              | ⚙️ (fixed)                             | ⚙️ `pm_update_interval` (+ extended-life pkg) | ⚙️ `pm_update_interval` / `pm_publish_interval` |
-| CO₂ manual calibration (400 ppm)          | 📱🔧 `co2CalibrationRequested`         | ✅ button                                     | ✅ button                                       |
-| CO₂ ABC enable / disable                  | 🔧 (via `abcDays`)                     | ✅ switch                                     | ✅ switch                                       |
-| CO₂ ABC interval (days)                   | 📱🔧 `abcDays` (0–200, def 8)          | ❌ fixed default                              | ✅ select (7/14/30/90/180)                      |
-| CO₂ offset (ppm)                          | ❌                                     | ⚙️ `co2_offset`                               | ✅ runtime number                               |
-| Temp/humidity compensation algorithm      | 📱🔧 `corrections.atmp/rhum`           | ⚙️ (outdoor compensation applied)             | ✅ runtime scale + offset ×2                    |
-| Temp/humidity reset to defaults           | ➖                                     | ❌                                            | ✅ reset buttons                                |
-| Show compensated vs raw on device         | 📱🔧 `monitorDisplayCompensatedValues` | ➖ (both published)                           | ➖ (both published)                             |
-| VOC learning-time offset                  | 📱🔧 `tvocLearningOffset` (0–720 h)    | ⚙️ `voc_learning_time_offset_hours`           | ✅ select (days)                                |
-| NOx learning-time offset                  | 📱🔧 `noxLearningOffset` (0–720 h)     | ⚙️ `nox_learning_time_offset_hours`           | ✅ select (days)                                |
+| Feature                                   | AirGradient (stock)                    | MallocArray                                   | This repo                                                                |
+| ----------------------------------------- | -------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------ |
+| PM measurement standard (µg/m³ vs US AQI) | 📱🔧 `pmStandard`                      | ➖                                            | ➖                                                                       |
+| PM2.5 EPA 2021 correction                 | 📱🔧 `corrections.pm02=epa_2021`       | ✅ applied                                    | ✅ applied                                                               |
+| PM2.5 batch-specific (SLR) correction     | 📱🔧 `corrections.pm02=slr_*`          | ⚙️ scaling/intercept substitution             | ✅ select: None / 6 presets (`PMS5003_20231030` … `_20250530`); def None |
+| PM2.5 custom scaling factor               | 📱🔧 `corrections.pm02.slr`            | ⚙️ substitution                               | ✅ number ×100: 0.001–200, def 100 (= 1.0×)                              |
+| PM2.5 custom intercept                    | 📱🔧 `corrections.pm02.slr`            | ⚙️ substitution                               | ✅ number: −10 … 10, def 0                                               |
+| PM update / publish interval              | ⚙️ (fixed)                             | ⚙️ `pm_update_interval` (+ extended-life pkg) | ⚙️ `pm_update_interval` 30 s / `pm_publish_interval` 60 s                |
+| CO₂ manual calibration (400 ppm)          | 📱🔧 `co2CalibrationRequested`         | ✅ button                                     | ✅ button                                                                |
+| CO₂ ABC enable / disable                  | 🔧 (via `abcDays`)                     | ✅ switch                                     | ✅ switch (def on)                                                       |
+| CO₂ ABC interval                          | 📱🔧 `abcDays` (0–200, def 8)          | ❌ fixed default                              | ✅ select: 7 / 14 / 30 / 90 / 180 days, def 14                           |
+| CO₂ offset (ppm)                          | ❌                                     | ⚙️ `co2_offset`                               | ✅ number: −400 … 400, def 22                                            |
+| Temp scale / offset                       | 📱🔧 `corrections.atmp`                | ⚙️ (outdoor compensation applied)             | ✅ scale 0.5–2.0 def 1.0 · offset −10 … 10 °C def 0                      |
+| Humidity scale / offset                   | 📱🔧 `corrections.rhum`                | ⚙️ (outdoor compensation applied)             | ✅ scale 0.5–2.0 def 1.0 · offset −20 … 20 % def 0                       |
+| Temp/humidity reset to defaults           | ➖                                     | ❌                                            | ✅ reset buttons                                                         |
+| Show compensated vs raw on device         | 📱🔧 `monitorDisplayCompensatedValues` | ➖ (both published)                           | ➖ (both published)                                                      |
+| VOC learning-time offset                  | 📱🔧 `tvocLearningOffset` (0–720 h)    | ⚙️ `voc_learning_time_offset_hours`           | ✅ select: 0.5 / 1 / 7 / 14 / 30 days, def 1                             |
+| NOx learning-time offset                  | 📱🔧 `noxLearningOffset` (0–720 h)     | ⚙️ `nox_learning_time_offset_hours`           | ✅ select: 0.5 / 1 / 7 / 14 / 30 days, def 1                             |
 
 ### LED bar
 
-| Feature                                  | AirGradient (stock)             | MallocArray                       | This repo                   |
-| ---------------------------------------- | ------------------------------- | --------------------------------- | --------------------------- |
-| LED bar on / off                         | 📱🔧 `ledBarMode=off`           | ✅ toggle                         | ✅ **Off** mode             |
-| LED brightness                           | 📱🔧 `ledBarBrightness` (0–100) | ✅ slider                         | ✅ slider                   |
-| Perceptual (gamma) brightness correction | ❌                              | ❌                                | ✅                          |
-| Edge-fade / bar softening                | ❌                              | ✅ fade                           | ✅ **LED Fade %** slider    |
-| Mode selectable **at runtime**           | 📱🔧 `ledBarMode`               | ❌ fixed by which `led_*` package | ✅ **LED Mode** select (11) |
-| CO₂ mode                                 | 📱 `co2`                        | ⚙️ `led_co2.yaml`                 | ✅                          |
-| PM2.5 mode                               | 📱 `pm`                         | ⚙️ `led_pm25.yaml`                | ✅                          |
-| VOC mode                                 | ❌                              | ⚙️ `led_tvoc.yaml`                | ✅                          |
-| Combo (CO₂+PM2.5+VOC) modes              | ❌                              | ⚙️ `led_combo.yaml` (one layout)  | ✅ several layouts          |
-| Graduated single-metric bar (fill)       | ❌                              | ❌                                | ✅ CO₂ Bar / PM2.5 Bar      |
-| Half-lit LED for sub-step resolution     | ❌                              | ❌                                | ✅ CO₂ Bar / PM2.5 Bar      |
-| GO IAQS LED mode                         | 📱 `iaqs` (3.6.6+)              | ❌                                | ✅                          |
-| LED test sequence                        | 📱🔧 `ledBarTestRequested`      | ❌                                | ✅ **Test** mode            |
-| Color thresholds                         | ❌ fixed                        | ⚙️ substitutions                  | ⚙️ substitutions            |
+| Feature                                  | AirGradient (stock)             | MallocArray                       | This repo                                |
+| ---------------------------------------- | ------------------------------- | --------------------------------- | ---------------------------------------- |
+| LED bar on / off                         | 📱🔧 `ledBarMode=off`           | ✅ toggle                         | ✅ **Off** mode                          |
+| LED brightness                           | 📱🔧 `ledBarBrightness` (0–100) | ✅ slider                         | ✅ slider 0–100 %, def 35                |
+| Perceptual (gamma) brightness correction | ❌                              | ❌                                | ✅                                       |
+| Edge-fade / bar softening                | ❌                              | ✅ fade                           | ✅ **LED Fade %** 0–100, def 15          |
+| Mode selectable **at runtime**           | 📱🔧 `ledBarMode`               | ❌ fixed by which `led_*` package | ✅ **LED Mode** select (11), def CO₂ Bar |
+| CO₂ mode                                 | 📱 `co2`                        | ⚙️ `led_co2.yaml`                 | ✅                                       |
+| PM2.5 mode                               | 📱 `pm`                         | ⚙️ `led_pm25.yaml`                | ✅                                       |
+| VOC mode                                 | ❌                              | ⚙️ `led_tvoc.yaml`                | ✅                                       |
+| Combo (CO₂+PM2.5+VOC) modes              | ❌                              | ⚙️ `led_combo.yaml` (one layout)  | ✅ several layouts                       |
+| Graduated single-metric bar (fill)       | ❌                              | ❌                                | ✅ CO₂ Bar / PM2.5 Bar                   |
+| Half-lit LED for sub-step resolution     | ❌                              | ❌                                | ✅ CO₂ Bar / PM2.5 Bar                   |
+| GO IAQS LED mode                         | 📱 `iaqs` (3.6.6+)              | ❌                                | ✅                                       |
+| LED test sequence                        | 📱🔧 `ledBarTestRequested`      | ❌                                | ✅ **Test** mode                         |
+| Color thresholds                         | ❌ fixed                        | ⚙️ substitutions                  | ⚙️ substitutions                         |
 
 ### Display
 
-| Feature                        | AirGradient (stock)              | MallocArray                 | This repo                    |
-| ------------------------------ | -------------------------------- | --------------------------- | ---------------------------- |
-| OLED display                   | ✅                               | ✅                          | ✅                           |
-| Brightness / contrast          | 📱🔧 `displayBrightness` (0–100) | ✅ contrast slider          | ✅ **Display Contrast %**    |
-| Page selectable **at runtime** | ❌ auto-cycle                    | ⚙️ single vs multi-page pkg | ✅ **Display Page** dropdown |
-| Number of pages                | fixed set                        | up to 7 (multi-page pkg)    | 9 pages + boot page          |
-| Display off / blank            | 📱 via automation                | ✅ blank page               | ✅ **Off** page              |
-| Boot / splash page             | ✅                               | limited                     | ✅ (name, MAC, firmware)     |
-| Temperature unit °C / °F       | 📱🔧 `temperatureUnit` + button  | ✅ button + runtime         | ✅ button + runtime          |
+| Feature                        | AirGradient (stock)              | MallocArray                 | This repo                                             |
+| ------------------------------ | -------------------------------- | --------------------------- | ----------------------------------------------------- |
+| OLED display                   | ✅                               | ✅                          | ✅                                                    |
+| Brightness / contrast          | 📱🔧 `displayBrightness` (0–100) | ✅ contrast slider          | ✅ **Display Contrast %** 0–100, def 35               |
+| Page selectable **at runtime** | ❌ auto-cycle                    | ⚙️ single vs multi-page pkg | ✅ **Display Page** dropdown, def AirGradient Default |
+| Number of pages                | fixed set                        | up to 7 (multi-page pkg)    | 9 pages + boot page                                   |
+| Display off / blank            | 📱 via automation                | ✅ blank page               | ✅ **Off** page                                       |
+| Boot / splash page             | ✅                               | limited                     | ✅ (name, MAC, firmware)                              |
+| Temperature unit °C / °F       | 📱🔧 `temperatureUnit` + button  | ✅ button + runtime         | ✅ select °C / °F + button, def °C                    |
 
 ### Physical button
 
