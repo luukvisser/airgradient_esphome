@@ -143,15 +143,16 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 
 ### Provisioning & updates
 
-| Feature                                 | AirGradient (stock) | MallocArray | This repo                            |
-| --------------------------------------- | ------------------- | ----------- | ------------------------------------ |
-| Wi-Fi AP fallback + captive portal      | ✅                  | ✅          | ✅                                   |
-| Improv BLE provisioning                 | ❌                  | ❌          | ✅ `esp32_improv`                    |
-| Improv Serial provisioning              | ❌                  | ❌          | ✅ `improv_serial`                   |
-| OTA firmware update                     | 📱 cloud OTA        | ✅ ESPHome  | ✅ `http_request` manifest + ESPHome |
-| Dashboard adoption (`dashboard_import`) | ➖                  | ✅          | ✅                                   |
-| Factory reset                           | 🔧 config / hold    | ✅ button   | ✅ button                            |
-| Safe-mode switch                        | ❌                  | ✅ switch   | ❌                                   |
+| Feature                                 | AirGradient (stock)         | MallocArray                   | This repo                            |
+| --------------------------------------- | --------------------------- | ----------------------------- | ------------------------------------ |
+| Wi-Fi AP fallback + captive portal      | ✅                          | ✅                            | ✅                                   |
+| Improv BLE provisioning                 | ❌                          | ❌                            | ✅ `esp32_improv`                    |
+| Improv Serial provisioning              | ❌                          | ❌                            | ✅ `improv_serial`                   |
+| OTA firmware update                     | 📱 cloud OTA                | ✅ ESPHome                    | ✅ `http_request` manifest + ESPHome |
+| Automatic new-firmware check            | ✅ polls AirGradient server | ❌ manual (ESPHome dashboard) | ✅ polls manifest every 6 h          |
+| Dashboard adoption (`dashboard_import`) | ➖                          | ✅                            | ✅                                   |
+| Factory reset                           | 🔧 config / hold            | ✅ button                     | ✅ button                            |
+| Safe-mode switch                        | ❌                          | ✅ switch                     | ❌                                   |
 
 ### Sensors reported
 
