@@ -237,12 +237,7 @@ substitutions:
   co2_orange: "1000"
   co2_red: "1200"
   co2_purple: "1500"
-  pm_2_5_green: "5"
-  pm_2_5_yellow: "15"
-  pm_2_5_orange: "25"
-  pm_2_5_red: "35"
-  pm_2_5_purple: "55"
-  # Bar-specific PM2.5 thresholds (compressed to 0–25 µg/m³ range):
+  # PM2.5 thresholds (compressed to 0–25 µg/m³ range; shared by every PM2.5 view):
   pm_2_5_bar_green: "0"
   pm_2_5_bar_yellow: "5"
   pm_2_5_bar_orange: "10"

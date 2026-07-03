@@ -270,13 +270,13 @@ The three firmwares treat the bar very differently:
 
 **PM2.5 colour scale (µg/m³):**
 
-| Colour      | AirGradient (stock) | MallocArray | This repo (solid / Bar) |
-| ----------- | ------------------- | ----------- | ----------------------- |
-| 🟢 Green ≤  | 9                   | 0           | 5 / 0                   |
-| 🟡 Yellow ≤ | 35                  | 11          | 15 / 5                  |
-| 🟠 Orange ≤ | 55                  | —           | 25 / 10                 |
-| 🔴 Red ≤    | 125                 | 56          | 35 / 15                 |
-| 🟣 Purple ≥ | 125                 | 201         | 55 / 25                 |
+| Colour      | AirGradient (stock) | MallocArray | This repo |
+| ----------- | ------------------- | ----------- | --------- |
+| 🟢 Green ≤  | 9                   | 0           | 0         |
+| 🟡 Yellow ≤ | 35                  | 11          | 5         |
+| 🟠 Orange ≤ | 55                  | —           | 10        |
+| 🔴 Red ≤    | 125                 | 56          | 15        |
+| 🟣 Purple ≥ | 125                 | 201         | 25        |
 
 > Net effect: MallocArray's defaults only turn the bar red/purple in genuinely extreme
 > air (CO₂ 2000–4000 ppm), stock AirGradient reaches red around 1750–2000 ppm, while
