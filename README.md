@@ -298,7 +298,7 @@ The three firmwares treat the bar very differently:
 | Blank / off page (manual)          | 📱🔧 only `displayBrightness=0` (no blank page)     | ✅ selectable **blank** page                                       | ✅ dedicated **Off** page (fills screen black)                                                                      |
 | Automatic display off (e.g. night) | 📱 cloud schedule — **online / server-driven only** | ✅ local — Home Assistant automation / ESPHome `time`              | ✅ local — Home Assistant automation / ESPHome `time`                                                               |
 | Boot / splash page                 | ✅                                                  | limited                                                            | ✅ (name, MAC, firmware)                                                                                            |
-| Temperature unit °C / °F           | 📱🔧 `temperatureUnit` + button                     | ✅ button + runtime                                                | ✅ select °C / °F + button, def °C                                                                                  |
+| Temperature unit °C / °F           | 📱🔧 `temperatureUnit` + button                     | ✅ button + runtime                                                | ✅ select °C / °F (HA / web), def °C                                                                                |
 
 > **Blank vs off, and auto-off.** Stock AirGradient has no dedicated blank/off page —
 > the screen is only "hidden" by pushing `displayBrightness` to 0, and any _automatic_
@@ -311,10 +311,11 @@ The three firmwares treat the bar very differently:
 
 ### Physical button
 
-| Feature                       | AirGradient (stock) | MallocArray | This repo |
-| ----------------------------- | ------------------- | ----------- | --------- |
-| Short press → toggle °C / °F  | ✅                  | ✅          | ✅        |
-| Hold → CO₂ manual calibration | ✅                  | ✅          | ✅        |
+| Feature                             | AirGradient (stock) | MallocArray | This repo                     |
+| ----------------------------------- | ------------------- | ----------- | ----------------------------- |
+| Short press → toggle °C / °F        | ✅                  | ✅          | ❌ (unit via HA / web select) |
+| Hold 1–5 s → CO₂ manual calibration | ✅                  | ✅          | ✅                            |
+| Hold ~8 s → factory reset           | ✅                  | ✅          | ✅                            |
 
 > **Where the versions diverge in one line:** stock AirGradient centralises
 > configuration in the app/cloud (with a local REST mirror) but exposes no Home
