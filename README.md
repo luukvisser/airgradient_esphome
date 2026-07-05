@@ -3,7 +3,6 @@
 [![Validate configs](https://github.com/luukvisser/airgradient_esphome/actions/workflows/validate.yml/badge.svg)](https://github.com/luukvisser/airgradient_esphome/actions/workflows/validate.yml)
 [![Build firmware](https://github.com/luukvisser/airgradient_esphome/actions/workflows/build-firmware.yml/badge.svg)](https://github.com/luukvisser/airgradient_esphome/actions/workflows/build-firmware.yml)
 [![Pre-commit](https://github.com/luukvisser/airgradient_esphome/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/luukvisser/airgradient_esphome/actions/workflows/pre-commit.yml)
-[![GitHub release](https://img.shields.io/github/v/release/luukvisser/airgradient_esphome)](https://github.com/luukvisser/airgradient_esphome/releases/latest)
 [![Made for ESPHome](https://img.shields.io/badge/Made_for-ESPHome-blue?logo=esphome)](https://esphome.io/guides/made_for_esphome/)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE.txt)
 
@@ -43,8 +42,10 @@ Every device is declared in [`devices.yaml`](devices.yaml):
 
 - **AirGradient ONE** (`airgradient-one`) — ESP32-C3 indoor monitor (I-9PSL): PM2.5,
   CO₂, VOC/NOx, temperature/humidity, OLED display, RGB LED strip
+  [![AirGradient ONE release](https://img.shields.io/github/v/release/luukvisser/airgradient_esphome?filter=airgradient-one%2F*&label=airgradient-one)](https://github.com/luukvisser/airgradient_esphome/releases?q=airgradient-one)
 - **AirGradient Open Air** (`airgradient-open-air`) — ESP32-C3 outdoor monitor (O-1PST):
   PM2.5, CO₂, VOC/NOx, temperature/humidity (via PMS5003T)
+  [![AirGradient Open Air release](https://img.shields.io/github/v/release/luukvisser/airgradient_esphome?filter=airgradient-open-air%2F*&label=airgradient-open-air)](https://github.com/luukvisser/airgradient_esphome/releases?q=airgradient-open-air)
 
 ---
 
