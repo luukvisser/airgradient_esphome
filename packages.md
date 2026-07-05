@@ -45,11 +45,15 @@ without reflashing when Wi-Fi credentials change.
 
 ### `config_button.yaml`
 
-Wires the physical button (GPIO9, strapping pin) to two actions:
+Wires the physical button (GPIO9, strapping pin) to two hold gestures:
 
-- **Short press** — toggle temperature display between °C and °F.
-- **Hold ≤ 5 s** — initiate SenseAir S8 CO2 manual baseline calibration (position the
-  device outdoors or near an open window for 5+ minutes first).
+- **Hold 1–5 s, then release** — initiate SenseAir S8 CO2 manual baseline calibration
+  (position the device outdoors or near an open window for 5+ minutes first).
+- **Hold ~8 s** — factory reset (wipes preferences and restarts); a warning is logged at
+  2 s so the hold can be released to cancel.
+
+A short tap performs no action. The temperature display unit (°C / °F) is changed with
+the **Display Temperature Unit** select in Home Assistant / the web UI, not the button.
 
 ---
 
@@ -237,12 +241,7 @@ substitutions:
   co2_orange: "1000"
   co2_red: "1200"
   co2_purple: "1500"
-  pm_2_5_green: "5"
-  pm_2_5_yellow: "15"
-  pm_2_5_orange: "25"
-  pm_2_5_red: "35"
-  pm_2_5_purple: "55"
-  # Bar-specific PM2.5 thresholds (compressed to 0–25 µg/m³ range):
+  # PM2.5 thresholds (compressed to 0–25 µg/m³ range; shared by every PM2.5 view):
   pm_2_5_bar_green: "0"
   pm_2_5_bar_yellow: "5"
   pm_2_5_bar_orange: "10"

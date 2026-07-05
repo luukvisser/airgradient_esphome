@@ -270,13 +270,13 @@ The three firmwares treat the bar very differently:
 
 **PM2.5 colour scale (µg/m³):**
 
-| Colour      | AirGradient (stock) | MallocArray | This repo (solid / Bar) |
-| ----------- | ------------------- | ----------- | ----------------------- |
-| 🟢 Green ≤  | 9                   | 0           | 5 / 0                   |
-| 🟡 Yellow ≤ | 35                  | 11          | 15 / 5                  |
-| 🟠 Orange ≤ | 55                  | —           | 25 / 10                 |
-| 🔴 Red ≤    | 125                 | 56          | 35 / 15                 |
-| 🟣 Purple ≥ | 125                 | 201         | 55 / 25                 |
+| Colour      | AirGradient (stock) | MallocArray | This repo |
+| ----------- | ------------------- | ----------- | --------- |
+| 🟢 Green ≤  | 9                   | 0           | 0         |
+| 🟡 Yellow ≤ | 35                  | 11          | 5         |
+| 🟠 Orange ≤ | 55                  | —           | 10        |
+| 🔴 Red ≤    | 125                 | 56          | 15        |
+| 🟣 Purple ≥ | 125                 | 201         | 25        |
 
 > Net effect: MallocArray's defaults only turn the bar red/purple in genuinely extreme
 > air (CO₂ 2000–4000 ppm), stock AirGradient reaches red around 1750–2000 ppm, while
@@ -298,7 +298,7 @@ The three firmwares treat the bar very differently:
 | Blank / off page (manual)          | 📱🔧 only `displayBrightness=0` (no blank page)     | ✅ selectable **blank** page                                       | ✅ dedicated **Off** page (fills screen black)                                                                      |
 | Automatic display off (e.g. night) | 📱 cloud schedule — **online / server-driven only** | ✅ local — Home Assistant automation / ESPHome `time`              | ✅ local — Home Assistant automation / ESPHome `time`                                                               |
 | Boot / splash page                 | ✅                                                  | limited                                                            | ✅ (name, MAC, firmware)                                                                                            |
-| Temperature unit °C / °F           | 📱🔧 `temperatureUnit` + button                     | ✅ button + runtime                                                | ✅ select °C / °F + button, def °C                                                                                  |
+| Temperature unit °C / °F           | 📱🔧 `temperatureUnit` + button                     | ✅ button + runtime                                                | ✅ select °C / °F (HA / web), def °C                                                                                |
 
 > **Blank vs off, and auto-off.** Stock AirGradient has no dedicated blank/off page —
 > the screen is only "hidden" by pushing `displayBrightness` to 0, and any _automatic_
@@ -311,10 +311,11 @@ The three firmwares treat the bar very differently:
 
 ### Physical button
 
-| Feature                       | AirGradient (stock) | MallocArray | This repo |
-| ----------------------------- | ------------------- | ----------- | --------- |
-| Short press → toggle °C / °F  | ✅                  | ✅          | ✅        |
-| Hold → CO₂ manual calibration | ✅                  | ✅          | ✅        |
+| Feature                             | AirGradient (stock) | MallocArray | This repo                     |
+| ----------------------------------- | ------------------- | ----------- | ----------------------------- |
+| Short press → toggle °C / °F        | ✅                  | ✅          | ❌ (unit via HA / web select) |
+| Hold 1–5 s → CO₂ manual calibration | ✅                  | ✅          | ✅                            |
+| Hold ~8 s → factory reset           | ✅                  | ✅          | ✅                            |
 
 > **Where the versions diverge in one line:** stock AirGradient centralises
 > configuration in the app/cloud (with a local REST mirror) but exposes no Home

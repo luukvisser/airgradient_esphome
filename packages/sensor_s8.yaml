@@ -64,6 +64,10 @@ select:
     name: "SenseAir S8 CO2 ABC Interval"
     id: co2_abc_interval_select
     # Option labels are days; set_action parses the leading number and converts to hours (× 24).
+    # The written period is stored in the S8's own non-volatile memory, so it survives
+    # reboots — set_action is intentionally not re-run on boot (restore_value only restores
+    # the UI label). The raw frame shares senseair_co2_uart with the polling component; the
+    # two only ever write briefly and sequentially, so no bus arbitration is needed.
     options: ["7 days", "14 days", "30 days", "90 days", "180 days"]
     initial_option: "14 days"
     restore_value: true

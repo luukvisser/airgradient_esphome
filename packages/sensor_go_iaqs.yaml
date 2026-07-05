@@ -68,6 +68,8 @@ text_sensor:
     id: go_iaqs_summary
     name: "GO IAQS Summary"
     icon: "mdi:air-filter"
-    update_interval: 15min
+    # Publish-driven only: the category string is set from the score sensor's
+    # on_value above. There is no lambda, so a polling interval would do nothing.
+    update_interval: never
     web_server:
       sorting_group_id: grp_sensors

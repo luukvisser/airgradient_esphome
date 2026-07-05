@@ -21,13 +21,9 @@ substitutions:
   co2_orange: '1000' # Ventilation recommended
   co2_red: '1200' # Poor air quality; open a window
   co2_purple: '1500' # Unacceptable; noticeable drowsiness/headaches possible
-  pm_2_5_green: '5' # WHO annual guideline (long-term healthy target)
-  pm_2_5_yellow: '15' # WHO 24-hour guideline (short-term exposure limit)
-  pm_2_5_orange: '25' # Old WHO annual guideline (pre-2021)
-  pm_2_5_red: '35' # US EPA 24h PM2.5 NAAQS standard
-  pm_2_5_purple: '55' # US EPA AQI "unhealthy for sensitive groups" boundary
-  # Bar-specific thresholds: compressed to 0–25 µg/m³ so the full green→purple
-  # gradient is visible within the bar's display range.
+  # PM2.5 thresholds, compressed to 0–25 µg/m³ so the full green→purple gradient
+  # is visible across the bar's display range. Shared by every PM2.5 view (solid
+  # PM2.5 mode, the combo modes, and PM2.5 Bar).
   pm_2_5_bar_green: '0' # Bar start (rightmost LED): very clean air
   pm_2_5_bar_yellow: '5' # WHO annual guideline
   pm_2_5_bar_orange: '10' # Midrange
