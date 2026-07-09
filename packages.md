@@ -45,15 +45,19 @@ without reflashing when Wi-Fi credentials change.
 
 ### `config_button.yaml`
 
-Wires the physical button (GPIO9, strapping pin) to two hold gestures:
+Wires the physical button (GPIO9, strapping pin) to three gestures:
 
 - **Hold 1–5 s, then release** — initiate SenseAir S8 CO2 manual baseline calibration
   (position the device outdoors or near an open window for 5+ minutes first).
 - **Hold ~8 s** — factory reset (wipes preferences and restarts); a warning is logged at
   2 s so the hold can be released to cancel.
+- **Double-click** — check for a firmware update and install it if a newer version is
+  available (downloads, flashes, and reboots; a no-op when already up to date). Uses the
+  `firmware_update` component from the device YAML.
 
-A short tap performs no action. The temperature display unit (°C / °F) is changed with
-the **Display Temperature Unit** select in Home Assistant / the web UI, not the button.
+A short single tap performs no action. The temperature display unit (°C / °F) is changed
+with the **Display Temperature Unit** select in Home Assistant / the web UI, not the
+button.
 
 ---
 

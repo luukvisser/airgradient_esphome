@@ -316,6 +316,7 @@ The three firmwares treat the bar very differently:
 | Short press → toggle °C / °F        | ✅                  | ✅          | ❌ (unit via HA / web select) |
 | Hold 1–5 s → CO₂ manual calibration | ✅                  | ✅          | ✅                            |
 | Hold ~8 s → factory reset           | ✅                  | ✅          | ✅                            |
+| Double-click → firmware update      | ❌                  | ❌          | ✅ check + install            |
 
 > **Where the versions diverge in one line:** stock AirGradient centralises
 > configuration in the app/cloud (with a local REST mirror) but exposes no Home
