@@ -258,6 +258,15 @@ substitutions:
   voc_purple: "475"
 ```
 
+It also adds a **left LED notification override** — a Home-Assistant-triggerable overlay
+that briefly lights the leftmost LED (index 0) on top of any mode, then returns to
+normal:
+
+- **Left LED Notification** button — fires the overlay (HA calls `button.press`).
+- **Left LED Notification Duration** number — 1–300 s, default 60 s.
+- **Left LED Notification Color** light — color-wheel picker, default white; brightness
+  follows **LED Brightness %**. No-op while **LED Mode** is Off.
+
 ---
 
 ## Integrations
