@@ -61,4 +61,4 @@ binary_sensor:
               format: "Config button double-click — checking for firmware update"
           - update.check: firmware_update
           - delay: 5s # let the async manifest fetch complete before installing
-          - update.install: firmware_update # no-op if already on the latest version
+          - update.perform: firmware_update # no-op if already on the latest version
