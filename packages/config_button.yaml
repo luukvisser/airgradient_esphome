@@ -1,6 +1,9 @@
 # Physical config button (GPIO9) on AirGradient ONE / Open Air hardware.
-# Depends on: senseair_co2 (from sensor_s8 package) for long-press CO2 calibration,
-#             factory_reset_btn (from button_factory_reset package) for 8s-hold factory reset.
+# Gestures: hold 1–5 s → CO2 calibration; hold ~8 s → factory reset;
+#           double-click → check for and install a firmware update.
+# Depends on: senseair_co2 (from sensor_s8 package) for the CO2 calibration hold,
+#             factory_reset_btn (from button_factory_reset package) for the 8s-hold reset,
+#             firmware_update (the update: component in the device YAML) for the double-click.
 # Cannot be used without those packages.
 ---
 script:
@@ -39,7 +42,7 @@ binary_sensor:
       then:
         - script.stop: config_button_factory_reset_hold
     on_multi_click:
-      - timing: # Press and hold up to 5 seconds
+      - timing: # Press and hold 1–5 s → CO2 calibration
           - ON for 1s to 5s
           - OFF for at least 0.5s
         then:
@@ -47,3 +50,15 @@ binary_sensor:
           - senseair.background_calibration: senseair_co2
           - delay: 70s
           - senseair.background_calibration_result: senseair_co2
+      - timing: # Double-click → check for and install a firmware update
+          - ON for at most 1s
+          - OFF for at most 0.5s
+          - ON for at most 1s
+          - OFF for at least 0.2s
+        then:
+          - logger.log:
+              level: INFO
+              format: "Config button double-click — checking for firmware update"
+          - update.check: firmware_update
+          - delay: 5s # let the async manifest fetch complete before installing
+          - update.perform: firmware_update # no-op if already on the latest version
