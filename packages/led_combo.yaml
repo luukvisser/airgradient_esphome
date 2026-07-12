@@ -48,6 +48,45 @@ globals:
     type: bool
     restore_value: false
     initial_value: 'false'
+  # Set true while the HA-triggered left-LED notification override is active.
+  # update_leds paints LED 0 with left_led_color as its final step whenever
+  # this is true, so the override survives the recurring 5 s repaint.
+  - id: left_led_override_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+# Virtual RGB "color holder" for the left-LED notification override. It exposes
+# a normal HA color light (default white) whose chosen hue is read by update_leds;
+# it drives no hardware, so it is backed by no-op template outputs. Brightness is
+# taken from led_brightness (not this light), so only the hue here matters.
+output:
+  - platform: template
+    id: left_led_color_r
+    type: float
+    write_action:
+      - lambda: '' # no-op; value is held in the light state, not driven anywhere
+  - platform: template
+    id: left_led_color_g
+    type: float
+    write_action:
+      - lambda: ''
+  - platform: template
+    id: left_led_color_b
+    type: float
+    write_action:
+      - lambda: ''
+light:
+  - platform: rgb
+    name: "Left LED Notification Color"
+    id: left_led_color
+    icon: "mdi:palette"
+    red: left_led_color_r
+    green: left_led_color_g
+    blue: left_led_color_b
+    restore_mode: RESTORE_DEFAULT_ON # Default = white
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_led
 select:
   - platform: template
     name: "LED Mode"
@@ -105,7 +144,51 @@ number:
             lambda: 'return id(leds_ready);'
           then:
             - script.execute: update_leds
+  # How long the left-LED notification override stays lit after the button is
+  # pressed, in seconds. Read by the left_led_override script's delay.
+  - platform: template
+    name: "Left LED Notification Duration"
+    id: left_led_duration
+    icon: "mdi:timer"
+    min_value: 1
+    max_value: 300
+    step: 1
+    initial_value: 60
+    unit_of_measurement: "s"
+    optimistic: true
+    restore_value: true
+    mode: box
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_led
+button:
+  # HA-triggerable notification: lights the leftmost LED (index 0) with
+  # left_led_color for left_led_duration seconds, then returns to normal
+  # operation. Fired from Home Assistant automations via button.press.
+  - platform: template
+    name: "Left LED Notification"
+    id: left_led_notify_button
+    icon: "mdi:bell-ring"
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_led
+    on_press:
+      - script.execute: left_led_override
 script:
+  # Temporary left-LED notification overlay. mode: restart so a re-press
+  # restarts the timer. Respects Off mode — does nothing while the bar is Off.
+  - id: left_led_override
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(leds_ready) && id(led_mode).current_option() != "Off";'
+          then:
+            - lambda: 'id(left_led_override_active) = true;'
+            - script.execute: update_leds # Paint LED 0 immediately
+            - delay: !lambda 'return (uint32_t)(id(left_led_duration).state * 1000);'
+            - lambda: 'id(left_led_override_active) = false;'
+            - script.execute: update_leds # Restore normal operation
   - id: update_leds
     then:
       # ── Off ──────────────────────────────────────────────────────────────
@@ -1223,3 +1306,21 @@ script:
                       red: 0%
                       green: 0%
                       blue: 0%
+      # ── Left LED notification override (HA-triggered, temporary) ──────────
+      # Painted last so it wins over every mode above. Persists across the 5 s
+      # interval repaint until left_led_override clears the flag. Uses the bar's
+      # led_brightness and the hue from the left_led_color light. Skipped in Off
+      # mode so it never fights a bar the user has switched off.
+      - if:
+          condition:
+            lambda: 'return id(left_led_override_active) && id(led_mode).current_option()
+              != "Off";'
+          then:
+            - light.addressable_set:
+                id: led_strip
+                range_from: 0
+                range_to: 0
+                color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
+                red: !lambda 'return id(left_led_color).current_values.get_red();'
+                green: !lambda 'return id(left_led_color).current_values.get_green();'
+                blue: !lambda 'return id(left_led_color).current_values.get_blue();'

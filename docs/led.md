@@ -123,3 +123,31 @@ instead of spending most of the range near-off.
 
 **LED fade** — outer LEDs in each group are dimmed relative to the centre LED,
 controlled by the **LED Fade %** slider. Set to 0 for uniform brightness across a group.
+
+---
+
+## Left LED notification override
+
+A Home-Assistant-triggerable overlay that briefly lights the **leftmost LED** (index 0)
+on top of whatever mode is active, then returns to normal operation. Use it to surface a
+notification from an HA automation (doorbell, timer, alert, …) on the air-quality bar.
+
+| Entity                             | Type   | Purpose                                                     |
+| ---------------------------------- | ------ | ----------------------------------------------------------- |
+| **Left LED Notification**          | button | Fires the override (HA calls `button.press`).               |
+| **Left LED Notification Duration** | number | How long LED 0 stays lit, **1–300 s** (default **60 s**).   |
+| **Left LED Notification Color**    | light  | Color-wheel picker for the overlay hue (default **white**). |
+
+Behaviour:
+
+- LED 0 lights immediately in the chosen color and stays lit for the configured
+  duration, then LED 0 returns to whatever the current mode shows — e.g. CO₂ 4 000 ppm
+  goes back to purple. It is a true overrule layered on top of every mode, not a new
+  mode.
+- Brightness follows the bar's **LED Brightness %** (the color light's own brightness
+  slider is ignored — only its hue is used).
+- Pressing the button again restarts the timer (`mode: restart`).
+- The override survives the shared 5 s LED repaint because it is painted as the final
+  step of the `update_leds` script.
+- When **LED Mode** is **Off**, the button does nothing — a bar the user switched off
+  stays dark.
