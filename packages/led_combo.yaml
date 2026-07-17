@@ -161,6 +161,23 @@ number:
     entity_category: config
     web_server:
       sorting_group_id: grp_led
+  # Brightness of the notification LED, independent of the bar's LED Brightness %
+  # so a notification can be full-brightness even when the bar is dimmed.
+  - platform: template
+    name: "Left LED Notification Brightness %"
+    id: left_led_notify_brightness
+    icon: "mdi:brightness-6"
+    min_value: 0
+    max_value: 100
+    step: 1
+    initial_value: 100
+    unit_of_measurement: "%"
+    optimistic: true
+    restore_value: true
+    mode: slider
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_led
 button:
   # HA-triggerable notification: lights the leftmost LED (index 0) with
   # left_led_color for left_led_duration seconds, then returns to normal
@@ -1320,7 +1337,7 @@ script:
                 id: led_strip
                 range_from: 0
                 range_to: 0
-                color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
+                color_brightness: !lambda 'return id(left_led_notify_brightness).state / 100.0f;'
                 red: !lambda 'return id(left_led_color).current_values.get_red();'
                 green: !lambda 'return id(left_led_color).current_values.get_green();'
                 blue: !lambda 'return id(left_led_color).current_values.get_blue();'

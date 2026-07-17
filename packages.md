@@ -264,8 +264,10 @@ normal:
 
 - **Left LED Notification** button — fires the overlay (HA calls `button.press`).
 - **Left LED Notification Duration** number — 1–300 s, default 60 s.
-- **Left LED Notification Color** light — color-wheel picker, default white; brightness
-  follows **LED Brightness %**. No-op while **LED Mode** is Off.
+- **Left LED Notification Color** light — color-wheel picker, default white (hue only).
+- **Left LED Notification Brightness %** number — 0–100 %, default 100 %, decoupled from
+  **LED Brightness %** so the overlay can be full brightness on a dimmed bar. No-op
+  while **LED Mode** is Off.
 
 ---
 
