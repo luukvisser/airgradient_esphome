@@ -266,7 +266,9 @@ normal:
 - **Left LED Notification Duration** number — 1–300 s, default 60 s.
 - **Left LED Notification Color** light — color-wheel picker, default white (hue only).
 - **Left LED Notification Brightness %** number — 0–100 %, default 100 %, decoupled from
-  **LED Brightness %** so the overlay can be full brightness on a dimmed bar. No-op
+  **LED Brightness %** so the overlay can be full brightness on a dimmed bar.
+- **Left LED Notification Follow LED Brightness** switch — when on, the overlay tracks
+  the bar's **LED Brightness %** instead of the slider (default off). Overlay is a no-op
   while **LED Mode** is Off.
 
 ---

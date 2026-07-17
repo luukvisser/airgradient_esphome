@@ -132,12 +132,13 @@ A Home-Assistant-triggerable overlay that briefly lights the **leftmost LED** (i
 on top of whatever mode is active, then returns to normal operation. Use it to surface a
 notification from an HA automation (doorbell, timer, alert, …) on the air-quality bar.
 
-| Entity                                 | Type   | Purpose                                                     |
-| -------------------------------------- | ------ | ----------------------------------------------------------- |
-| **Left LED Notification**              | button | Fires the override (HA calls `button.press`).               |
-| **Left LED Notification Duration**     | number | How long LED 0 stays lit, **1–300 s** (default **60 s**).   |
-| **Left LED Notification Color**        | light  | Color-wheel picker for the overlay hue (default **white**). |
-| **Left LED Notification Brightness %** | number | Brightness of the overlay, **0–100 %** (default **100 %**). |
+| Entity                                          | Type   | Purpose                                                                        |
+| ----------------------------------------------- | ------ | ------------------------------------------------------------------------------ |
+| **Left LED Notification**                       | button | Fires the override (HA calls `button.press`).                                  |
+| **Left LED Notification Duration**              | number | How long LED 0 stays lit, **1–300 s** (default **60 s**).                      |
+| **Left LED Notification Color**                 | light  | Color-wheel picker for the overlay hue (default **white**).                    |
+| **Left LED Notification Brightness %**          | number | Brightness of the overlay, **0–100 %** (default **100 %**).                    |
+| **Left LED Notification Follow LED Brightness** | switch | Follow the bar's **LED Brightness %** instead of the slider (default **off**). |
 
 Behaviour:
 
@@ -147,8 +148,9 @@ Behaviour:
   mode.
 - Brightness is set by its own **Left LED Notification Brightness %** slider (default
   100 %), decoupled from the bar's **LED Brightness %** — so a notification can be full
-  brightness even when the bar is dimmed. The color light's own brightness slider is
-  ignored; only its hue is used.
+  brightness even when the bar is dimmed. Turn on the **Left LED Notification Follow LED
+  Brightness** switch to instead track the bar's **LED Brightness %**. The color light's
+  own brightness slider is ignored; only its hue is used.
 - Pressing the button again restarts the timer (`mode: restart`).
 - The override survives the shared 5 s LED repaint because it is painted as the final
   step of the `update_leds` script.
