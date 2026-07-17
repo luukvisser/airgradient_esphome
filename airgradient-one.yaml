@@ -12,7 +12,7 @@
 #     on GitHub Pages, and attaches binaries to a GitHub Release.
 ---
 substitutions:
-  config_version: "1.5.0" # keep in sync with esphome.project.version below
+  config_version: "1.5.1" # keep in sync with esphome.project.version below
 esphome:
   name: "airgradient-one"
   friendly_name: "AG ONE"
@@ -22,7 +22,7 @@ esphome:
   # the device slug so multiple products from the same org don't collide.
   project:
     name: "luukvisser.airgradient-one"
-    version: "1.5.0"
+    version: "1.5.1"
 logger:
 api:
 ota:
@@ -55,6 +55,12 @@ update:
 wifi:
   id: wifi_client
   fast_connect: false
+  # Keep the modem fully awake. The ESP32 default (WIFI_PS_MIN_MODEM) sleeps
+  # the radio between beacons, which drops/delays packets and stalls the
+  # once-a-minute AirGradient upload — a cause of the dashboard's "no
+  # measurements for 30 min" gaps. Devices are mains-powered, so the extra
+  # draw is irrelevant.
+  power_save_mode: none
   ap:
     ap_timeout: 90s
     password: "cleanair"
