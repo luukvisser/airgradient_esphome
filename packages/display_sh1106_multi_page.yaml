@@ -1,7 +1,10 @@
 ---
 substitutions:
-  # On the AirGradient Default page the top-right slot shows a clock and the
-  # right column's lower cell shows humidity (see the airgradient_default page).
+  # Controls the "AirGradient Default (Clock)" page variant: its top-right slot
+  # shows a clock and the right column's lower cell shows humidity instead of
+  # NOx (see the airgradient_default page). The plain "AirGradient Default"
+  # option keeps the original humidity + NOx layout.
+  clock_option: "AirGradient Default (Clock)" # Display Page option that enables the clock
   clock_format: "%H:%M" # 24h clock; use "%I:%M" for 12h
   clock_time_id: ha_time # id of the time: component that drives the clock
   humidity_label: "Hum"
@@ -80,6 +83,7 @@ select:
     id: display_page_select
     options:
       - "AirGradient Default"
+      - "$clock_option"
       - "Env Summary"
       - "VOC Summary"
       - "Large Numbers"
@@ -122,11 +126,16 @@ display:
           } else {
             it.printf(0, -4, id(open_sans_14), "%.1f°C", id(temp).state);
           }
-          ESPTime now = id($clock_time_id).now();
-          if (now.is_valid()) {
-            it.strftime(128, -4, id(open_sans_14), TextAlign::TOP_RIGHT, "$clock_format", now);
+          bool clock_mode = id(display_page_select).current_option() == "$clock_option";
+          if (clock_mode) {
+            ESPTime now = id($clock_time_id).now();
+            if (now.is_valid()) {
+              it.strftime(128, -4, id(open_sans_14), TextAlign::TOP_RIGHT, "$clock_format", now);
+            } else {
+              it.printf(128, -4, id(open_sans_14), TextAlign::TOP_RIGHT, "--:--");
+            }
           } else {
-            it.printf(128, -4, id(open_sans_14), TextAlign::TOP_RIGHT, "--:--");
+            it.printf(128, -4, id(open_sans_14), TextAlign::TOP_RIGHT, isnan(id(humidity).state) ? "-" : "%.0f%%", id(humidity).state);
           }
           it.line(0,18-4,128,18-4);
           it.printf(0,19-4, id(open_sans_10), "CO2");
@@ -145,8 +154,13 @@ display:
           it.line(97,19-4,97,64);
           it.printf(101, 15, id(open_sans_10), "VOC");
           it.printf(101, 26, id(open_sans_bold_10), isnan(id(voc).state) ? "-" : "%.0f", id(voc).state);
-          it.printf(101, 39, id(open_sans_10), "$humidity_label");
-          it.printf(101, 50, id(open_sans_bold_10), isnan(id(humidity).state) ? "-" : "%.0f%%", id(humidity).state);
+          if (clock_mode) {
+            it.printf(101, 39, id(open_sans_10), "$humidity_label");
+            it.printf(101, 50, id(open_sans_bold_10), isnan(id(humidity).state) ? "-" : "%.0f%%", id(humidity).state);
+          } else {
+            it.printf(101, 39, id(open_sans_10), "NOx");
+            it.printf(101, 50, id(open_sans_bold_10), isnan(id(nox).state) ? "-" : "%.0f", id(nox).state);
+          }
       - id: boot
         lambda: |-
           it.printf(0, 0, id(open_sans_bold_14), "AirGradient ONE");
@@ -252,8 +266,9 @@ script:
           else:
             - if:
                 condition:
-                  lambda: return id(display_page_select).current_option() == "AirGradient
-                    Default";
+                  lambda: |-
+                    auto opt = id(display_page_select).current_option();
+                    return opt == "AirGradient Default" || opt == "$clock_option";
                 then:
                   - display.page.show: airgradient_default
             - if:

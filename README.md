@@ -55,8 +55,9 @@ Every device is declared in [`devices.yaml`](devices.yaml):
   thresholds, perceptual brightness correction, LED fade effect, plus an HA-triggerable
   left-LED notification overlay (configurable duration, color, and brightness). See
   [docs/led.md](docs/led.md).
-- **Display**: multi-page OLED with nine selectable pages plus a boot page. See
-  [docs/display.md](docs/display.md).
+- **Display**: multi-page OLED with ten selectable pages plus a boot page, including an
+  optional clock variant of the default page (Home Assistant time, with humidity moved
+  into the NOx slot). See [docs/display.md](docs/display.md).
 - **CI/CD**: full automated release pipeline — `validate.yml`, `build-firmware.yml`,
   `devices.yaml` registry, OTA via `update.http_request`. See
   [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -114,7 +115,7 @@ same knobs to live entities (✅) you can change from Home Assistant or the web 
 | VOC learning-time offset           | ⚙️ `voc_learning_time_offset_hours`                | ✅ **VOC Learning Offset** select (days)        |
 | NOx learning-time offset           | ⚙️ `nox_learning_time_offset_hours`                | ✅ **NOx Learning Offset** select (days)        |
 | Temperature / humidity calibration | ⚙️/fixed (compensation baked in)                   | ✅ per-axis **scale + offset** numbers + resets |
-| Display page                       | ⚙️ single- vs multi-page package (auto-rotates)    | ✅ **Display Page** dropdown (9 pages)          |
+| Display page                       | ⚙️ single- vs multi-page package (auto-rotates)    | ✅ **Display Page** dropdown (10 pages)         |
 
 Everything below repeats these in context alongside the stock-firmware equivalents.
 
@@ -296,7 +297,7 @@ The three firmwares treat the bar very differently:
 | OLED display                       | ✅                                                  | ✅                                                                 | ✅                                                                                                                  |
 | Brightness / contrast              | 📱🔧 `displayBrightness` (0–100)                    | ✅ contrast slider 0–100, def 100                                  | ✅ **Display Contrast %** 0–100, def 35                                                                             |
 | Page selectable **at runtime**     | ❌ auto-cycle                                       | ⚙️ single vs multi-page pkg                                        | ✅ **Display Page** dropdown, def AirGradient Default                                                               |
-| Number of pages                    | fixed set                                           | up to 7 (multi-page pkg)                                           | 9 pages + boot page                                                                                                 |
+| Number of pages                    | fixed set                                           | up to 7 (multi-page pkg)                                           | 10 pages + boot page                                                                                                |
 | Display refresh cadence            | firmware loop; auto-cycles screens (~5 s)           | ~1 s auto-refresh + **auto-rotates** pages every 5 s (`show_next`) | `update_interval: never` — redrawn on the shared **5 s tick**, selected page only (no rotation) + instant on change |
 | Blank / off page (manual)          | 📱🔧 only `displayBrightness=0` (no blank page)     | ✅ selectable **blank** page                                       | ✅ dedicated **Off** page (fills screen black)                                                                      |
 | Automatic display off (e.g. night) | 📱 cloud schedule — **online / server-driven only** | ✅ local — Home Assistant automation / ESPHome `time`              | ✅ local — Home Assistant automation / ESPHome `time`                                                               |
@@ -326,7 +327,7 @@ The three firmwares treat the bar very differently:
 > Assistant/web-server controls; MallocArray moves configuration into ESPHome but leaves
 > many knobs (LED mode, thresholds, CO₂ offset, learning offsets) as compile-time
 > substitutions; this repo promotes those same knobs to **runtime** Home Assistant / web
-> UI controls and adds an 11-mode LED selector, a 9-page display selector, and per-axis
+> UI controls and adds an 11-mode LED selector, a 10-page display selector, and per-axis
 > temperature/humidity calibration.
 
 ---
