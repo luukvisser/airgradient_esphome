@@ -1,0 +1,9 @@
+---
+# Time source for the on-screen clock. Uses the native ESPHome API (already
+# enabled on the ONE), so once the device is adopted into Home Assistant it
+# receives the current time and HA's configured timezone automatically — no
+# device-side timezone configuration needed. The clock shows "--:--" until the
+# first sync and whenever HA is disconnected.
+time:
+  - platform: homeassistant
+    id: ha_time

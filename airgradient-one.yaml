@@ -122,6 +122,7 @@ packages:
   led_combo: !include packages/led_combo.yaml
   # ── Integrations ────────────────────────────────────────────────────────
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
+  time: !include packages/time_homeassistant.yaml
   # ── System utilities ────────────────────────────────────────────────────
   diagnostic_esp32: !include packages/diagnostic_esp32.yaml
   hardware_watchdog: !include packages/watchdog.yaml
