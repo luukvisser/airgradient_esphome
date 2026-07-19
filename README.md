@@ -52,7 +52,8 @@ Every device is declared in [`devices.yaml`](devices.yaml):
 ## Notable changes from upstream
 
 - **LED**: `led_co2` replaced by `led_combo` — eleven selectable modes, health-based
-  thresholds, perceptual brightness correction, LED fade effect. See
+  thresholds, perceptual brightness correction, LED fade effect, plus an HA-triggerable
+  left-LED notification overlay (configurable duration, color, and brightness). See
   [docs/led.md](docs/led.md).
 - **Display**: multi-page OLED with nine selectable pages plus a boot page. See
   [docs/display.md](docs/display.md).
@@ -223,23 +224,24 @@ substitution.
 
 ### LED bar
 
-| Feature                                  | AirGradient (stock)                              | MallocArray                                    | This repo                                                                       |
-| ---------------------------------------- | ------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------- |
-| LED bar on / off                         | 📱🔧 `ledBarMode=off`                            | ✅ toggle                                      | ✅ **Off** mode                                                                 |
-| LED brightness                           | 📱🔧 `ledBarBrightness` (0–100)                  | ✅ slider 0–100 %, def 100                     | ✅ slider 0–100 %, def 35                                                       |
-| Perceptual (gamma) brightness correction | ❌                                               | ❌                                             | ✅                                                                              |
-| Edge-fade / bar softening                | ❌                                               | ✅ fade 0–100, def 20                          | ✅ **LED Fade %** 0–100, def 15                                                 |
-| Mode selectable **at runtime**           | 📱🔧 `ledBarMode`                                | ❌ fixed by which `led_*` package              | ✅ **LED Mode** select (11), def CO₂ Bar                                        |
-| CO₂ mode                                 | 📱 `co2`                                         | ⚙️ `led_co2.yaml`                              | ✅                                                                              |
-| PM2.5 mode                               | 📱 `pm`                                          | ⚙️ `led_pm25.yaml`                             | ✅                                                                              |
-| VOC mode                                 | ❌                                               | ⚙️ `led_tvoc.yaml`                             | ✅                                                                              |
-| Combo (CO₂+PM2.5+VOC) modes              | ❌                                               | ⚙️ `led_combo.yaml` (one layout)               | ✅ several layouts                                                              |
-| Graduated single-metric bar (fill)       | ❌                                               | ❌                                             | ✅ CO₂ Bar / PM2.5 Bar                                                          |
-| Half-lit LED for sub-step resolution     | ❌                                               | ❌                                             | ✅ CO₂ Bar / PM2.5 Bar                                                          |
-| GO IAQS LED mode                         | 📱 `iaqs` (3.6.6+)                               | ❌                                             | ✅                                                                              |
-| LED test sequence                        | 📱🔧 `ledBarTestRequested`                       | ❌                                             | ✅ **Test** mode                                                                |
-| Color thresholds                         | ❌ fixed                                         | ⚙️ substitutions                               | ⚙️ substitutions                                                                |
-| LED refresh cadence                      | firmware loop — repainted each measurement cycle | repainted on every sensor publish (`on_value`) | fixed **5 s tick, synced with the display** + instant repaint on control change |
+| Feature                                  | AirGradient (stock)                              | MallocArray                                    | This repo                                                                                            |
+| ---------------------------------------- | ------------------------------------------------ | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| LED bar on / off                         | 📱🔧 `ledBarMode=off`                            | ✅ toggle                                      | ✅ **Off** mode                                                                                      |
+| LED brightness                           | 📱🔧 `ledBarBrightness` (0–100)                  | ✅ slider 0–100 %, def 100                     | ✅ slider 0–100 %, def 35                                                                            |
+| Perceptual (gamma) brightness correction | ❌                                               | ❌                                             | ✅                                                                                                   |
+| Edge-fade / bar softening                | ❌                                               | ✅ fade 0–100, def 20                          | ✅ **LED Fade %** 0–100, def 15                                                                      |
+| Mode selectable **at runtime**           | 📱🔧 `ledBarMode`                                | ❌ fixed by which `led_*` package              | ✅ **LED Mode** select (11), def CO₂ Bar                                                             |
+| CO₂ mode                                 | 📱 `co2`                                         | ⚙️ `led_co2.yaml`                              | ✅                                                                                                   |
+| PM2.5 mode                               | 📱 `pm`                                          | ⚙️ `led_pm25.yaml`                             | ✅                                                                                                   |
+| VOC mode                                 | ❌                                               | ⚙️ `led_tvoc.yaml`                             | ✅                                                                                                   |
+| Combo (CO₂+PM2.5+VOC) modes              | ❌                                               | ⚙️ `led_combo.yaml` (one layout)               | ✅ several layouts                                                                                   |
+| Graduated single-metric bar (fill)       | ❌                                               | ❌                                             | ✅ CO₂ Bar / PM2.5 Bar                                                                               |
+| Half-lit LED for sub-step resolution     | ❌                                               | ❌                                             | ✅ CO₂ Bar / PM2.5 Bar                                                                               |
+| GO IAQS LED mode                         | 📱 `iaqs` (3.6.6+)                               | ❌                                             | ✅                                                                                                   |
+| LED test sequence                        | 📱🔧 `ledBarTestRequested`                       | ❌                                             | ✅ **Test** mode                                                                                     |
+| HA notification overlay (leftmost LED)   | ❌                                               | ❌                                             | ✅ **Left LED Notification** button — temporary; duration 1–300 s, color, brightness (or follow bar) |
+| Color thresholds                         | ❌ fixed                                         | ⚙️ substitutions                               | ⚙️ substitutions                                                                                     |
+| LED refresh cadence                      | firmware loop — repainted each measurement cycle | repainted on every sensor publish (`on_value`) | fixed **5 s tick, synced with the display** + instant repaint on control change                      |
 
 #### LED bar scale & colours
 
