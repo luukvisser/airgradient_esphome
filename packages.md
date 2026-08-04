@@ -173,22 +173,23 @@ Reports device uptime in seconds since last boot.
 
 ### `display_sh1106_multi_page.yaml`
 
-SH1106 128×64 OLED display with nine independently switchable pages plus a boot page.
-The active page is selected via the **Display Page** dropdown in Home Assistant or the
-web UI:
+SH1106 128×64 OLED display with ten independently switchable pages plus a boot page. The
+active page is selected via the **Display Page** dropdown in Home Assistant or the web
+UI:
 
-| Option (name)           | Contents                                                                 |
-| ----------------------- | ------------------------------------------------------------------------ |
-| AirGradient Default ★   | Compact all-in-one: temp, humidity, CO2 (large), PM2.5 (large), VOC, NOx |
-| Env Summary             | CO2 · PM2.5 · Temperature · Humidity                                     |
-| VOC Summary             | CO2 · PM2.5 · VOC · NOx                                                  |
-| CO2 & PM2.5             | CO2 and PM2.5 in large type                                              |
-| Temp & Humidity         | Temperature and humidity in large type                                   |
-| VOC & NOx               | VOC index and NOx in large type                                          |
-| Combo                   | Temp, humidity, PM2.5, CO2, VOC, NOx, AQI                                |
-| Large Numbers           | CO2, humidity, PM2.5, temp in the largest font (no units)                |
-| Off                     | Display off                                                              |
-| _(Boot — startup only)_ | Device name, MAC address, firmware version; auto-dismissed after 10 s    |
+| Option (name)               | Contents                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------ |
+| AirGradient Default ★       | Compact all-in-one: temp, humidity, CO2 (large), PM2.5 (large), VOC, NOx                         |
+| AirGradient Default (Clock) | Same as AirGradient Default, but a clock replaces humidity (top-right) and humidity replaces NOx |
+| Env Summary                 | CO2 · PM2.5 · Temperature · Humidity                                                             |
+| VOC Summary                 | CO2 · PM2.5 · VOC · NOx                                                                          |
+| CO2 & PM2.5                 | CO2 and PM2.5 in large type                                                                      |
+| Temp & Humidity             | Temperature and humidity in large type                                                           |
+| VOC & NOx                   | VOC index and NOx in large type                                                                  |
+| Combo                       | Temp, humidity, PM2.5, CO2, VOC, NOx, AQI                                                        |
+| Large Numbers               | CO2, humidity, PM2.5, temp in the largest font (no units)                                        |
+| Off                         | Display off                                                                                      |
+| _(Boot — startup only)_     | Device name, MAC address, firmware version; auto-dismissed after 10 s                            |
 
 ★ default on first boot
 
@@ -197,6 +198,12 @@ Additional controls:
 - **Display Contrast %** slider (0–100) — dims the OLED backlight.
 - **Temperature unit** — toggle between °C and °F (also controllable via the config
   button).
+
+The **AirGradient Default (Clock)** option renders the same page as **AirGradient
+Default** with two cells swapped, driven by the `clock_option`, `clock_format`,
+`clock_time_id` and `humidity_label` substitutions at the top of the package. It needs a
+time source — see [`time_homeassistant.yaml`](#time_homeassistantyaml) — and shows
+`--:--` until the first sync.
 
 Uses six bitmap fonts (Open Sans regular + bold, sizes 10–34 pt).
 
@@ -280,6 +287,14 @@ normal:
 Uploads sensor readings to the
 [AirGradient Dashboard](https://app.airgradient.com/dashboard) every 1 minute via HTTPS.
 A boot POST is sent on startup.
+
+### `time_homeassistant.yaml`
+
+Time source (`id: ha_time`) for the on-screen clock, using the native ESPHome API. Once
+the device is adopted into Home Assistant it receives both the current time and HA's
+configured timezone automatically, so there is no device-side timezone setting. Only
+needed by devices that use the **AirGradient Default (Clock)** display page — included
+by `airgradient-one.yaml`, not by the display-less Open Air.
 
 Includes an **Upload to AirGradient Dashboard** toggle switch so data upload can be
 disabled without reflashing.
