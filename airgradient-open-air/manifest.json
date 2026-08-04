@@ -1,6 +1,6 @@
 {
   "name": "AirGradient Open Air",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "home_assistant_domain": "esphome",
   "new_install_prompt_erase": false,
   "builds": [
@@ -14,9 +14,9 @@
       ],
       "ota": {
         "path": "firmware/latest/airgradient-open-air.ota.bin",
-        "md5": "80c2b81defbe471e8704f2f847e5c713",
-        "release_url": "https://github.com/luukvisser/airgradient_esphome/releases/tag/airgradient-open-air%2Fv1.1.0",
-        "summary": "AirGradient Open Air firmware v1.1.0"
+        "md5": "f3071f32629a755617fac27d887a8748",
+        "release_url": "https://github.com/luukvisser/airgradient_esphome/releases/tag/airgradient-open-air%2Fv1.1.2",
+        "summary": "AirGradient Open Air firmware v1.1.2"
       }
     }
   ]
