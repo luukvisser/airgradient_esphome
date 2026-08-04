@@ -15,9 +15,10 @@ on:
         description: "Device slug to build (must exist in devices.yaml)"
         required: true
         type: string
-# Never let two releases for the same device deploy Pages concurrently —
-# the shared gh-pages branch can't tolerate interleaved pushes. Different
-# devices are fine to deploy in parallel.
+# Keyed on the ref, so this only stops re-runs of the *same* tag from
+# overlapping — every tag push is a distinct ref and therefore a distinct
+# group. Cross-device serialisation of the shared gh-pages branch is handled
+# by the `publish-pages` job's own concurrency group, not here.
 concurrency:
   group: firmware-release-${{ github.ref }}
   cancel-in-progress: false
@@ -206,6 +207,15 @@ jobs:
     needs: [resolve, build]
     if: needs.resolve.outputs.is_tag_release == 'true' && needs.resolve.outputs.is_prerelease
       == 'false'
+    # gh-pages is a single shared branch and the deploy below force-pushes a
+    # full site snapshot (keep_files: false), so two devices releasing at the
+    # same time clobber each other — whichever pushes last wins and the other
+    # release never reaches the site. This group is deliberately constant
+    # (no ${{ github.ref }}) so that EVERY Pages deploy, for any device or
+    # tag, queues behind the one before it.
+    concurrency:
+      group: gh-pages-deploy
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
