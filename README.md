@@ -19,8 +19,15 @@ Flash directly from the browser — no ESPHome or Python installation required:
 
 **<https://luukvisser.github.io/airgradient_esphome/>**
 
-Open the link in Chrome or Edge, plug in your device via USB, and click **Install**. See
-[docs/firmware.md](docs/firmware.md) for full instructions and OTA update details.
+Open the link in Chrome or Edge, plug in your device via USB, and click **Install**. The
+page lists both devices; each has its own install button and update manifest:
+
+| Device               | Update manifest                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------- |
+| AirGradient ONE      | <https://luukvisser.github.io/airgradient_esphome/airgradient-one/manifest.json>      |
+| AirGradient Open Air | <https://luukvisser.github.io/airgradient_esphome/airgradient-open-air/manifest.json> |
+
+See [docs/firmware.md](docs/firmware.md) for full instructions and OTA update details.
 
 ---
 
@@ -72,11 +79,11 @@ An extensive comparison of every configurable feature, sensor, and toggle across
 three firmwares an AirGradient ONE / Open Air owner is likely to choose between. The
 columns are pinned to specific released versions so it is clear what is being compared:
 
-| Column                  | Project                                                                               | Version compared                                         |
-| ----------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| **AirGradient (stock)** | [airgradienthq/arduino](https://github.com/airgradienthq/arduino)                     | `3.6.x` (stable `3.6.2`; IAQS/SPS30 pre-releases 3.6.6)  |
-| **MallocArray**         | [MallocArray/airgradient_esphome](https://github.com/MallocArray/airgradient_esphome) | `5.3.7`                                                  |
-| **This repo**           | [luukvisser/airgradient_esphome](https://github.com/luukvisser/airgradient_esphome)   | `airgradient-one/v1.4.16`, `airgradient-open-air/v1.0.1` |
+| Column                  | Project                                                                               | Version compared                                        |
+| ----------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **AirGradient (stock)** | [airgradienthq/arduino](https://github.com/airgradienthq/arduino)                     | `3.6.x` (stable `3.6.2`; IAQS/SPS30 pre-releases 3.6.6) |
+| **MallocArray**         | [MallocArray/airgradient_esphome](https://github.com/MallocArray/airgradient_esphome) | `5.3.7`                                                 |
+| **This repo**           | [luukvisser/airgradient_esphome](https://github.com/luukvisser/airgradient_esphome)   | `airgradient-one/v1.7.0`, `airgradient-open-air/v1.1.2` |
 
 **Legend for how a setting is changed:**
 
@@ -181,33 +188,40 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 
 ### Calibration & correction
 
-| Feature                                   | AirGradient (stock)                    | MallocArray                                                  | This repo                                                                |
-| ----------------------------------------- | -------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| PM measurement standard (µg/m³ vs US AQI) | 📱🔧 `pmStandard`                      | ➖                                                           | ➖                                                                       |
-| PM2.5 EPA 2021 correction                 | 📱🔧 `corrections.pm02=epa_2021`       | ✅ applied                                                   | ✅ applied                                                               |
-| PM2.5 batch-specific (SLR) correction     | 📱🔧 `corrections.pm02=slr_*`          | ⚙️ `pm_2_5_scaling_factor` def 1 / `pm_2_5_intercept` def 0  | ✅ select: None / 6 presets (`PMS5003_20231030` … `_20250530`); def None |
-| PM2.5 custom scaling factor               | 📱🔧 `corrections.pm02.slr`            | ⚙️ `pm_2_5_scaling_factor`, def 1 (= 1.0×)                   | ✅ number ×100: 0.001–200, def 100 (= 1.0×)                              |
-| PM2.5 custom intercept                    | 📱🔧 `corrections.pm02.slr`            | ⚙️ `pm_2_5_intercept`, def 0                                 | ✅ number: −10 … 10, def 0                                               |
-| PM update / publish interval              | ⚙️ (fixed)                             | ⚙️ `pm_update_interval` 30 s (2 min w/ extended-life pkg)    | ⚙️ `pm_update_interval` 30 s / `pm_publish_interval` 60 s                |
-| CO₂ manual calibration (400 ppm)          | 📱🔧 `co2CalibrationRequested`         | ✅ button                                                    | ✅ button                                                                |
-| CO₂ ABC enable / disable                  | 🔧 (via `abcDays`)                     | ✅ switch                                                    | ✅ switch (def on)                                                       |
-| CO₂ ABC interval                          | 📱🔧 `abcDays` (0–200, def 8)          | ❌ not exposed (SenseAir default)                            | ✅ select: 7 / 14 / 30 / 90 / 180 days, def 14                           |
-| CO₂ offset (ppm)                          | ❌                                     | ⚙️ `co2_offset`, def 0                                       | ✅ number: −400 … 400, def 22                                            |
-| Temp scale / offset                       | 📱🔧 `corrections.atmp`                | ⚙️ baked-in outdoor compensation (no range)                  | ✅ scale 0.5–2.0 def 1.0 · offset −10 … 10 °C def 0                      |
-| Humidity scale / offset                   | 📱🔧 `corrections.rhum`                | ⚙️ baked-in outdoor compensation (no range)                  | ✅ scale 0.5–2.0 def 1.0 · offset −20 … 20 % def 0                       |
-| Temp/humidity reset to defaults           | ➖                                     | ❌                                                           | ✅ reset buttons                                                         |
-| Show compensated vs raw on device         | 📱🔧 `monitorDisplayCompensatedValues` | ➖ (both published)                                          | ➖ (both published)                                                      |
-| VOC learning-time offset                  | 📱🔧 `tvocLearningOffset` (0–720 h)    | ⚙️ `voc_learning_time_offset_hours`, def 12 h (range 1–1000) | ✅ select: 0.5 / 1 / 7 / 14 / 30 days, def 1                             |
-| NOx learning-time offset                  | 📱🔧 `noxLearningOffset` (0–720 h)     | ⚙️ `nox_learning_time_offset_hours`, def 12 h (range 1–1000) | ✅ select: 0.5 / 1 / 7 / 14 / 30 days, def 1                             |
+| Feature                                   | AirGradient (stock)                    | MallocArray                                                  | This repo                                                                                   |
+| ----------------------------------------- | -------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| PM measurement standard (µg/m³ vs US AQI) | 📱🔧 `pmStandard`                      | ➖                                                           | ➖                                                                                          |
+| PM2.5 EPA 2021 correction                 | 📱🔧 `corrections.pm02=epa_2021`       | ✅ applied                                                   | ✅ applied                                                                                  |
+| PM2.5 batch-specific (SLR) correction     | 📱🔧 `corrections.pm02=slr_*`          | ⚙️ `pm_2_5_scaling_factor` def 1 / `pm_2_5_intercept` def 0  | ✅ select: None / 10 PMS5003 presets (ONE) · None / 6 PMS5003T presets (Open Air); def None |
+| PM2.5 custom scaling factor               | 📱🔧 `corrections.pm02.slr`            | ⚙️ `pm_2_5_scaling_factor`, def 1 (= 1.0×)                   | ✅ number ×100: 0.001–200, def 100 (= 1.0×)                                                 |
+| PM2.5 custom intercept                    | 📱🔧 `corrections.pm02.slr`            | ⚙️ `pm_2_5_intercept`, def 0                                 | ✅ number: −10 … 10, def 0                                                                  |
+| PM update / publish interval              | ⚙️ (fixed)                             | ⚙️ `pm_update_interval` 30 s (2 min w/ extended-life pkg)    | ⚙️ `pm_update_interval` 30 s / `pm_publish_interval` 60 s                                   |
+| CO₂ manual calibration (400 ppm)          | 📱🔧 `co2CalibrationRequested`         | ✅ button                                                    | ✅ button                                                                                   |
+| CO₂ ABC enable / disable                  | 🔧 (via `abcDays`)                     | ✅ switch                                                    | ✅ switch (def on)                                                                          |
+| CO₂ ABC interval                          | 📱🔧 `abcDays` (0–200, def 8)          | ❌ not exposed (SenseAir default)                            | ✅ select: 7 / 14 / 30 / 90 / 180 days, def 14                                              |
+| CO₂ offset (ppm)                          | ❌                                     | ⚙️ `co2_offset`, def 0                                       | ✅ number: −400 … 400, def 22                                                               |
+| Temp scale / offset                       | 📱🔧 `corrections.atmp`                | ⚙️ baked-in outdoor compensation (no range)                  | ✅ scale 0.5–2.0 def 1.0 · offset −10 … 10 °C def 0                                         |
+| Humidity scale / offset                   | 📱🔧 `corrections.rhum`                | ⚙️ baked-in outdoor compensation (no range)                  | ✅ scale 0.5–2.0 def 1.0 · offset −20 … 20 % def 0                                          |
+| Temp/humidity reset to defaults           | ➖                                     | ❌                                                           | ✅ reset buttons                                                                            |
+| Show compensated vs raw on device         | 📱🔧 `monitorDisplayCompensatedValues` | ➖ (both published)                                          | ➖ (both published)                                                                         |
+| VOC learning-time offset                  | 📱🔧 `tvocLearningOffset` (0–720 h)    | ⚙️ `voc_learning_time_offset_hours`, def 12 h (range 1–1000) | ✅ select: 0.5 / 1 / 7 / 14 / 30 days, def 1                                                |
+| NOx learning-time offset                  | 📱🔧 `noxLearningOffset` (0–720 h)     | ⚙️ `nox_learning_time_offset_hours`, def 12 h (range 1–1000) | ✅ select: 0.5 / 1 / 7 / 14 / 30 days, def 1                                                |
 
 #### PM2.5 batch calibration presets
 
-AirGradient publishes SLR scaling factors for specific PMS5003 manufacturing batches
+AirGradient publishes SLR scaling factors for specific Plantower manufacturing batches
 (the factor multiplies the PM0.3 particle count for readings below 31 µg/m³, with EPA
-2021 layered on top). This repo bakes the same six batches into a runtime **Batch
-Preset** select; stock AirGradient applies them from the server `corrections.pm02`
-document; MallocArray has no batch list — you enter the scaling factor by hand as a
-substitution.
+2021 layered on top). This repo bakes them into a runtime **Batch Preset** select — one
+per sensor, since the two devices ship different Plantower modules:
+
+- **AirGradient ONE** uses the **PMS5003** → _PMS5003 PM2.5 Batch Preset_
+- **AirGradient Open Air** uses the **PMS5003T** (the variant that also reports
+  temperature and humidity) → _PMS5003T PM2.5 Batch Preset_
+
+Stock AirGradient applies these from the server `corrections.pm02` document; MallocArray
+has no batch list — you enter the scaling factor by hand as a substitution.
+
+**PMS5003 — AirGradient ONE** (10 presets)
 
 | Batch (PMS5003)    | Scaling factor | AirGradient (stock)             | MallocArray      | This repo |
 | ------------------ | -------------- | ------------------------------- | ---------------- | --------- |
@@ -217,11 +231,37 @@ substitution.
 | `PMS5003_20240826` | 0.03863        | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
 | `PMS5003_20250116` | 0.02983        | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
 | `PMS5003_20250530` | 0.02411        | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+| `PMS5003_20250720` | 0.004629       | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+| `PMS5003_20251218` | 0.016522       | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+| `PMS5003_20260225` | 0.004341       | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+| `PMS5003_20260410` | 0.005152       | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+
+**PMS5003T — AirGradient Open Air** (6 presets)
+
+| Batch (PMS5003T)    | Scaling factor | AirGradient (stock)             | MallocArray      | This repo |
+| ------------------- | -------------- | ------------------------------- | ---------------- | --------- |
+| `PMS5003T_20240417` | 0.02799        | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+| `PMS5003T_20240518` | 0.03394        | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+| `PMS5003T_20240921` | 0.03343        | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+| `PMS5003T_20241222` | 0.02080        | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+| `PMS5003T_20250208` | 0.02719        | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
+| `PMS5003T_20260408` | 0.003964       | ✅ dashboard SLR (undocumented) | ⚙️ enter by hand | ✅ preset |
 
 > Stock AirGradient's `local-server.md` only documents the first three
-> `slr_PMS5003_<date>` identifiers; the later batches are applied as dashboard/server
-> scaling-factor corrections. This repo stores each factor ×100 internally (e.g. `2.838`
-> → 0.02838) and also allows a fully manual **Intercept** + **Scaling Factor**.
+> `slr_PMS5003_<date>` identifiers; every later batch — and the whole PMS5003T list — is
+> applied as a dashboard/server scaling-factor correction. This repo stores each factor
+> ×100 internally (e.g. `2.838` → 0.02838) so the web UI keeps all significant digits,
+> and also allows a fully manual **Intercept** + **Scaling Factor**. Selecting **None
+> (manual)** resets the factor to 1.0 and the intercept to 0, which disables batch
+> correction and leaves the EPA 2021 curve on raw PM2.5.
+
+> **Batch list last updated: 2026-07-05.** These tables mirror
+> [`packages/sensor_pms5003.yaml`](packages/sensor_pms5003.yaml) and
+> [`packages/sensor_pms5003t.yaml`](packages/sensor_pms5003t.yaml), which are the source
+> of truth. Check AirGradient's
+> [PM batch correction factors](https://www.airgradient.com/documentation/kb/pm-batch-correction-factors)
+> table for batches newer than the ones listed here, and update both the YAML and this
+> section together.
 
 ### LED bar
 
@@ -298,6 +338,7 @@ The three firmwares treat the bar very differently:
 | Brightness / contrast              | 📱🔧 `displayBrightness` (0–100)                    | ✅ contrast slider 0–100, def 100                                  | ✅ **Display Contrast %** 0–100, def 35                                                                             |
 | Page selectable **at runtime**     | ❌ auto-cycle                                       | ⚙️ single vs multi-page pkg                                        | ✅ **Display Page** dropdown, def AirGradient Default                                                               |
 | Number of pages                    | fixed set                                           | up to 7 (multi-page pkg)                                           | 10 pages + boot page                                                                                                |
+| On-screen clock                    | ❌                                                  | ❌                                                                 | ✅ **AirGradient Default (Clock)** page — Home Assistant time top-right, humidity moves into the NOx slot           |
 | Display refresh cadence            | firmware loop; auto-cycles screens (~5 s)           | ~1 s auto-refresh + **auto-rotates** pages every 5 s (`show_next`) | `update_interval: never` — redrawn on the shared **5 s tick**, selected page only (no rotation) + instant on change |
 | Blank / off page (manual)          | 📱🔧 only `displayBrightness=0` (no blank page)     | ✅ selectable **blank** page                                       | ✅ dedicated **Off** page (fills screen black)                                                                      |
 | Automatic display off (e.g. night) | 📱 cloud schedule — **online / server-driven only** | ✅ local — Home Assistant automation / ESPHome `time`              | ✅ local — Home Assistant automation / ESPHome `time`                                                               |
@@ -312,6 +353,13 @@ The three firmwares treat the bar very differently:
 > page (it fills the panel black); in both ESPHome firmwares the display runs entirely
 > **locally**, so auto-off is driven by a Home Assistant automation or an on-device
 > ESPHome `time` schedule with no cloud dependency.
+
+> **Clock page.** **AirGradient Default (Clock)** is a variant of the default page, not
+> a separate layout: the top-right humidity readout becomes a clock and humidity takes
+> over the NOx cell. Time comes from Home Assistant over the native API
+> (`packages/time_homeassistant.yaml`), so HA also supplies the timezone — no on-device
+> timezone setting. The clock reads `--:--` until the first sync and while HA is
+> disconnected. ONE only; the Open Air has no display.
 
 ### Physical button
 

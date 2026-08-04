@@ -33,6 +33,17 @@ https://luukvisser.github.io/airgradient_esphome/<slug>/firmware/latest/  # late
 https://luukvisser.github.io/airgradient_esphome/<slug>/firmware/<ver>/   # pinned version
 ```
 
+`<slug>` is the device slug from [`devices.yaml`](../devices.yaml) — one of
+`airgradient-one` or `airgradient-open-air`. Spelled out:
+
+```
+https://luukvisser.github.io/airgradient_esphome/airgradient-one/manifest.json
+https://luukvisser.github.io/airgradient_esphome/airgradient-open-air/manifest.json
+```
+
+These are the same URLs the devices themselves poll (`update.http_request.source` in
+each device YAML), so they always point at the newest published release for that device.
+
 ---
 
 ## OTA updates
