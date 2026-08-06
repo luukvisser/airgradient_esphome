@@ -4,7 +4,7 @@
 [![Build firmware](https://github.com/luukvisser/airgradient_esphome/actions/workflows/build-firmware.yml/badge.svg)](https://github.com/luukvisser/airgradient_esphome/actions/workflows/build-firmware.yml)
 [![Pre-commit](https://github.com/luukvisser/airgradient_esphome/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/luukvisser/airgradient_esphome/actions/workflows/pre-commit.yml)
 [![Made for ESPHome](https://img.shields.io/badge/Made_for-ESPHome-blue?logo=esphome)](https://esphome.io/guides/made_for_esphome/)
-[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE.txt)
+[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-green.svg)](LICENSE.txt)
 
 ESPHome firmware for **AirGradient** air-quality monitors (ESP32-C3), built on top of
 [MallocArray/airgradient_esphome](https://github.com/MallocArray/airgradient_esphome).
@@ -394,3 +394,42 @@ The three firmwares treat the bar very differently:
 | Dashboard adoption        | `dashboard_import.package_import_url`              |
 | No secrets / static IPs   | credential fields are commented out                |
 | IDs on components         | every top-level component has an explicit `id:`    |
+
+---
+
+## License
+
+This project is licensed under the **GNU General Public License v3.0 only** (SPDX:
+`GPL-3.0-only`). The full text is in [LICENSE.txt](LICENSE.txt).
+
+```text
+Copyright (C) 2021-2025 Joshua Post and the MallocArray/airgradient_esphome contributors
+Copyright (C) 2026 Luuk Visser
+```
+
+### Modified fork
+
+This repository is a **modified fork** of
+[MallocArray/airgradient_esphome](https://github.com/MallocArray/airgradient_esphome),
+which is itself GPL-3.0. It retains the full upstream commit history; modifications by
+this fork's author date from April 2026 onwards. See
+[Notable changes from upstream](#notable-changes-from-upstream) for what differs.
+
+Upstream is distributed under GPL-3.0 **without** an "or any later version" clause, so
+this fork is `GPL-3.0-only` as well — the later-version option cannot be added
+unilaterally to a derivative work.
+
+### Firmware binaries
+
+The `.bin` files published through
+[GitHub Releases](https://github.com/luukvisser/airgradient_esphome/releases) and the
+[web installer](https://luukvisser.github.io/airgradient_esphome/) are built by
+[`build-firmware.yml`](.github/workflows/build-firmware.yml) from this repository. The
+corresponding source for any released binary is the `<slug>/v<version>` tag it was built
+from.
+
+### Third-party
+
+ESPHome is dual-licensed — MIT for the Python codebase, GPL-3.0 for the C++/runtime code
+(`.c`, `.cpp`, `.h`, `.hpp`, `.tcc`, `.ino`). Both are compatible with this project's
+GPL-3.0 licensing.
