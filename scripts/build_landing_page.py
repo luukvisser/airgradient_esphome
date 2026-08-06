@@ -78,7 +78,11 @@ TEMPLATE = """<!doctype html>
     {cards}
 
     <p style="font-size: 0.85rem; color: #888; margin-top: 3rem;">
-      Source: <a href="https://github.com/{repo}">github.com/{repo}</a>.
+      Source: <a href="https://github.com/{repo}">github.com/{repo}</a> &middot;
+      Licensed
+      <a href="https://github.com/{repo}/blob/main/LICENSE.txt">GPL-3.0-only</a>
+      &middot; the corresponding source for each binary is the release tag it was
+      built from.
     </p>
   </body>
 </html>
