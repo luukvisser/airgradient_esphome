@@ -10,7 +10,7 @@ license-files = ["LICENSE.txt"]
 
 # ESPHome is the one required runtime dep for building firmware.
 dependencies = [
-    "esphome==2026.6.5",
+    "esphome==2026.9.1",
     # Used by scripts/ to parse devices.yaml and build the landing page.
     "pyyaml == 6.0.3",
 ]
