@@ -3,7 +3,7 @@ name = "airgradient-esphome-firmware"
 version = "0.0.0"
 description = "ESPHome firmware build pipeline for AirGradient devices (Made for ESPHome)."
 readme = "README.md"
-requires-python = ">=3.11,<3.15"
+requires-python = ">=3.12,<3.15"
 # Inherited from the upstream fork, which grants no "or any later version" option.
 license = "GPL-3.0-only"
 license-files = ["LICENSE.txt"]
