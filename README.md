@@ -180,7 +180,7 @@ trust. The shared security settings live in
   Home Assistant has set that key, any client could set it (and then upload firmware),
   so adopt new devices promptly.
 - **Switch off what you don't use.** Config switches in Home Assistant turn off the web
-  server, Bluetooth, OTA uploads, the fallback hotspot and mDNS, and an "Update Check
+  server, Bluetooth, OTA uploads and the fallback hotspot, and an "Update Check
   Interval" select sets how often it checks for new firmware. See
   [`switch_network_services.yaml`](packages.md#switch_network_servicesyaml). The
   switches can only be changed while Home Assistant is connected, so a device used

@@ -63,7 +63,6 @@ adopted in Home Assistant, reducing attack surface and network noise:
 | Bluetooth        | Stops the BLE stack (Improv Wi-Fi provisioning).                                                                      |
 | OTA Updates      | Random password on the ESPHome OTA port: unauthenticated uploads fail. Uploads encrypted with the API key still work. |
 | Fallback Hotspot | No access point + captive portal when Wi-Fi is lost; keeps retrying Wi-Fi.                                            |
-| mDNS Discovery   | Stops multicast announcements. Re-enabling restarts the device.                                                       |
 
 A **Web Password** field sets an optional per-device password for the web page and its
 REST API (digest auth, username `admin`). Empty (the default) means no password. It can
@@ -87,9 +86,6 @@ First-time setup (no Wi-Fi configured) always gets the hotspot. Turning Fallback
 off does not stop a hotspot that is already running; it closes once Wi-Fi reconnects.
 The package restores a 90 s hotspot delay when the switch is turned back on
 (`fallback_ap_timeout_ms`), which must match `wifi: ap: ap_timeout:`.
-
-With mDNS Discovery off, Home Assistant and the ESPHome dashboard can no longer find the
-device by name: give it a DHCP reservation and make sure Home Assistant connects by IP.
 
 ### `config_button.yaml`
 
