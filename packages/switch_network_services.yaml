@@ -1,6 +1,8 @@
 # Switches to turn off network services that are not needed once the device
 # is adopted in Home Assistant, reducing its attack surface and network noise:
-#   - Web Server:       stops the HTTP listener on port 80.
+#   - Web Server:       stops the HTTP listener on port 80. Turning it off is
+#                       refused unless Home Assistant is connected, so devices
+#                       used without HA cannot lock themselves out.
 #   - Bluetooth:        stops the BLE stack (used for Improv Wi-Fi provisioning).
 #   - OTA Updates:      rejects uploads on the ESPHome OTA port (3232) by
 #                       rebooting before any data is written. Firmware updates
@@ -132,7 +134,32 @@ switch:
     id: web_server_enabled
     name: "Web Server"
     icon: mdi:web
-    optimistic: true
+    # Not optimistic: turning it off is only accepted while Home Assistant is
+    # connected, so the web page (the only control without HA) can never lock
+    # itself out. During setup the restored state is always accepted.
+    optimistic: false
+    turn_on_action:
+      - switch.template.publish:
+          id: web_server_enabled
+          state: true
+    turn_off_action:
+      - if:
+          condition:
+            or:
+              - lambda: return !id(network_services_ready);
+              - api.connected:
+                  state_subscription_only: true
+          then:
+            - switch.template.publish:
+                id: web_server_enabled
+                state: false
+          else:
+            - logger.log:
+                level: WARN
+                format: "Web Server can only be turned off while Home Assistant is connected"
+            - switch.template.publish:
+                id: web_server_enabled
+                state: true
     restore_mode: RESTORE_DEFAULT_ON
     entity_category: config
     web_server:

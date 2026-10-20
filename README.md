@@ -181,7 +181,9 @@ This firmware is meant to be safe on a network with devices you don't fully trus
 - **Switch off what you don't use.** Config switches in Home Assistant turn off the web
   server, Bluetooth, OTA uploads, the fallback hotspot and mDNS, and an "Update Check
   Interval" select sets how often it checks for new firmware. See
-  [`switch_network_services.yaml`](packages.md#switch_network_servicesyaml).
+  [`switch_network_services.yaml`](packages.md#switch_network_servicesyaml). The web
+  server can only be switched off while Home Assistant is connected, so a device used
+  without Home Assistant always keeps its web page.
 
 ### Sensors reported
 
