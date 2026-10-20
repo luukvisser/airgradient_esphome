@@ -70,6 +70,14 @@ only be changed while Home Assistant is connected and is shown as `********`, so
 password never ends up in Home Assistant's history. With a password set, use
 `curl --digest -u admin:<password> http://<ip>/sensor/<id>`. A factory reset clears it.
 
+A **Wi-Fi Power Save** select sets the radio's power saving: Off (full power, the
+default and the most reliable for Home Assistant, the web page and cloud uploads), Light
+or High (lower power, slower to receive). It applies immediately and can be changed
+without Home Assistant. While Bluetooth is on, Wi-Fi and Bluetooth share the radio in
+time slices, so even "Off" is not fully awake: **turn Bluetooth off once the device is
+set up** to give Wi-Fi the radio to itself. The hidden diagnostic sensor **Wi-Fi Power
+Save (actual)** shows the mode the radio reports.
+
 An **Update Check Interval** select sets how often the device checks GitHub Pages for
 new firmware: Off, every 6 hours, every 24 hours (default) or weekly. Manual checks (the
 update entity action in Home Assistant, double-clicking the config button) always work.

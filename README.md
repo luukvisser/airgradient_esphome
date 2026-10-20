@@ -193,6 +193,9 @@ trust. The shared security settings live in
   device on your network cannot impersonate either server with an ordinary certificate.
   One trust list serves both hosts, so AirGradient's CA is also trusted for the update
   host.
+- **Wi-Fi power saving.** Full power by default for reliable connections; a "Wi-Fi Power
+  Save" select lowers it at runtime. Turning Bluetooth off after setup gives Wi-Fi the
+  shared radio to itself.
 - **Optional web password.** A "Web Password" field in Home Assistant protects the web
   page and REST API with a per-device password (digest auth). It is empty by default, so
   nothing changes until you set one.
