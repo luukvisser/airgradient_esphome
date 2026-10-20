@@ -46,9 +46,11 @@ without reflashing when Wi-Fi credentials change.
 ### `security.yaml`
 
 Security baseline for every device: native API encryption with a key set by Home
-Assistant, `api: reboot_timeout: 1h`, `safe_mode: num_attempts: 5`, and verified HTTPS
-against [`certs/ca_bundle.pem`](packages/certs/ca_bundle.pem) (AirGradient's private
-root CA plus the public roots GitHub Pages uses).
+Assistant, `api: reboot_timeout: 1h` (only once Home Assistant has adopted the device; a
+device used without Home Assistant never reboots for lack of an API client),
+`safe_mode: num_attempts: 5`, and verified HTTPS against
+[`certs/ca_bundle.pem`](packages/certs/ca_bundle.pem) (AirGradient's private root CA
+plus the public roots GitHub Pages uses).
 
 ### `switch_network_services.yaml`
 

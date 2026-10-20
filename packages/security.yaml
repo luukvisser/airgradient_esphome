@@ -2,6 +2,10 @@
 # reliability limits and verified HTTPS. Device YAMLs include this instead of
 # repeating it, so the devices cannot drift apart.
 ---
+substitutions:
+  # Reboot after this long without any API client, but only on devices that
+  # Home Assistant has adopted (see apply_api_reboot_timeout).
+  api_reboot_timeout_ms: "3600000"
 api:
   # Encrypt the native API link to Home Assistant (Noise, ChaCha20-Poly1305).
   # No key is set here on purpose: these prebuilt firmwares are shared by every
@@ -12,7 +16,32 @@ api:
   encryption: {}
   # Reboot only after an hour without any API client (default 15 min), so
   # Home Assistant restarts/maintenance do not reboot every sensor.
-  reboot_timeout: 1h
+  reboot_timeout: ${api_reboot_timeout_ms}ms
+  # Home Assistant sets the key while connected and then reconnects
+  # encrypted, so re-check on every connection.
+  on_client_connected:
+    - script.execute: apply_api_reboot_timeout
+esphome:
+  on_boot:
+    - priority: -100 # After the API server has loaded its saved key.
+      then:
+        - script.execute: apply_api_reboot_timeout
+script:
+  # A device with an API key has been adopted by Home Assistant and keeps the
+  # reboot timeout as a recovery mechanism. A device without a key is used
+  # without Home Assistant (web page / cloud only) and would otherwise reboot
+  # every hour, so its timeout is disabled.
+  - id: apply_api_reboot_timeout
+    then:
+      - lambda: |-
+          auto *server = api::global_api_server;
+          if (server->get_noise_ctx().has_psk()) {
+            server->set_reboot_timeout(${api_reboot_timeout_ms});
+          } else {
+            server->set_reboot_timeout(0);
+            // Set during setup while the timeout was still active
+            server->status_clear_warning();
+          }
 # Fall back to the minimal recovery firmware after 5 failed boots instead of
 # the default 10, so a bad update recovers sooner.
 safe_mode:
