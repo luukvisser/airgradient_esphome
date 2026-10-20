@@ -184,6 +184,9 @@ This firmware is meant to be safe on a network with devices you don't fully trus
   [`switch_network_services.yaml`](packages.md#switch_network_servicesyaml). The web
   server can only be switched off while Home Assistant is connected, so a device used
   without Home Assistant always keeps its web page.
+- **Optional web password.** A "Web Password" field in Home Assistant protects the web
+  page and REST API with a per-device password (digest auth). It is empty by default, so
+  nothing changes until you set one.
 
 ### Sensors reported
 

@@ -14,6 +14,11 @@
 #   - mDNS Discovery:   stops multicast announcements. Home Assistant must then
 #                       reach the device by a fixed IP (DHCP reservation).
 #                       Turning it back on restarts the device.
+#   - Web Password (text): optional per-device password for the web page and
+#                       its REST API (digest auth, username "admin"). Empty =
+#                       no password. Like turning the web server off, it can only
+#                       be changed while Home Assistant is connected. Shown as
+#                       "********" so the password never reaches HA's history.
 #   - Update Check Interval (select): Off / 6 h / 24 h (default) / weekly
 #                       manifest checks against GitHub Pages. Manual checks
 #                       (HA "update entity" action, config button double-click)
@@ -31,10 +36,23 @@ substitutions:
   # Must match `wifi: ap: ap_timeout:` in the device YAML; restored when the
   # Fallback Hotspot switch is turned back on.
   fallback_ap_timeout_ms: "90000"
+web_server:
+  # Build-time placeholder only, never used: apply_web_auth replaces the
+  # credentials at boot, before the web server starts. Declaring auth here is
+  # what compiles the auth check in and wraps every web handler with it.
+  auth:
+    username: admin
+    password: replaced-at-boot
+    type: digest
 esphome:
   includes:
     - <mdns.h>
   on_boot:
+    # After the restored password global (HARDWARE), before the web server
+    # starts listening (WIFI).
+    - priority: 600
+      then:
+        - script.execute: apply_web_auth
     - priority: -100 # After all components (web server, BLE, mDNS) are set up.
       then:
         - lambda: id(network_services_ready) = true;
@@ -59,12 +77,31 @@ globals:
     type: bool
     restore_value: false
     initial_value: 'true'
+  # Per-device web password, empty = no auth. Cleared by a factory reset.
+  - id: web_password_value
+    type: std::string
+    restore_value: true
+    max_restore_data_length: 64
+    initial_value: '""'
   # Update check interval in ms derived from the select; 0 = no automatic check.
   - id: update_check_ms
     type: uint32_t
     restore_value: false
     initial_value: '0'
 script:
+  - id: apply_web_auth
+    then:
+      - lambda: |-
+          // The web server checks credentials from its own task, so it keeps
+          // pointers into this fixed buffer rather than into the std::string.
+          static char password[65];
+          const std::string &value = id(web_password_value);
+          strncpy(password, value.c_str(), sizeof(password) - 1);
+          auto *base = web_server_base::global_web_server_base;
+          base->set_auth_password(password);
+          // An empty username disables authentication entirely.
+          base->set_auth_username(value.empty() ? "" : "admin");
+          id(web_password).publish_state(value.empty() ? "" : "********");
   - id: apply_network_services
     mode: queued
     then:
@@ -216,6 +253,40 @@ switch:
       - script.execute: apply_network_services
     on_turn_off:
       - script.execute: apply_network_services
+text:
+  - platform: template
+    id: web_password
+    name: "Web Password"
+    icon: mdi:form-textbox-password
+    mode: password
+    min_length: 0
+    max_length: 64
+    optimistic: false
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    set_action:
+      - if:
+          condition:
+            and:
+              - api.connected:
+                  state_subscription_only: true
+              # Re-submitting the masked placeholder keeps the current password.
+              - lambda: return x != "********";
+          then:
+            - lambda: id(web_password_value) = x;
+            - script.execute: apply_web_auth
+          else:
+            - if:
+                condition:
+                  not:
+                    api.connected:
+                      state_subscription_only: true
+                then:
+                  - logger.log:
+                      level: WARN
+                      format: "Web Password can only be changed while Home Assistant is connected"
+            - script.execute: apply_web_auth
 select:
   # Option order must match the index lookup in apply_network_services.
   - platform: template

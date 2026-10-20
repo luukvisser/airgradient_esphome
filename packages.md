@@ -56,6 +56,12 @@ adopted in Home Assistant, reducing attack surface and network noise:
 | Fallback Hotspot | No access point + captive portal when Wi-Fi is lost; keeps retrying Wi-Fi.           |
 | mDNS Discovery   | Stops multicast announcements. Re-enabling restarts the device.                      |
 
+A **Web Password** field sets an optional per-device password for the web page and its
+REST API (digest auth, username `admin`). Empty (the default) means no password. It can
+only be changed while Home Assistant is connected and is shown as `********`, so the
+password never ends up in Home Assistant's history. With a password set, use
+`curl --digest -u admin:<password> http://<ip>/sensor/<id>`. A factory reset clears it.
+
 An **Update Check Interval** select sets how often the device checks GitHub Pages for
 new firmware: Off, every 6 hours, every 24 hours (default) or weekly. Manual checks (the
 update entity action in Home Assistant, double-clicking the config button) always work.
