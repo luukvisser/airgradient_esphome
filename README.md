@@ -184,6 +184,10 @@ This firmware is meant to be safe on a network with devices you don't fully trus
   [`switch_network_services.yaml`](packages.md#switch_network_servicesyaml). The web
   server can only be switched off while Home Assistant is connected, so a device used
   without Home Assistant always keeps its web page.
+- **Verified HTTPS.** Cloud uploads and firmware update checks only trust the roots in
+  [`packages/certs/ca_bundle.pem`](packages/certs/ca_bundle.pem): AirGradient's own root
+  CA (pinned, like AirGradient's firmware) and the public roots GitHub Pages uses. A
+  device on your network cannot impersonate either server.
 - **Optional web password.** A "Web Password" field in Home Assistant protects the web
   page and REST API with a per-device password (digest auth). It is empty by default, so
   nothing changes until you set one.
