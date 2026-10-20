@@ -24,31 +24,6 @@ esphome:
     name: "luukvisser.airgradient-open-air"
     version: "1.2.0"
 logger:
-api:
-  # Encrypt the native API link to Home Assistant (Noise, ChaCha20-Poly1305).
-  # No key is set here on purpose: these prebuilt firmwares are shared by every
-  # device, so a baked-in key would be identical everywhere. The device boots
-  # unprovisioned, and the first client to connect (Home Assistant on adoption)
-  # sets a per-device key, which is stored in flash. From then on only
-  # encrypted connections are accepted; only a factory reset clears the key.
-  encryption: {}
-  # Room for Home Assistant plus a dashboard/log viewer; a misbehaving client
-  # on the network cannot exhaust the slots Home Assistant needs.
-  max_connections: 3
-  # Reboot only after an hour without any API client (default 15 min), so
-  # Home Assistant restarts/maintenance do not reboot every sensor.
-  reboot_timeout: 1h
-# Fall back to the minimal recovery firmware after 5 failed boots instead of
-# the default 10, so a bad update recovers sooner.
-safe_mode:
-  num_attempts: 5
-# Provisioning window: a device that is not fully set up yet (no Wi-Fi, or no
-# API encryption key from Home Assistant) only accepts Wi-Fi credentials and an
-# API key for 15 minutes after power-on. This stops another client on the
-# network from setting the key before Home Assistant does. Power-cycle the
-# device to reopen the window.
-provisioning:
-  timeout: 15min
 ota:
   - platform: esphome
     id: ota_esphome
@@ -56,13 +31,6 @@ ota:
     id: ota_http_request
 http_request:
   id: http_request_client
-  # Verify both hosts against our own trust list instead of the public CA
-  # bundle: hw.airgradient.com uses AirGradient's private root CA (in no
-  # public store), luukvisser.github.io a Let's Encrypt chain. The bundle
-  # pins the AirGradient root plus the public roots GitHub Pages may use;
-  # see packages/certs/ca_bundle.pem for fingerprints and upkeep.
-  verify_ssl: true
-  ca_certificate_path: packages/certs/ca_bundle.pem
   timeout: 10s
   buffer_size_rx: 2048
 update:
@@ -135,6 +103,7 @@ packages:
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
   network_services: !include packages/switch_network_services.yaml
   # ── System utilities ────────────────────────────────────────────────────
+  security: !include packages/security.yaml
   diagnostic_esp32: !include packages/diagnostic_esp32.yaml
   hardware_watchdog: !include packages/watchdog.yaml
   button_factory_reset: !include packages/button_factory_reset.yaml

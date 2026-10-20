@@ -4,13 +4,14 @@
 #                       refused unless Home Assistant is connected, so devices
 #                       used without HA cannot lock themselves out.
 #   - Bluetooth:        stops the BLE stack (used for Improv Wi-Fi provisioning).
-#   - OTA Updates:      rejects uploads on the ESPHome OTA port (3232) by
-#                       rebooting before any data is written. Firmware updates
-#                       via the "Firmware Update" entity (http_request) keep
-#                       working.
+#   - OTA Updates:      when off, the ESPHome OTA port (3232) gets a random
+#                       password nobody knows, so unauthenticated uploads fail.
+#                       Uploads encrypted with the device's API key and the
+#                       "Firmware Update" entity (http_request) keep working.
 #   - Fallback Hotspot: no "cleanair" access point + captive portal when Wi-Fi
 #                       is lost; the device keeps retrying Wi-Fi instead. First
-#                       setup (no Wi-Fi configured yet) is unaffected.
+#                       setup (no Wi-Fi configured yet) is unaffected. A hotspot
+#                       that is already running stays up until Wi-Fi returns.
 #   - mDNS Discovery:   stops multicast announcements. Home Assistant must then
 #                       reach the device by a fixed IP (DHCP reservation).
 #                       Turning it back on restarts the device.
@@ -28,14 +29,24 @@
 # reboots. The native API (Home Assistant) is never affected, so everything
 # can always be turned back on from there. A factory reset restores defaults.
 #
+# Changing a switch is only accepted while Home Assistant is connected
+# (re-enabling the web server is always allowed). Without that, any client
+# could flip them back through the open web page. While HA is connected the
+# web page can still change them; set a Web Password or turn the web server
+# off to close that.
+#
 # Requires `web_server:`, `esp32_ble` (pulled in by `esp32_improv:`), an
 # `ota: - platform: esphome` with id `ota_esphome`, a `wifi: ap:` and an
 # `update:` with id `firmware_update`.
 ---
 substitutions:
-  # Must match `wifi: ap: ap_timeout:` in the device YAML; restored when the
-  # Fallback Hotspot switch is turned back on.
+  # Must match `wifi: ap: ap_timeout:` in the device YAML (ESPHome offers no
+  # getter); restored when the Fallback Hotspot switch is turned back on.
   fallback_ap_timeout_ms: "90000"
+  # C++ condition: a switch change is accepted. During setup the restored
+  # state is always applied; afterwards Home Assistant must be connected.
+  network_change_allowed: >-
+    (!id(network_services_ready) || (api::global_api_server != nullptr && api::global_api_server->is_connected_with_state_subscription()))
 web_server:
   # Build-time placeholder only, never used: apply_web_auth replaces the
   # credentials at boot, before the web server starts. Declaring auth here is
@@ -53,6 +64,7 @@ esphome:
     - priority: 600
       then:
         - script.execute: apply_web_auth
+        - script.execute: apply_ota_auth
     - priority: -100 # After all components (web server, BLE, mDNS) are set up.
       then:
         - lambda: id(network_services_ready) = true;
@@ -88,6 +100,12 @@ globals:
     type: uint32_t
     restore_value: false
     initial_value: '0'
+  # Interval last applied to firmware_update; resuming restarts its timer, so
+  # only do it when the interval actually changes.
+  - id: update_check_applied_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0xFFFFFFFF'
 script:
   - id: apply_web_auth
     then:
@@ -102,6 +120,19 @@ script:
           // An empty username disables authentication entirely.
           base->set_auth_username(value.empty() ? "" : "admin");
           id(web_password).publish_state(value.empty() ? "" : "********");
+  - id: apply_ota_auth
+    then:
+      - lambda: |-
+          if (id(ota_enabled).state) {
+            id(ota_esphome).set_auth_password("");
+          } else {
+            // Random per boot and never shown: plaintext uploads fail
+            // authentication. Uploads encrypted with the API key skip it.
+            char password[33];
+            snprintf(password, sizeof(password), "%08" PRIx32 "%08" PRIx32 "%08" PRIx32 "%08" PRIx32,
+                     random_uint32(), random_uint32(), random_uint32(), random_uint32());
+            id(ota_esphome).set_auth_password(password);
+          }
   - id: apply_network_services
     mode: queued
     then:
@@ -138,13 +169,18 @@ script:
                   - ble.disable:
             - if:
                 condition:
-                  lambda: return id(update_check_ms) == 0;
+                  lambda: return id(update_check_ms) != id(update_check_applied_ms);
                 then:
-                  - component.suspend: firmware_update
-                else:
-                  - component.resume:
-                      id: firmware_update
-                      update_interval: !lambda return id(update_check_ms);
+                  - if:
+                      condition:
+                        lambda: return id(update_check_ms) == 0;
+                      then:
+                        - component.suspend: firmware_update
+                      else:
+                        - component.resume:
+                            id: firmware_update
+                            update_interval: !lambda return id(update_check_ms);
+                  - lambda: id(update_check_applied_ms) = id(update_check_ms);
             - if:
                 condition:
                   lambda: return id(mdns_discovery_enabled).state && !id(mdns_running);
@@ -154,49 +190,28 @@ script:
                   - lambda: App.safe_reboot();
 ota:
   - id: !extend ota_esphome
-    on_begin:
-      then:
-        - if:
-            condition:
-              switch.is_off: ota_enabled
-            then:
-              - logger.log:
-                  level: WARN
-                  format: "OTA upload rejected: OTA Updates switch is off"
-              # on_begin fires before the backend starts writing flash, and
-              # the running partition is never touched, so rebooting is safe.
-              - lambda: App.safe_reboot();
+    # Compiles in the password check; apply_ota_auth sets the real value
+    # (empty = no password while the OTA Updates switch is on).
+    password: ""
 switch:
   - platform: template
     id: web_server_enabled
     name: "Web Server"
     icon: mdi:web
-    # Not optimistic: turning it off is only accepted while Home Assistant is
-    # connected, so the web page (the only control without HA) can never lock
-    # itself out. During setup the restored state is always accepted.
+    # Turning it off is only accepted while Home Assistant is connected, so
+    # the web page (the only control without HA) can never lock itself out.
+    # Turning it back on is always allowed.
     optimistic: false
     turn_on_action:
       - switch.template.publish:
           id: web_server_enabled
           state: true
     turn_off_action:
-      - if:
-          condition:
-            or:
-              - lambda: return !id(network_services_ready);
-              - api.connected:
-                  state_subscription_only: true
-          then:
-            - switch.template.publish:
-                id: web_server_enabled
-                state: false
-          else:
-            - logger.log:
-                level: WARN
-                format: "Web Server can only be turned off while Home Assistant is connected"
-            - switch.template.publish:
-                id: web_server_enabled
-                state: true
+      - lambda: |-
+          if (${network_change_allowed})
+            id(web_server_enabled).publish_state(false);
+          else
+            ESP_LOGW("network_services", "Web Server can only be turned off while Home Assistant is connected");
     restore_mode: RESTORE_DEFAULT_ON
     entity_category: config
     web_server:
@@ -209,7 +224,19 @@ switch:
     id: bluetooth_enabled
     name: "Bluetooth"
     icon: mdi:bluetooth
-    optimistic: true
+    optimistic: false
+    turn_on_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(bluetooth_enabled).publish_state(true);
+          else
+            ESP_LOGW("network_services", "Bluetooth can only be changed while Home Assistant is connected");
+    turn_off_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(bluetooth_enabled).publish_state(false);
+          else
+            ESP_LOGW("network_services", "Bluetooth can only be changed while Home Assistant is connected");
     restore_mode: RESTORE_DEFAULT_ON
     entity_category: config
     web_server:
@@ -222,16 +249,44 @@ switch:
     id: ota_enabled
     name: "OTA Updates"
     icon: mdi:upload-network
-    optimistic: true
+    optimistic: false
+    turn_on_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(ota_enabled).publish_state(true);
+          else
+            ESP_LOGW("network_services", "OTA Updates can only be changed while Home Assistant is connected");
+    turn_off_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(ota_enabled).publish_state(false);
+          else
+            ESP_LOGW("network_services", "OTA Updates can only be changed while Home Assistant is connected");
     restore_mode: RESTORE_DEFAULT_ON
     entity_category: config
     web_server:
       sorting_group_id: grp_system
+    on_turn_on:
+      - script.execute: apply_ota_auth
+    on_turn_off:
+      - script.execute: apply_ota_auth
   - platform: template
     id: fallback_hotspot_enabled
     name: "Fallback Hotspot"
     icon: mdi:access-point
-    optimistic: true
+    optimistic: false
+    turn_on_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(fallback_hotspot_enabled).publish_state(true);
+          else
+            ESP_LOGW("network_services", "Fallback Hotspot can only be changed while Home Assistant is connected");
+    turn_off_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(fallback_hotspot_enabled).publish_state(false);
+          else
+            ESP_LOGW("network_services", "Fallback Hotspot can only be changed while Home Assistant is connected");
     restore_mode: RESTORE_DEFAULT_ON
     entity_category: config
     web_server:
@@ -244,7 +299,19 @@ switch:
     id: mdns_discovery_enabled
     name: "mDNS Discovery"
     icon: mdi:radar
-    optimistic: true
+    optimistic: false
+    turn_on_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(mdns_discovery_enabled).publish_state(true);
+          else
+            ESP_LOGW("network_services", "mDNS Discovery can only be changed while Home Assistant is connected");
+    turn_off_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(mdns_discovery_enabled).publish_state(false);
+          else
+            ESP_LOGW("network_services", "mDNS Discovery can only be changed while Home Assistant is connected");
     restore_mode: RESTORE_DEFAULT_ON
     entity_category: config
     web_server:

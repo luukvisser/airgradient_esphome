@@ -170,24 +170,29 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 
 ### Security & network
 
-This firmware is meant to be safe on a network with devices you don't fully trust:
+This firmware is built to be harder to attack on a network with devices you don't fully
+trust. The shared security settings live in
+[`packages/security.yaml`](packages/security.yaml).
 
 - **Encrypted Home Assistant connection.** The native API uses Noise encryption. No key
   is baked into the shared firmware: Home Assistant sets a per-device key on adoption,
-  after which only encrypted connections are accepted (a factory reset clears it).
-- **15-minute setup window.** A device that is not fully set up (no Wi-Fi, or no API key
-  yet) only accepts Wi-Fi credentials and an API key for 15 minutes after power-on. If
-  you add it to Home Assistant later than that, unplug and replug it first.
+  after which only encrypted connections are accepted (a factory reset clears it). Until
+  Home Assistant has set that key, any client could set it (and then upload firmware),
+  so adopt new devices promptly.
 - **Switch off what you don't use.** Config switches in Home Assistant turn off the web
   server, Bluetooth, OTA uploads, the fallback hotspot and mDNS, and an "Update Check
   Interval" select sets how often it checks for new firmware. See
-  [`switch_network_services.yaml`](packages.md#switch_network_servicesyaml). The web
-  server can only be switched off while Home Assistant is connected, so a device used
-  without Home Assistant always keeps its web page.
+  [`switch_network_services.yaml`](packages.md#switch_network_servicesyaml). The
+  switches can only be changed while Home Assistant is connected, so a device used
+  without Home Assistant always keeps its web page, and nobody can flip them through it.
+  While Home Assistant is connected the open web page can still change them: set a web
+  password or turn the web server off for full protection.
 - **Verified HTTPS.** Cloud uploads and firmware update checks only trust the roots in
   [`packages/certs/ca_bundle.pem`](packages/certs/ca_bundle.pem): AirGradient's own root
-  CA (pinned, like AirGradient's firmware) and the public roots GitHub Pages uses. A
-  device on your network cannot impersonate either server.
+  CA (pinned, like AirGradient's firmware) and the public roots GitHub Pages uses, so a
+  device on your network cannot impersonate either server with an ordinary certificate.
+  One trust list serves both hosts, so AirGradient's CA is also trusted for the update
+  host.
 - **Optional web password.** A "Web Password" field in Home Assistant protects the web
   page and REST API with a per-device password (digest auth). It is empty by default, so
   nothing changes until you set one.
