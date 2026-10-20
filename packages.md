@@ -43,6 +43,22 @@ you see persistent warnings about being unable to save preferences.
 Configures a fallback Wi-Fi AP with a captive portal so the device can be re-provisioned
 without reflashing when Wi-Fi credentials change.
 
+### `switch_network_services.yaml`
+
+Adds three config switches to turn off network services that are not needed once the
+device is adopted in Home Assistant:
+
+| Switch      | When off                                                               |
+| ----------- | ---------------------------------------------------------------------- |
+| Web Server  | Stops the HTTP listener on port 80.                                    |
+| Bluetooth   | Stops the BLE stack (Improv Wi-Fi provisioning).                       |
+| OTA Updates | Rejects uploads on the ESPHome OTA port by rebooting before any write. |
+
+All default to on and keep their state across reboots. The native API is never affected,
+so the services can always be re-enabled from Home Assistant. Firmware updates through
+the "Firmware Update" entity still work with OTA Updates off. While the fallback Wi-Fi
+AP is active, the captive portal reopens port 80 regardless of the Web Server switch.
+
 ### `config_button.yaml`
 
 Wires the physical button (GPIO9, strapping pin) to three gestures:

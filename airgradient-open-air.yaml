@@ -115,6 +115,7 @@ packages:
   go_iaqs: !include packages/sensor_go_iaqs.yaml
   # ── Integrations ────────────────────────────────────────────────────────
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
+  network_services: !include packages/switch_network_services.yaml
   # ── System utilities ────────────────────────────────────────────────────
   diagnostic_esp32: !include packages/diagnostic_esp32.yaml
   hardware_watchdog: !include packages/watchdog.yaml

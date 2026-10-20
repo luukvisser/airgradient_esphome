@@ -1,0 +1,106 @@
+# Switches to turn off network services that are not needed once the device
+# is adopted in Home Assistant, reducing its attack surface:
+#   - Web Server:  stops the HTTP listener on port 80.
+#   - Bluetooth:   stops the BLE stack (used for Improv Wi-Fi provisioning).
+#   - OTA Updates: rejects uploads on the ESPHome OTA port (3232) by rebooting
+#                  before any data is written. Firmware updates via the
+#                  "Firmware Update" entity (http_request) keep working.
+#
+# All default to ON so first-time setup is unaffected; their state survives
+# reboots. The native API (Home Assistant) is never affected, so everything
+# can always be turned back on from there. A factory reset restores defaults.
+#
+# Requires `web_server:`, `esp32_ble` (pulled in by `esp32_improv:`) and an
+# `ota: - platform: esphome` with id `ota_esphome`.
+---
+globals:
+  # Switch actions are ignored until on_boot has run: template switches
+  # restore their state during setup, before the web server and BLE exist.
+  - id: network_services_ready
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  # Whether this package currently holds the web server's listener reference.
+  # init()/deinit() are refcounted (the captive portal shares the listener),
+  # so each must be called exactly once per transition.
+  - id: web_server_listening
+    type: bool
+    restore_value: false
+    initial_value: 'true'
+script:
+  - id: apply_network_services
+    then:
+      - lambda: |-
+          if (!id(network_services_ready))
+            return;
+          bool want = id(web_server_enabled).state;
+          if (want != id(web_server_listening)) {
+            if (want)
+              web_server_base::global_web_server_base->init();
+            else
+              web_server_base::global_web_server_base->deinit();
+            id(web_server_listening) = want;
+          }
+      - if:
+          condition:
+            switch.is_on: bluetooth_enabled
+          then:
+            - ble.enable:
+          else:
+            - ble.disable:
+esphome:
+  on_boot:
+    - priority: -100 # After all components (web server, BLE) are set up.
+      then:
+        - lambda: id(network_services_ready) = true;
+        - script.execute: apply_network_services
+ota:
+  - id: !extend ota_esphome
+    on_begin:
+      then:
+        - if:
+            condition:
+              switch.is_off: ota_enabled
+            then:
+              - logger.log:
+                  level: WARN
+                  format: "OTA upload rejected: OTA Updates switch is off"
+              # on_begin fires before the backend starts writing flash, and
+              # the running partition is never touched, so rebooting is safe.
+              - lambda: App.safe_reboot();
+switch:
+  - platform: template
+    id: web_server_enabled
+    name: "Web Server"
+    icon: mdi:web
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    on_turn_on:
+      - script.execute: apply_network_services
+    on_turn_off:
+      - script.execute: apply_network_services
+  - platform: template
+    id: bluetooth_enabled
+    name: "Bluetooth"
+    icon: mdi:bluetooth
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    on_turn_on:
+      - script.execute: apply_network_services
+    on_turn_off:
+      - script.execute: apply_network_services
+  - platform: template
+    id: ota_enabled
+    name: "OTA Updates"
+    icon: mdi:upload-network
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
