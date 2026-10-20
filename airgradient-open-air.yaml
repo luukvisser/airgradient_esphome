@@ -55,7 +55,8 @@ update:
     # Per-device manifest URL. Must match the Pages path the release
     # workflow publishes to (site/<slug>/manifest.json).
     source: "https://luukvisser.github.io/airgradient_esphome/airgradient-open-air/manifest.json"
-    update_interval: 6h
+    # Default; overridden at runtime by the Update Check Interval select.
+    update_interval: 24h
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system

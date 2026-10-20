@@ -12,11 +12,12 @@
 #   - mDNS Discovery:   stops multicast announcements. Home Assistant must then
 #                       reach the device by a fixed IP (DHCP reservation).
 #                       Turning it back on restarts the device.
-#   - Automatic Update Check: stops the 6-hourly manifest check against GitHub
-#                       Pages. Manual checks (HA "update entity" action, config
-#                       button double-click) still work.
+#   - Update Check Interval (select): Off / 6 h / 24 h (default) / weekly
+#                       manifest checks against GitHub Pages. Manual checks
+#                       (HA "update entity" action, config button double-click)
+#                       always work.
 #
-# All default to ON so first-time setup is unaffected; their state survives
+# All switches default to ON so first-time setup is unaffected; their state survives
 # reboots. The native API (Home Assistant) is never affected, so everything
 # can always be turned back on from there. A factory reset restores defaults.
 #
@@ -56,48 +57,62 @@ globals:
     type: bool
     restore_value: false
     initial_value: 'true'
+  # Update check interval in ms derived from the select; 0 = no automatic check.
+  - id: update_check_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
 script:
   - id: apply_network_services
+    mode: queued
     then:
-      - lambda: |-
-          if (!id(network_services_ready))
-            return;
-          bool want = id(web_server_enabled).state;
-          if (want != id(web_server_listening)) {
-            if (want)
-              web_server_base::global_web_server_base->init();
-            else
-              web_server_base::global_web_server_base->deinit();
-            id(web_server_listening) = want;
-          }
-          // ap_timeout 0 means the fallback AP is never started
-          id(wifi_client).set_ap_timeout(id(fallback_hotspot_enabled).state ? ${fallback_ap_timeout_ms} : 0);
-          if (!id(mdns_discovery_enabled).state && id(mdns_running)) {
-            mdns_free();
-            id(mdns_running) = false;
-          }
+      # Ignored until on_boot has run (see network_services_ready).
       - if:
           condition:
-            switch.is_on: bluetooth_enabled
+            lambda: return id(network_services_ready);
           then:
-            - ble.enable:
-          else:
-            - ble.disable:
-      - if:
-          condition:
-            switch.is_on: update_check_enabled
-          then:
-            - component.resume: firmware_update
-          else:
-            - component.suspend: firmware_update
-      - if:
-          condition:
-            lambda: return id(network_services_ready) && id(mdns_discovery_enabled).state
-              && !id(mdns_running);
-          then:
-            - logger.log: "mDNS re-enabled, restarting"
-            - delay: 1s # Let the switch state reach Home Assistant first.
-            - lambda: App.safe_reboot();
+            - lambda: |-
+                bool want = id(web_server_enabled).state;
+                if (want != id(web_server_listening)) {
+                  if (want)
+                    web_server_base::global_web_server_base->init();
+                  else
+                    web_server_base::global_web_server_base->deinit();
+                  id(web_server_listening) = want;
+                }
+                // ap_timeout 0 means the fallback AP is never started
+                id(wifi_client).set_ap_timeout(id(fallback_hotspot_enabled).state ? ${fallback_ap_timeout_ms} : 0);
+                if (!id(mdns_discovery_enabled).state && id(mdns_running)) {
+                  mdns_free();
+                  id(mdns_running) = false;
+                }
+                // Indexes follow the update_check_interval options; 0 = Off.
+                static const uint32_t UPDATE_CHECK_MS[] = {0, 6 * 3600000UL, 24 * 3600000UL, 7 * 24 * 3600000UL};
+                auto index = id(update_check_interval).active_index();
+                id(update_check_ms) = UPDATE_CHECK_MS[index.has_value() ? *index : 2];
+            - if:
+                condition:
+                  switch.is_on: bluetooth_enabled
+                then:
+                  - ble.enable:
+                else:
+                  - ble.disable:
+            - if:
+                condition:
+                  lambda: return id(update_check_ms) == 0;
+                then:
+                  - component.suspend: firmware_update
+                else:
+                  - component.resume:
+                      id: firmware_update
+                      update_interval: !lambda return id(update_check_ms);
+            - if:
+                condition:
+                  lambda: return id(mdns_discovery_enabled).state && !id(mdns_running);
+                then:
+                  - logger.log: "mDNS re-enabled, restarting"
+                  - delay: 1s # Let the switch state reach Home Assistant first.
+                  - lambda: App.safe_reboot();
 ota:
   - id: !extend ota_esphome
     on_begin:
@@ -174,16 +189,22 @@ switch:
       - script.execute: apply_network_services
     on_turn_off:
       - script.execute: apply_network_services
+select:
+  # Option order must match the index lookup in apply_network_services.
   - platform: template
-    id: update_check_enabled
-    name: "Automatic Update Check"
+    id: update_check_interval
+    name: "Update Check Interval"
     icon: mdi:update
+    options:
+      - "Off"
+      - "Every 6 hours"
+      - "Every 24 hours"
+      - "Weekly"
+    initial_option: "Every 24 hours"
     optimistic: true
-    restore_mode: RESTORE_DEFAULT_ON
+    restore_value: true
     entity_category: config
     web_server:
       sorting_group_id: grp_system
-    on_turn_on:
-      - script.execute: apply_network_services
-    on_turn_off:
+    on_value:
       - script.execute: apply_network_services

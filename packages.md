@@ -48,20 +48,23 @@ without reflashing when Wi-Fi credentials change.
 Adds config switches to turn off network services that are not needed once the device is
 adopted in Home Assistant, reducing attack surface and network noise:
 
-| Switch                 | When off                                                                   |
-| ---------------------- | -------------------------------------------------------------------------- |
-| Web Server             | Stops the HTTP listener on port 80.                                        |
-| Bluetooth              | Stops the BLE stack (Improv Wi-Fi provisioning).                           |
-| OTA Updates            | Rejects uploads on the ESPHome OTA port by rebooting before any write.     |
-| Fallback Hotspot       | No access point + captive portal when Wi-Fi is lost; keeps retrying Wi-Fi. |
-| mDNS Discovery         | Stops multicast announcements. Re-enabling restarts the device.            |
-| Automatic Update Check | Stops the 6-hourly update check; manual checks still work.                 |
+| Switch           | When off                                                                   |
+| ---------------- | -------------------------------------------------------------------------- |
+| Web Server       | Stops the HTTP listener on port 80.                                        |
+| Bluetooth        | Stops the BLE stack (Improv Wi-Fi provisioning).                           |
+| OTA Updates      | Rejects uploads on the ESPHome OTA port by rebooting before any write.     |
+| Fallback Hotspot | No access point + captive portal when Wi-Fi is lost; keeps retrying Wi-Fi. |
+| mDNS Discovery   | Stops multicast announcements. Re-enabling restarts the device.            |
 
-All default to on and keep their state across reboots. The native API is never affected,
-so the services can always be re-enabled from Home Assistant. Firmware updates through
-the "Firmware Update" entity still work with OTA Updates off. While the fallback Wi-Fi
-AP is active, the captive portal reopens port 80 regardless of the Web Server switch.
-First-time setup (no Wi-Fi configured) always gets the hotspot.
+An **Update Check Interval** select sets how often the device checks GitHub Pages for
+new firmware: Off, every 6 hours, every 24 hours (default) or weekly. Manual checks (the
+update entity action in Home Assistant, double-clicking the config button) always work.
+
+All switches default to on, and every setting keeps its state across reboots. The native
+API is never affected, so the services can always be re-enabled from Home Assistant.
+Firmware updates through the "Firmware Update" entity still work with OTA Updates off.
+While the fallback Wi-Fi AP is active, the captive portal reopens port 80 regardless of
+the Web Server switch. First-time setup (no Wi-Fi configured) always gets the hotspot.
 
 With mDNS Discovery off, Home Assistant and the ESPHome dashboard can no longer find the
 device by name: give it a DHCP reservation and make sure Home Assistant connects by IP.
