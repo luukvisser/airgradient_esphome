@@ -163,10 +163,25 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | Improv BLE provisioning                 | ❌                          | ❌                            | ✅ `esp32_improv`                    |
 | Improv Serial provisioning              | ❌                          | ❌                            | ✅ `improv_serial`                   |
 | OTA firmware update                     | 📱 cloud OTA                | ✅ ESPHome                    | ✅ `http_request` manifest + ESPHome |
-| Automatic new-firmware check            | ✅ polls AirGradient server | ❌ manual (ESPHome dashboard) | ✅ polls manifest every 6 h          |
+| Automatic new-firmware check            | ✅ polls AirGradient server | ❌ manual (ESPHome dashboard) | ✅ polls manifest, 24 h default      |
 | Dashboard adoption (`dashboard_import`) | ➖                          | ✅                            | ✅                                   |
 | Factory reset                           | 🔧 config / hold            | ✅ button                     | ✅ button                            |
 | Safe-mode reboot                        | ❌                          | ✅ switch                     | ✅ button (`safe_mode`)              |
+
+### Security & network
+
+This firmware is meant to be safe on a network with devices you don't fully trust:
+
+- **Encrypted Home Assistant connection.** The native API uses Noise encryption. No key
+  is baked into the shared firmware: Home Assistant sets a per-device key on adoption,
+  after which only encrypted connections are accepted (a factory reset clears it).
+- **15-minute setup window.** A device that is not fully set up (no Wi-Fi, or no API key
+  yet) only accepts Wi-Fi credentials and an API key for 15 minutes after power-on. If
+  you add it to Home Assistant later than that, unplug and replug it first.
+- **Switch off what you don't use.** Config switches in Home Assistant turn off the web
+  server, Bluetooth, OTA uploads, the fallback hotspot and mDNS, and an "Update Check
+  Interval" select sets how often it checks for new firmware. See
+  [`switch_network_services.yaml`](packages.md#switch_network_servicesyaml).
 
 ### Sensors reported
 
