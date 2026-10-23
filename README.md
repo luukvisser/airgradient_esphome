@@ -163,10 +163,33 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | Improv BLE provisioning                 | ❌                          | ❌                            | ✅ `esp32_improv`                    |
 | Improv Serial provisioning              | ❌                          | ❌                            | ✅ `improv_serial`                   |
 | OTA firmware update                     | 📱 cloud OTA                | ✅ ESPHome                    | ✅ `http_request` manifest + ESPHome |
-| Automatic new-firmware check            | ✅ polls AirGradient server | ❌ manual (ESPHome dashboard) | ✅ polls manifest every 6 h          |
+| Automatic new-firmware check            | ✅ polls AirGradient server | ❌ manual (ESPHome dashboard) | ✅ polls manifest, 24 h default      |
 | Dashboard adoption (`dashboard_import`) | ➖                          | ✅                            | ✅                                   |
 | Factory reset                           | 🔧 config / hold            | ✅ button                     | ✅ button                            |
 | Safe-mode reboot                        | ❌                          | ✅ switch                     | ✅ button (`safe_mode`)              |
+
+### Security & network
+
+This firmware is built to be harder to attack on a network with devices you don't fully
+trust. The shared security settings live in
+[`packages/security.yaml`](packages/security.yaml).
+
+- **Encrypted Home Assistant connection.** The native API uses Noise encryption. No key
+  is baked into the shared firmware: Home Assistant sets a per-device key on adoption,
+  after which only encrypted connections are accepted (a factory reset clears it). Until
+  Home Assistant has set that key, any client could set it (and then upload firmware),
+  so adopt new devices promptly.
+- **Switch off what you don't use.** Config entities in Home Assistant turn off the web
+  server, Bluetooth, OTA uploads and the fallback hotspot, and set a web password, Wi-Fi
+  power saving and the update check interval. Tip: turn Bluetooth off once the device is
+  set up. Details in
+  [`switch_network_services.yaml`](packages.md#switch_network_servicesyaml).
+- **Verified HTTPS.** Cloud uploads and firmware update checks only trust the roots in
+  [`packages/certs/ca_bundle.pem`](packages/certs/ca_bundle.pem): AirGradient's own root
+  CA (pinned, like AirGradient's firmware) and the public roots GitHub Pages uses, so a
+  device on your network cannot impersonate either server with an ordinary certificate.
+  One trust list serves both hosts, so AirGradient's CA is also trusted for the update
+  host.
 
 ### Sensors reported
 

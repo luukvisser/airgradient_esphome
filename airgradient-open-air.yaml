@@ -12,7 +12,7 @@
 #     on GitHub Pages, and attaches binaries to a GitHub Release.
 ---
 substitutions:
-  config_version: "1.1.2" # keep in sync with esphome.project.version below
+  config_version: "1.2.0" # keep in sync with esphome.project.version below
 esphome:
   name: "airgradient-open-air"
   friendly_name: "AG Open Air"
@@ -22,9 +22,8 @@ esphome:
   # the device slug so multiple products from the same org don't collide.
   project:
     name: "luukvisser.airgradient-open-air"
-    version: "1.1.2"
+    version: "1.2.0"
 logger:
-api:
 ota:
   - platform: esphome
     id: ota_esphome
@@ -32,13 +31,6 @@ ota:
     id: ota_http_request
 http_request:
   id: http_request_client
-  # hw.airgradient.com presents a certificate chain that the ESP-IDF cert
-  # bundle (even the full Mozilla set) cannot verify — likely a missing
-  # intermediate on the server side. Disabling verification keeps the
-  # connection encrypted (TLS) but skips identity checks. OTA firmware
-  # downloads from luukvisser.github.io go through the same component;
-  # they remain encrypted, with the URL pinned in this config.
-  verify_ssl: false
   timeout: 10s
   buffer_size_rx: 2048
 update:
@@ -48,7 +40,8 @@ update:
     # Per-device manifest URL. Must match the Pages path the release
     # workflow publishes to (site/<slug>/manifest.json).
     source: "https://luukvisser.github.io/airgradient_esphome/airgradient-open-air/manifest.json"
-    update_interval: 6h
+    # Default; overridden at runtime by the Update Check Interval select.
+    update_interval: 24h
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
@@ -59,7 +52,8 @@ wifi:
   # the radio between beacons, which drops/delays packets and stalls the
   # once-a-minute AirGradient upload — a cause of the dashboard's "no
   # measurements for 30 min" gaps. Devices are mains-powered, so the extra
-  # draw is irrelevant.
+  # draw is irrelevant. Default only: the "Wi-Fi Power Save" select
+  # (switch_network_services.yaml) overrides it at runtime.
   power_save_mode: none
   ap:
     ap_timeout: 90s
@@ -108,7 +102,9 @@ packages:
   go_iaqs: !include packages/sensor_go_iaqs.yaml
   # ── Integrations ────────────────────────────────────────────────────────
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
+  network_services: !include packages/switch_network_services.yaml
   # ── System utilities ────────────────────────────────────────────────────
+  security: !include packages/security.yaml
   diagnostic_esp32: !include packages/diagnostic_esp32.yaml
   hardware_watchdog: !include packages/watchdog.yaml
   button_factory_reset: !include packages/button_factory_reset.yaml

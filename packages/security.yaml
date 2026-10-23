@@ -1,0 +1,59 @@
+# Security baseline shared by every device: encrypted Home Assistant API,
+# reliability limits and verified HTTPS. Device YAMLs include this instead of
+# repeating it, so the devices cannot drift apart.
+---
+substitutions:
+  # Reboot after this long without any API client, but only on devices that
+  # Home Assistant has adopted (see apply_api_reboot_timeout).
+  api_reboot_timeout_ms: "3600000"
+api:
+  # Encrypt the native API link to Home Assistant (Noise, ChaCha20-Poly1305).
+  # No key is set here on purpose: these prebuilt firmwares are shared by every
+  # device, so a baked-in key would be identical everywhere. The device boots
+  # unprovisioned, and the first client to connect (Home Assistant on adoption)
+  # sets a per-device key, which is stored in flash. From then on only
+  # encrypted connections are accepted; only a factory reset clears the key.
+  encryption: {}
+  # Reboot only after an hour without any API client (default 15 min), so
+  # Home Assistant restarts/maintenance do not reboot every sensor.
+  reboot_timeout: ${api_reboot_timeout_ms}ms
+  # Home Assistant sets the key while connected and then reconnects
+  # encrypted, so re-check on every connection.
+  on_client_connected:
+    - script.execute: apply_api_reboot_timeout
+esphome:
+  on_boot:
+    - priority: -100 # After the API server has loaded its saved key.
+      then:
+        - script.execute: apply_api_reboot_timeout
+script:
+  # A device with an API key has been adopted by Home Assistant and keeps the
+  # reboot timeout as a recovery mechanism. A device without a key is used
+  # without Home Assistant (web page / cloud only) and would otherwise reboot
+  # every hour, so its timeout is disabled.
+  - id: apply_api_reboot_timeout
+    then:
+      - lambda: |-
+          auto *server = api::global_api_server;
+          if (server->get_noise_ctx().has_psk()) {
+            server->set_reboot_timeout(${api_reboot_timeout_ms});
+          } else {
+            server->set_reboot_timeout(0);
+            // Set during setup while the timeout was still active
+            server->status_clear_warning();
+          }
+# Fall back to the minimal recovery firmware after 5 failed boots instead of
+# the default 10, so a bad update recovers sooner.
+safe_mode:
+  num_attempts: 5
+http_request:
+  # Verify both hosts against our own trust list instead of the public CA
+  # bundle: hw.airgradient.com uses AirGradient's private root CA (in no
+  # public store), luukvisser.github.io a Let's Encrypt chain. The bundle
+  # pins the AirGradient root plus the public roots GitHub Pages may use;
+  # see packages/certs/ca_bundle.pem for fingerprints and upkeep.
+  # One trust list serves both hosts (ESPHome has a single http_request), so
+  # AirGradient's CA is also trusted for the update host.
+  verify_ssl: true
+  # Relative to the device YAML (repository root).
+  ca_certificate_path: packages/certs/ca_bundle.pem

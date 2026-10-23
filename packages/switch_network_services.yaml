@@ -1,0 +1,375 @@
+# Config entities to turn off network services that are not needed once the
+# device is adopted in Home Assistant. Behaviour, caveats and recommendations
+# are documented in packages.md (switch_network_services.yaml); keep that the
+# single place for user-facing explanations.
+#
+#   Web Server, Bluetooth, OTA Updates, Fallback Hotspot (switches)
+#   Web Password (text), Wi-Fi Power Save, Update Check Interval (selects)
+#   Wi-Fi Power Save (actual) (diagnostic text sensor)
+#
+# Requires `web_server:`, `esp32_ble` (pulled in by `esp32_improv:`), an
+# `ota: - platform: esphome` with id `ota_esphome`, a `wifi: ap:` and an
+# `update:` with id `firmware_update`.
+---
+substitutions:
+  # Must match `wifi: ap: ap_timeout:` in the device YAML (ESPHome offers no
+  # getter); restored when the Fallback Hotspot switch is turned back on.
+  fallback_ap_timeout_ms: "90000"
+  # C++ expression: the Update Check Interval in ms (0 = Off). Indexes follow
+  # the update_check_interval options.
+  update_check_interval_ms: >-
+    ([]() -> uint32_t { static const uint32_t MS[] = {0, 6 * 3600000UL, 24 * 3600000UL, 7
+    * 24 * 3600000UL}; auto i = id(update_check_interval).active_index(); return MS[i.has_value()
+    ? *i : 2]; }())
+  # C++ condition: a switch change is accepted. During setup the restored
+  # state is always applied; afterwards Home Assistant must be connected.
+  network_change_allowed: >-
+    (!id(network_services_ready) || (api::global_api_server != nullptr && api::global_api_server->is_connected_with_state_subscription()))
+web_server:
+  # Build-time placeholder only, never used: apply_web_auth replaces the
+  # credentials at boot, before the web server starts. Declaring auth here is
+  # what compiles the auth check in and wraps every web handler with it.
+  auth:
+    username: admin
+    password: replaced-at-boot
+    type: digest
+esphome:
+  includes:
+    - <esp_wifi.h>
+  on_boot:
+    # After the restored password global (HARDWARE), before the web server
+    # starts listening (WIFI).
+    - priority: 600
+      then:
+        - script.execute: apply_web_auth
+        - script.execute: apply_ota_auth
+    - priority: -100 # After all components (web server, BLE) are set up.
+      then:
+        - lambda: id(network_services_ready) = true;
+        - script.execute: apply_network_services
+        # ESPHome applies the mode when Wi-Fi starts but ignores the result;
+        # apply it again here so a failure is logged.
+        - script.execute: apply_wifi_power_save
+globals:
+  # Switch actions are ignored until on_boot has run: template switches
+  # restore their state during setup, before the web server and BLE exist.
+  - id: network_services_ready
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  # Whether this package currently holds the web server's listener reference.
+  # init()/deinit() are refcounted (the captive portal shares the listener),
+  # so each must be called exactly once per transition.
+  - id: web_server_listening
+    type: bool
+    restore_value: false
+    initial_value: 'true'
+  # Per-device web password, empty = no auth. Cleared by a factory reset.
+  - id: web_password_value
+    type: std::string
+    restore_value: true
+    max_restore_data_length: 64
+    initial_value: '""'
+  # Interval last applied to firmware_update; resuming restarts its timer, so
+  # only do it when the interval actually changes.
+  - id: update_check_applied_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0xFFFFFFFF'
+script:
+  - id: apply_web_auth
+    then:
+      - lambda: |-
+          // The web server checks credentials from its own task, so it keeps
+          // pointers into this fixed buffer rather than into the std::string.
+          static char password[65];
+          const std::string &value = id(web_password_value);
+          strncpy(password, value.c_str(), sizeof(password) - 1);
+          auto *base = web_server_base::global_web_server_base;
+          base->set_auth_password(password);
+          // An empty username disables authentication entirely.
+          base->set_auth_username(value.empty() ? "" : "admin");
+          id(web_password).publish_state(value.empty() ? "" : "********");
+  - id: apply_ota_auth
+    then:
+      - lambda: |-
+          if (id(ota_enabled).state) {
+            id(ota_esphome).set_auth_password("");
+          } else {
+            // Random per boot and never shown: plaintext uploads fail
+            // authentication. Uploads encrypted with the API key skip it.
+            char password[33];
+            snprintf(password, sizeof(password), "%08" PRIx32 "%08" PRIx32 "%08" PRIx32 "%08" PRIx32,
+                     random_uint32(), random_uint32(), random_uint32(), random_uint32());
+            id(ota_esphome).set_auth_password(password);
+          }
+  - id: apply_wifi_power_save
+    then:
+      - lambda: |-
+          // Indexes follow the wifi_power_save options.
+          static const wifi::WiFiPowerSaveMode MODES[] = {wifi::WIFI_POWER_SAVE_NONE, wifi::WIFI_POWER_SAVE_LIGHT,
+                                                          wifi::WIFI_POWER_SAVE_HIGH};
+          static const wifi_ps_type_t PS_TYPES[] = {WIFI_PS_NONE, WIFI_PS_MIN_MODEM, WIFI_PS_MAX_MODEM};
+          auto index = id(wifi_power_save).active_index();
+          size_t i = index.has_value() ? *index : 0;
+          // Stored so ESPHome re-applies it whenever Wi-Fi (re)starts
+          id(wifi_client).set_power_save_mode(MODES[i]);
+          if (id(network_services_ready)) {
+            esp_err_t err = esp_wifi_set_ps(PS_TYPES[i]);
+            if (err != ESP_OK)
+              ESP_LOGW("network_services", "esp_wifi_set_ps failed: %s", esp_err_to_name(err));
+          }
+      - component.update: wifi_power_save_actual
+  # The BLE stack shuts down on its next loop after ble.disable; re-apply the
+  # Wi-Fi mode afterwards in case it did not take effect while BLE was on.
+  - id: reapply_wifi_power_save_later
+    mode: restart
+    then:
+      - delay: 2s
+      - script.execute: apply_wifi_power_save
+  - id: apply_network_services
+    mode: queued
+    then:
+      # Ignored until on_boot has run (see network_services_ready).
+      - if:
+          condition:
+            lambda: return id(network_services_ready);
+          then:
+            - lambda: |-
+                bool want = id(web_server_enabled).state;
+                if (want != id(web_server_listening)) {
+                  if (want)
+                    web_server_base::global_web_server_base->init();
+                  else
+                    web_server_base::global_web_server_base->deinit();
+                  id(web_server_listening) = want;
+                }
+                // ap_timeout 0 means the fallback AP is never started
+                id(wifi_client).set_ap_timeout(id(fallback_hotspot_enabled).state ? ${fallback_ap_timeout_ms} : 0);
+            - if:
+                condition:
+                  switch.is_on: bluetooth_enabled
+                then:
+                  - ble.enable:
+                else:
+                  - ble.disable:
+            - script.execute: reapply_wifi_power_save_later
+            - if:
+                condition:
+                  lambda: return ${update_check_interval_ms} != id(update_check_applied_ms);
+                then:
+                  - if:
+                      condition:
+                        lambda: return ${update_check_interval_ms} == 0;
+                      then:
+                        - component.suspend: firmware_update
+                      else:
+                        - component.resume:
+                            id: firmware_update
+                            update_interval: !lambda return ${update_check_interval_ms};
+                  - lambda: id(update_check_applied_ms) = ${update_check_interval_ms};
+ota:
+  - id: !extend ota_esphome
+    # Compiles in the password check; apply_ota_auth sets the real value
+    # (empty = no password while the OTA Updates switch is on).
+    password: ""
+switch:
+  - platform: template
+    id: web_server_enabled
+    name: "Web Server"
+    icon: mdi:web
+    # Turning it off is only accepted while Home Assistant is connected, so
+    # the web page (the only control without HA) can never lock itself out.
+    # Turning it back on is always allowed.
+    optimistic: false
+    turn_on_action:
+      - switch.template.publish:
+          id: web_server_enabled
+          state: true
+    turn_off_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(web_server_enabled).publish_state(false);
+          else
+            ESP_LOGW("network_services", "Web Server can only be turned off while Home Assistant is connected");
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    on_turn_on:
+      - script.execute: apply_network_services
+    on_turn_off:
+      - script.execute: apply_network_services
+  - platform: template
+    id: bluetooth_enabled
+    name: "Bluetooth"
+    icon: mdi:bluetooth
+    optimistic: false
+    turn_on_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(bluetooth_enabled).publish_state(true);
+          else
+            ESP_LOGW("network_services", "Bluetooth can only be changed while Home Assistant is connected");
+    turn_off_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(bluetooth_enabled).publish_state(false);
+          else
+            ESP_LOGW("network_services", "Bluetooth can only be changed while Home Assistant is connected");
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    on_turn_on:
+      - script.execute: apply_network_services
+    on_turn_off:
+      - script.execute: apply_network_services
+  - platform: template
+    id: ota_enabled
+    name: "OTA Updates"
+    icon: mdi:upload-network
+    optimistic: false
+    turn_on_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(ota_enabled).publish_state(true);
+          else
+            ESP_LOGW("network_services", "OTA Updates can only be changed while Home Assistant is connected");
+    turn_off_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(ota_enabled).publish_state(false);
+          else
+            ESP_LOGW("network_services", "OTA Updates can only be changed while Home Assistant is connected");
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    on_turn_on:
+      - script.execute: apply_ota_auth
+    on_turn_off:
+      - script.execute: apply_ota_auth
+  - platform: template
+    id: fallback_hotspot_enabled
+    name: "Fallback Hotspot"
+    icon: mdi:access-point
+    optimistic: false
+    turn_on_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(fallback_hotspot_enabled).publish_state(true);
+          else
+            ESP_LOGW("network_services", "Fallback Hotspot can only be changed while Home Assistant is connected");
+    turn_off_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(fallback_hotspot_enabled).publish_state(false);
+          else
+            ESP_LOGW("network_services", "Fallback Hotspot can only be changed while Home Assistant is connected");
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    on_turn_on:
+      - script.execute: apply_network_services
+    on_turn_off:
+      - script.execute: apply_network_services
+text:
+  - platform: template
+    id: web_password
+    name: "Web Password"
+    icon: mdi:form-textbox-password
+    mode: password
+    min_length: 0
+    max_length: 64
+    optimistic: false
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    set_action:
+      - if:
+          condition:
+            and:
+              - api.connected:
+                  state_subscription_only: true
+              # Re-submitting the masked placeholder keeps the current password.
+              - lambda: return x != "********";
+          then:
+            - lambda: id(web_password_value) = x;
+            - script.execute: apply_web_auth
+          else:
+            - if:
+                condition:
+                  not:
+                    api.connected:
+                      state_subscription_only: true
+                then:
+                  - logger.log:
+                      level: WARN
+                      format: "Web Password can only be changed while Home Assistant is connected"
+            - script.execute: apply_web_auth
+select:
+  # Option order must match the update_check_interval_ms substitution.
+  - platform: template
+    id: update_check_interval
+    name: "Update Check Interval"
+    icon: mdi:update
+    options:
+      - "Off"
+      - "Every 6 hours"
+      - "Every 24 hours"
+      - "Weekly"
+    initial_option: "Every 24 hours"
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    on_value:
+      - script.execute: apply_network_services
+  - platform: template
+    id: wifi_power_save
+    name: "Wi-Fi Power Save"
+    icon: mdi:wifi-cog
+    # Option order must match apply_wifi_power_save.
+    options:
+      - "Off (full power)"
+      - "Light"
+      - "High"
+    initial_option: "Off (full power)"
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    on_value:
+      - script.execute: apply_wifi_power_save
+text_sensor:
+  # Not wifi_info's power_save_mode: that one only updates when ESPHome itself
+  # applies the mode successfully, so it misses the select's direct
+  # esp_wifi_set_ps() calls and shows nothing when applying fails, which is
+  # what this sensor is meant to reveal.
+  - platform: template
+    id: wifi_power_save_actual
+    name: "Wi-Fi Power Save (actual)"
+    icon: mdi:wifi-cog
+    entity_category: diagnostic
+    disabled_by_default: true
+    update_interval: 60s
+    web_server:
+      sorting_group_id: grp_system
+    lambda: |-
+      wifi_ps_type_t ps;
+      if (esp_wifi_get_ps(&ps) != ESP_OK)
+        return std::string("unknown");
+      switch (ps) {
+        case WIFI_PS_NONE:
+          return std::string("off (full power)");
+        case WIFI_PS_MIN_MODEM:
+          return std::string("light");
+        case WIFI_PS_MAX_MODEM:
+          return std::string("high");
+        default:
+          return std::string("unknown");
+      }

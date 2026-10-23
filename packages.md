@@ -43,6 +43,59 @@ you see persistent warnings about being unable to save preferences.
 Configures a fallback Wi-Fi AP with a captive portal so the device can be re-provisioned
 without reflashing when Wi-Fi credentials change.
 
+### `security.yaml`
+
+Security baseline for every device: native API encryption with a key set by Home
+Assistant, `api: reboot_timeout: 1h` (only once Home Assistant has adopted the device; a
+device used without Home Assistant never reboots for lack of an API client),
+`safe_mode: num_attempts: 5`, and verified HTTPS against
+[`certs/ca_bundle.pem`](packages/certs/ca_bundle.pem) (AirGradient's private root CA
+plus the public roots GitHub Pages uses).
+
+### `switch_network_services.yaml`
+
+Adds config switches to turn off network services that are not needed once the device is
+adopted in Home Assistant, reducing attack surface and network noise:
+
+| Switch           | When off                                                                                                              |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Web Server       | Stops the HTTP listener on port 80. Turning it back on is always allowed.                                             |
+| Bluetooth        | Stops the BLE stack (Improv Wi-Fi provisioning).                                                                      |
+| OTA Updates      | Random password on the ESPHome OTA port: unauthenticated uploads fail. Uploads encrypted with the API key still work. |
+| Fallback Hotspot | No access point + captive portal when Wi-Fi is lost; keeps retrying Wi-Fi.                                            |
+
+A **Web Password** field sets an optional per-device password for the web page and its
+REST API (digest auth, username `admin`). Empty (the default) means no password. It can
+only be changed while Home Assistant is connected and is shown as `********`, so the
+password never ends up in Home Assistant's history. With a password set, use
+`curl --digest -u admin:<password> http://<ip>/sensor/<id>`. A factory reset clears it.
+
+A **Wi-Fi Power Save** select sets the radio's power saving: Off (full power, the
+default and the most reliable for Home Assistant, the web page and cloud uploads), Light
+or High (lower power, slower to receive). It applies immediately and can be changed
+without Home Assistant. While Bluetooth is on, Wi-Fi and Bluetooth share the radio in
+time slices, so even "Off" is not fully awake: **turn Bluetooth off once the device is
+set up** to give Wi-Fi the radio to itself. The hidden diagnostic sensor **Wi-Fi Power
+Save (actual)** shows the mode the radio reports.
+
+An **Update Check Interval** select sets how often the device checks GitHub Pages for
+new firmware: Off, every 6 hours, every 24 hours (default) or weekly. Manual checks (the
+update entity action in Home Assistant, the **Firmware Update Check** button, or
+double-clicking the config button) always work.
+
+All switches default to on, and every setting keeps its state across reboots. The native
+API is never affected, so the services can always be re-enabled from Home Assistant.
+Switches can only be changed while Home Assistant is connected: a device used without
+Home Assistant cannot lock itself out, and nobody can flip them through the open web
+page. While Home Assistant is connected the web page can still change them, so set a Web
+Password or turn the web server off for full protection. Firmware updates through the
+"Firmware Update" entity still work with OTA Updates off. While the fallback Wi-Fi AP is
+active, the captive portal reopens port 80 regardless of the Web Server switch.
+First-time setup (no Wi-Fi configured) always gets the hotspot. Turning Fallback Hotspot
+off does not stop a hotspot that is already running; it closes once Wi-Fi reconnects.
+The package restores a 90 s hotspot delay when the switch is turned back on
+(`fallback_ap_timeout_ms`), which must match `wifi: ap: ap_timeout:`.
+
 ### `config_button.yaml`
 
 Wires the physical button (GPIO9, strapping pin) to three gestures:
