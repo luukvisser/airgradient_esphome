@@ -1,43 +1,11 @@
-# Switches to turn off network services that are not needed once the device
-# is adopted in Home Assistant, reducing its attack surface and network noise:
-#   - Web Server:       stops the HTTP listener on port 80. Turning it off is
-#                       refused unless Home Assistant is connected, so devices
-#                       used without HA cannot lock themselves out.
-#   - Bluetooth:        stops the BLE stack (used for Improv Wi-Fi provisioning).
-#   - OTA Updates:      when off, the ESPHome OTA port (3232) gets a random
-#                       password nobody knows, so unauthenticated uploads fail.
-#                       Uploads encrypted with the device's API key and the
-#                       "Firmware Update" entity (http_request) keep working.
-#   - Fallback Hotspot: no "cleanair" access point + captive portal when Wi-Fi
-#                       is lost; the device keeps retrying Wi-Fi instead. First
-#                       setup (no Wi-Fi configured yet) is unaffected. A hotspot
-#                       that is already running stays up until Wi-Fi returns.
-#   - Web Password (text): optional per-device password for the web page and
-#                       its REST API (digest auth, username "admin"). Empty =
-#                       no password. Like turning the web server off, it can only
-#                       be changed while Home Assistant is connected. Shown as
-#                       "********" so the password never reaches HA's history.
-#   - Wi-Fi Power Save (select): Off (full power, default) / Light / High.
-#                       Applied immediately and kept across reconnects. Can
-#                       also be changed without HA (not a security setting).
-#                       While Bluetooth is on, Wi-Fi and BLE share the radio in
-#                       time slices, so even "Off" is not fully awake; turning
-#                       Bluetooth off gives Wi-Fi the radio to itself.
-#                       "Wi-Fi Power Save (actual)" shows what the radio reports.
-#   - Update Check Interval (select): Off / 6 h / 24 h (default) / weekly
-#                       manifest checks against GitHub Pages. Manual checks
-#                       (HA "update entity" action, config button double-click)
-#                       always work.
+# Config entities to turn off network services that are not needed once the
+# device is adopted in Home Assistant. Behaviour, caveats and recommendations
+# are documented in packages.md (switch_network_services.yaml); keep that the
+# single place for user-facing explanations.
 #
-# All switches default to ON so first-time setup is unaffected; their state survives
-# reboots. The native API (Home Assistant) is never affected, so everything
-# can always be turned back on from there. A factory reset restores defaults.
-#
-# Changing a switch is only accepted while Home Assistant is connected
-# (re-enabling the web server is always allowed). Without that, any client
-# could flip them back through the open web page. While HA is connected the
-# web page can still change them; set a Web Password or turn the web server
-# off to close that.
+#   Web Server, Bluetooth, OTA Updates, Fallback Hotspot (switches)
+#   Web Password (text), Wi-Fi Power Save, Update Check Interval (selects)
+#   Wi-Fi Power Save (actual) (diagnostic text sensor)
 #
 # Requires `web_server:`, `esp32_ble` (pulled in by `esp32_improv:`), an
 # `ota: - platform: esphome` with id `ota_esphome`, a `wifi: ap:` and an
@@ -47,6 +15,12 @@ substitutions:
   # Must match `wifi: ap: ap_timeout:` in the device YAML (ESPHome offers no
   # getter); restored when the Fallback Hotspot switch is turned back on.
   fallback_ap_timeout_ms: "90000"
+  # C++ expression: the Update Check Interval in ms (0 = Off). Indexes follow
+  # the update_check_interval options.
+  update_check_interval_ms: >-
+    ([]() -> uint32_t { static const uint32_t MS[] = {0, 6 * 3600000UL, 24 * 3600000UL, 7
+    * 24 * 3600000UL}; auto i = id(update_check_interval).active_index(); return MS[i.has_value()
+    ? *i : 2]; }())
   # C++ condition: a switch change is accepted. During setup the restored
   # state is always applied; afterwards Home Assistant must be connected.
   network_change_allowed: >-
@@ -96,11 +70,6 @@ globals:
     restore_value: true
     max_restore_data_length: 64
     initial_value: '""'
-  # Update check interval in ms derived from the select; 0 = no automatic check.
-  - id: update_check_ms
-    type: uint32_t
-    restore_value: false
-    initial_value: '0'
   # Interval last applied to firmware_update; resuming restarts its timer, so
   # only do it when the interval actually changes.
   - id: update_check_applied_ms
@@ -177,10 +146,6 @@ script:
                 }
                 // ap_timeout 0 means the fallback AP is never started
                 id(wifi_client).set_ap_timeout(id(fallback_hotspot_enabled).state ? ${fallback_ap_timeout_ms} : 0);
-                // Indexes follow the update_check_interval options; 0 = Off.
-                static const uint32_t UPDATE_CHECK_MS[] = {0, 6 * 3600000UL, 24 * 3600000UL, 7 * 24 * 3600000UL};
-                auto index = id(update_check_interval).active_index();
-                id(update_check_ms) = UPDATE_CHECK_MS[index.has_value() ? *index : 2];
             - if:
                 condition:
                   switch.is_on: bluetooth_enabled
@@ -191,18 +156,18 @@ script:
             - script.execute: reapply_wifi_power_save_later
             - if:
                 condition:
-                  lambda: return id(update_check_ms) != id(update_check_applied_ms);
+                  lambda: return ${update_check_interval_ms} != id(update_check_applied_ms);
                 then:
                   - if:
                       condition:
-                        lambda: return id(update_check_ms) == 0;
+                        lambda: return ${update_check_interval_ms} == 0;
                       then:
                         - component.suspend: firmware_update
                       else:
                         - component.resume:
                             id: firmware_update
-                            update_interval: !lambda return id(update_check_ms);
-                  - lambda: id(update_check_applied_ms) = id(update_check_ms);
+                            update_interval: !lambda return ${update_check_interval_ms};
+                  - lambda: id(update_check_applied_ms) = ${update_check_interval_ms};
 ota:
   - id: !extend ota_esphome
     # Compiles in the password check; apply_ota_auth sets the real value
@@ -345,7 +310,7 @@ text:
                       format: "Web Password can only be changed while Home Assistant is connected"
             - script.execute: apply_web_auth
 select:
-  # Option order must match the index lookup in apply_network_services.
+  # Option order must match the update_check_interval_ms substitution.
   - platform: template
     id: update_check_interval
     name: "Update Check Interval"
@@ -381,6 +346,10 @@ select:
     on_value:
       - script.execute: apply_wifi_power_save
 text_sensor:
+  # Not wifi_info's power_save_mode: that one only updates when ESPHome itself
+  # applies the mode successfully, so it misses the select's direct
+  # esp_wifi_set_ps() calls and shows nothing when applying fails, which is
+  # what this sensor is meant to reveal.
   - platform: template
     id: wifi_power_save_actual
     name: "Wi-Fi Power Save (actual)"

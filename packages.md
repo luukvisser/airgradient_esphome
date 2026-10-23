@@ -80,7 +80,8 @@ Save (actual)** shows the mode the radio reports.
 
 An **Update Check Interval** select sets how often the device checks GitHub Pages for
 new firmware: Off, every 6 hours, every 24 hours (default) or weekly. Manual checks (the
-update entity action in Home Assistant, double-clicking the config button) always work.
+update entity action in Home Assistant, the **Firmware Update Check** button, or
+double-clicking the config button) always work.
 
 All switches default to on, and every setting keeps its state across reboots. The native
 API is never affected, so the services can always be re-enabled from Home Assistant.
