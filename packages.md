@@ -89,16 +89,17 @@ affected, so the services can always be re-enabled from Home Assistant.
   Assistant cannot lock itself out, and nobody can flip them through the open web page.
   While Home Assistant is connected the web page can still change them, so set a Web
   Password or turn the web server off for full protection. Turning the web server back
-  **on** is always allowed.
+  **on** is always allowed. A refused change is logged as a warning; the web page may
+  keep showing the toggle in the position you clicked until you reload it.
 - **Tip: turn Bluetooth off once the device is set up.** While Bluetooth is on, Wi-Fi
   and Bluetooth share the radio in time slices. After a Bluetooth toggle the Wi-Fi power
   save mode is re-applied (requires [`wifi_power_save.yaml`](#wifi_power_saveyaml)).
 - **Fallback Hotspot:** first-time setup (no Wi-Fi configured) always gets the hotspot.
   Turning it off does not stop a hotspot that is already running; it closes once Wi-Fi
   reconnects. While the hotspot is active, the captive portal reopens port 80 regardless
-  of the Web Server switch. Turning the switch back on restores a 90 s hotspot delay
-  (`fallback_ap_timeout_ms`), which must match `wifi: ap: ap_timeout:` in the device
-  YAML.
+  of the Web Server switch. Turning the switch back on restores the hotspot delay
+  (`fallback_ap_timeout_ms`, 90 s), which the device YAMLs also use for
+  `wifi: ap: ap_timeout:`.
 
 ### `wifi_power_save.yaml`
 

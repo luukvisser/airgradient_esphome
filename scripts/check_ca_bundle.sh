@@ -16,16 +16,30 @@ failed=0
 # 1. Every host's served chain verifies against the bundle alone, including
 #    the hostname check (OpenSSL falls back to the subject CN when there is no
 #    subjectAltName, as mbedTLS on the device does).
+# Try twice so a transient network error does not fail the weekly run.
+check_host() {
+  timeout 20 openssl s_client -connect "${1}:443" -servername "${1}" \
+    -CAfile "${bundle}" -no-CApath -no-CAstore -verify_hostname "${1}" \
+    -verify_return_error </dev/null 2>&1 || true
+}
 for host in "${hosts[@]}"; do
-  out=$(openssl s_client -connect "${host}:443" -servername "${host}" \
-    -CAfile "${bundle}" -no-CApath -no-CAstore -verify_hostname "${host}" \
-    -verify_return_error </dev/null 2>&1) || true
+  out=$(check_host "${host}")
+  if ! grep -q "Verify return code:" <<<"${out}"; then
+    sleep 10
+    out=$(check_host "${host}")
+  fi
   if grep -q "Verify return code: 0 (ok)" <<<"${out}"; then
-    root=$(grep -E "^ *[0-9]+ s:" <<<"${out}" | tail -n1 | sed 's/^ *[0-9]* s://')
-    echo "OK    ${host}  (chain top: ${root})"
-  else
+    root=$(grep -E "^ *[0-9]+ s:" <<<"${out}" | tail -n1 | sed 's/^ *[0-9]* s://' || true)
+    echo "OK    ${host}  (chain top: ${root:-unknown})"
+  elif grep -q "Verify return code:" <<<"${out}"; then
+    # The TLS handshake happened, so this is a real certificate problem.
     echo "::error::${host} does not verify against ${bundle}"
-    grep -E "verify error|Verify return code|^ *[0-9]+ [si]:" <<<"${out}" || echo "${out}" | tail -n 5
+    grep -E "verify error|Verify return code|^ *[0-9]+ [si]:" <<<"${out}" || true
+    failed=1
+  else
+    # No handshake (DNS, timeout, connection refused): not a bundle problem.
+    echo "::error::Could not connect to ${host}:443 to check its certificate (network error, not a bundle problem)"
+    tail -n 5 <<<"${out}" || true
     failed=1
   fi
 done
