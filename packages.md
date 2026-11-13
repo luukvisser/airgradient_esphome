@@ -65,6 +65,20 @@ choice is restored after a reboot. Manual checks always work: the update entity 
 Assistant, the **Firmware Update Check** button, or double-clicking the config button.
 Requires an `update:` component with id `firmware_update` in the device YAML.
 
+### `wifi_power_save.yaml`
+
+Adds a **Wi-Fi Power Save** select for the radio's power saving: **Off (full power)**,
+the default and the most reliable for Home Assistant, the web page and cloud uploads;
+**Light**; or **High** (lower power, slower to receive). It applies immediately, is
+restored after a reboot and can be changed without Home Assistant. The device YAML's
+`wifi: power_save_mode: none` is only the default before the select is restored.
+
+While Bluetooth is on, Wi-Fi and Bluetooth share the radio in time slices, so even "Off"
+is not fully awake. The hidden diagnostic sensor **Wi-Fi Power Save (actual)** shows the
+mode the radio reports (enable it in Home Assistant to see it); a failure to apply the
+mode is logged as an `esp_wifi_set_ps failed` warning. Requires a `wifi:` component with
+id `wifi_client`.
+
 ### `config_button.yaml`
 
 Wires the physical button (GPIO9, strapping pin) to three gestures:

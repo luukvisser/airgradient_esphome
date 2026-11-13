@@ -56,7 +56,8 @@ wifi:
   # the radio between beacons, which drops/delays packets and stalls the
   # once-a-minute AirGradient upload — a cause of the dashboard's "no
   # measurements for 30 min" gaps. Devices are mains-powered, so the extra
-  # draw is irrelevant.
+  # draw is irrelevant. Default only: the "Wi-Fi Power Save" select
+  # (packages/wifi_power_save.yaml) overrides it at runtime.
   power_save_mode: none
   ap:
     ap_timeout: 90s
@@ -123,6 +124,7 @@ packages:
   # ── System utilities ────────────────────────────────────────────────────
   security: !include packages/security.yaml
   update_check: !include packages/update_check_interval.yaml
+  wifi_power_save: !include packages/wifi_power_save.yaml
   diagnostic_esp32: !include packages/diagnostic_esp32.yaml
   hardware_watchdog: !include packages/watchdog.yaml
   button_factory_reset: !include packages/button_factory_reset.yaml
