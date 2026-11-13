@@ -60,6 +60,8 @@ wifi:
   # (packages/wifi_power_save.yaml) overrides it at runtime.
   power_save_mode: none
   ap:
+    # Keep in sync with fallback_ap_timeout_ms in
+    # packages/switch_network_services.yaml (restored by the Fallback Hotspot switch).
     ap_timeout: 90s
     password: "cleanair"
 captive_portal:
@@ -120,6 +122,7 @@ packages:
   led_combo: !include packages/led_combo.yaml
   # ── Integrations ────────────────────────────────────────────────────────
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
+  network_services: !include packages/switch_network_services.yaml
   time: !include packages/time_homeassistant.yaml
   # ── System utilities ────────────────────────────────────────────────────
   security: !include packages/security.yaml

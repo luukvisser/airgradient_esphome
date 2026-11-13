@@ -65,6 +65,34 @@ choice is restored after a reboot. Manual checks always work: the update entity 
 Assistant, the **Firmware Update Check** button, or double-clicking the config button.
 Requires an `update:` component with id `firmware_update` in the device YAML.
 
+### `switch_network_services.yaml`
+
+Adds config switches to turn off network services that are not needed once the device is
+adopted in Home Assistant, reducing attack surface and network noise:
+
+| Switch           | When off                                                                   |
+| ---------------- | -------------------------------------------------------------------------- |
+| Web Server       | Stops the HTTP listener on port 80. Turning it back on is always allowed.  |
+| Bluetooth        | Stops the BLE stack (Improv Wi-Fi provisioning); Wi-Fi gets the radio.     |
+| Fallback Hotspot | No access point + captive portal when Wi-Fi is lost; keeps retrying Wi-Fi. |
+
+All switches default to on and keep their state across reboots. The native API is never
+affected, so the services can always be re-enabled from Home Assistant.
+
+- **Only changeable while Home Assistant is connected.** A device used without Home
+  Assistant cannot lock itself out, and nobody can flip them through the open web page.
+  While Home Assistant is connected the web page can still change them, so turn the web
+  server off for full protection. Turning the web server back **on** is always allowed.
+- **Tip: turn Bluetooth off once the device is set up.** While Bluetooth is on, Wi-Fi
+  and Bluetooth share the radio in time slices. After a Bluetooth toggle the Wi-Fi power
+  save mode is re-applied (requires [`wifi_power_save.yaml`](#wifi_power_saveyaml)).
+- **Fallback Hotspot:** first-time setup (no Wi-Fi configured) always gets the hotspot.
+  Turning it off does not stop a hotspot that is already running; it closes once Wi-Fi
+  reconnects. While the hotspot is active, the captive portal reopens port 80 regardless
+  of the Web Server switch. Turning the switch back on restores a 90 s hotspot delay
+  (`fallback_ap_timeout_ms`), which must match `wifi: ap: ap_timeout:` in the device
+  YAML.
+
 ### `wifi_power_save.yaml`
 
 Adds a **Wi-Fi Power Save** select for the radio's power saving: **Off (full power)**,
