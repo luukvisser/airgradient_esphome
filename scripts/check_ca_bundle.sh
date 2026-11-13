@@ -13,9 +13,13 @@ min_days="${2:-365}"
 hosts=(hw.airgradient.com luukvisser.github.io)
 failed=0
 
-# 1. Every host's served chain verifies against the bundle alone, including
-#    the hostname check (OpenSSL falls back to the subject CN when there is no
-#    subjectAltName, as mbedTLS on the device does).
+# -no-CAstore (trust only the bundle, never the system store) needs OpenSSL 3;
+# LibreSSL (macOS /usr/bin/openssl) and OpenSSL 1.1 reject it.
+if ! openssl version | grep -q "^OpenSSL [3-9]"; then
+  echo "::error::$(openssl version) is not supported; run with OpenSSL 3 or newer (e.g. Homebrew openssl@3)"
+  exit 2
+fi
+
 # GNU timeout (Linux CI), gtimeout (Homebrew coreutils on macOS) or none.
 timeout_cmd=()
 if command -v timeout >/dev/null; then
@@ -36,6 +40,9 @@ check_host() {
 got_chain() {
   grep -q "Verify return code:" <<<"${1}" && grep -qE "^ *[0-9]+ s:" <<<"${1}"
 }
+# 1. Every host's served chain verifies against the bundle alone, including
+#    the hostname check (OpenSSL falls back to the subject CN when there is no
+#    subjectAltName, as mbedTLS on the device does).
 for host in "${hosts[@]}"; do
   out=$(check_host "${host}")
   if ! got_chain "${out}"; then
@@ -51,9 +58,10 @@ for host in "${hosts[@]}"; do
     grep -E "verify error|Verify return code|^ *[0-9]+ [si]:" <<<"${out}" || true
     failed=1
   else
-    # No certificate received (DNS, timeout, refused or reset connection):
-    # not a bundle problem, but the bundle could not be checked either.
-    echo "::error::Could not get a certificate from ${host}:443 (network error, not a bundle problem)"
+    # No certificate received (DNS, timeout, refused or reset connection, or a
+    # TLS failure before the certificate, such as an SNI or protocol error):
+    # not a bundle mismatch, but the bundle could not be checked either.
+    echo "::error::No certificate received from ${host}:443 (network or TLS error, not a bundle mismatch); output:"
     tail -n 5 <<<"${out}" || true
     failed=1
   fi
