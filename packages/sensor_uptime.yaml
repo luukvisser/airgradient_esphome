@@ -27,7 +27,12 @@ sensor:
     id: total_uptime
     unit_of_measurement: "h"
     accuracy_decimals: 1
-    state_class: total_increasing
+    # `total`, not `total_increasing`: after a reboot the value restarts from the
+    # last hourly save, so it can drop by up to 1 h. Home Assistant treats any
+    # drop in a total_increasing sensor as a meter reset and re-adds the whole
+    # lifetime total to its statistics; with `total` the drop is a small negative
+    # change instead.
+    state_class: total
     entity_category: diagnostic
     icon: "mdi:clock-outline"
     # Self-driven so the value publishes reliably (~60s after boot and every

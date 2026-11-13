@@ -4,10 +4,12 @@
 ---
 esphome:
   on_boot:
-    # Priority 250 fires before hardware sensor setup (~200), so the saved
-    # value from the global overrides the compiled-in default before the
-    # Sensirion algorithm initialises.
-    - priority: 250
+    # The sgp4x component only hands tuning parameters to the Sensirion
+    # algorithm inside its own setup() (setup priority DATA = 600). Higher
+    # priorities run first, so this must sit between the restored globals
+    # (HARDWARE = 800) and the sensor setup (600). Changing a select later only
+    # takes effect at the next restart (re-running setup() is not safe).
+    - priority: 700
       then:
         - lambda: |-
             // All parameters are Sensirion defaults except learning_time_offset_hours (user-configurable).
@@ -15,11 +17,11 @@ esphome:
             // https://sensirion.com/media/documents/02232963/6294E210/Info_Note_SGP_Gas_Index_Algorithm.pdf
             //
             // set_voc_algorithm_tuning(index_offset=100, learning_time_offset_hours,
-            //   gating_max_duration_minutes=12, std_initial=180, gain_factor=50, gating_max_ratio=230)
+            //   learning_time_gain_hours=12, gating_max_duration_minutes=180, std_initial=50, gain_factor=230)
             id(sgp4x_sensor).set_voc_algorithm_tuning(100, (uint16_t)id(g_voc_learning_time), 12, 180, 50, 230);
-            // set_nox_algorithm_tuning(index_offset=100, learning_time_offset_hours,
-            //   gating_max_duration_minutes=12, std_initial=180, gain_factor=230)
-            id(sgp4x_sensor).set_nox_algorithm_tuning(100, (uint16_t)id(g_nox_learning_time), 12, 180, 230);
+            // set_nox_algorithm_tuning(index_offset=1, learning_time_offset_hours,
+            //   learning_time_gain_hours=12, gating_max_duration_minutes=720, gain_factor=230)
+            id(sgp4x_sensor).set_nox_algorithm_tuning(1, (uint16_t)id(g_nox_learning_time), 12, 720, 230);
 globals:
   - id: g_voc_learning_time
     type: int
@@ -57,7 +59,7 @@ select:
     name: "SGP41 VOC Learning Time Offset"
     id: voc_learning_time_offset
     # Option labels are days; set_action parses the leading number and converts
-    # to Sensirion's learning_time_offset_hours (× 24).
+    # to Sensirion's learning_time_offset_hours (× 24). Applied at the next boot.
     options: ["0.5 days", "1 day", "7 days", "14 days", "30 days"]
     initial_option: "1 day"
     restore_value: true
@@ -70,13 +72,14 @@ select:
       - globals.set:
           id: g_voc_learning_time
           value: !lambda 'return (int)(atof(x.c_str()) * 24);'
-      - lambda: |-
-          id(sgp4x_sensor).set_voc_algorithm_tuning(100, (uint16_t)(atof(x.c_str()) * 24), 12, 180, 50, 230);
+      - logger.log:
+          level: WARN
+          format: "SGP41 VOC learning time offset changed; restart the device to apply it"
   - platform: template
     name: "SGP41 NOx Learning Time Offset"
     id: nox_learning_time_offset
     # Option labels are days; set_action parses the leading number and converts
-    # to Sensirion's learning_time_offset_hours (× 24).
+    # to Sensirion's learning_time_offset_hours (× 24). Applied at the next boot.
     options: ["0.5 days", "1 day", "7 days", "14 days", "30 days"]
     initial_option: "1 day"
     restore_value: true
@@ -89,5 +92,6 @@ select:
       - globals.set:
           id: g_nox_learning_time
           value: !lambda 'return (int)(atof(x.c_str()) * 24);'
-      - lambda: |-
-          id(sgp4x_sensor).set_nox_algorithm_tuning(100, (uint16_t)(atof(x.c_str()) * 24), 12, 180, 230);
+      - logger.log:
+          level: WARN
+          format: "SGP41 NOx learning time offset changed; restart the device to apply it"

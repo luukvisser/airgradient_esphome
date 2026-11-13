@@ -158,11 +158,13 @@ Reports CO2 concentration. Exposes controls for:
 Sensirion SGP41 MOX sensor. Reports VOC index (0–500) and NOx index (0–500) using
 Sensirion's on-chip algorithm with temperature/humidity compensation from the SHT40.
 
-The algorithm learning-time offsets are exposed as runtime selects (separate VOC and NOx
+The algorithm learning-time offsets are exposed as selects (separate VOC and NOx
 controls), configured in **days**: 0.5, 1, 7, 14, or 30 (default 1). Internally each
 maps to Sensirion's `learning_time_offset_hours` (× 24; the algorithm forgets past
 events after roughly twice the learning time). A longer value makes the index baseline
-more stable but slower to adapt; a shorter value tracks daily changes more closely.
+more stable but slower to adapt; a shorter value tracks daily changes more closely. A
+change takes effect at the **next restart**: the sensor only loads its tuning during
+start-up. All other tuning parameters are Sensirion's defaults.
 
 ### `sensor_sht40.yaml`
 
