@@ -1,0 +1,7 @@
+# Security and recovery baseline shared by every device. Device YAMLs include
+# this instead of repeating it, so the devices cannot drift apart.
+---
+# Fall back to the minimal recovery firmware after 5 failed boots instead of
+# the default 10, so a bad update recovers sooner.
+safe_mode:
+  num_attempts: 5

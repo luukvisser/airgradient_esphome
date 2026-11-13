@@ -43,6 +43,20 @@ you see persistent warnings about being unable to save preferences.
 Configures a fallback Wi-Fi AP with a captive portal so the device can be re-provisioned
 without reflashing when Wi-Fi credentials change.
 
+### `security.yaml`
+
+Security and recovery baseline shared by every device. Currently sets
+`safe_mode: num_attempts: 5` (ESPHome's default is 10), so a bad update falls back to
+the recovery firmware after 5 failed boots instead of 10.
+
+### `update_check_interval.yaml`
+
+Adds an **Update Check Interval** select that sets how often the device checks GitHub
+Pages for new firmware: Off, every 6 hours, every 24 hours (default) or weekly. The
+choice is restored after a reboot. Manual checks always work: the update entity in Home
+Assistant, the **Firmware Update Check** button, or double-clicking the config button.
+Requires an `update:` component with id `firmware_update` in the device YAML.
+
 ### `config_button.yaml`
 
 Wires the physical button (GPIO9, strapping pin) to three gestures:
