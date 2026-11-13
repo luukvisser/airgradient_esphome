@@ -142,7 +142,12 @@ Reports CO2 concentration. Exposes controls for:
   least once; otherwise ABC slowly drags all readings too low.
 - **ABC on/off switch** — disable ABC entirely if the device rarely sees
   outdoor-equivalent air. The interval and switch are written to the sensor at boot and
-  on change, and only when the sensor holds a different value.
+  on change, and only when the sensor holds a different value. A failed write is retried
+  once after 5 s.
+- **ABC Period (Sensor)** — diagnostic showing the period actually stored in the S8
+  (e.g. `14 days`, `Paused`, or `No response`), read back after every change and once a
+  day. If it differs from the ABC interval / switch, the sensor did not accept the
+  change; toggling the setting or rebooting retries it.
 - **Manual calibration button** — sets the current reading to 400 ppm in one step. Put
   the device in steady fresh air for 5+ minutes first. The result appears 70 s later in
   **Calibration Result**: `OK`, `Skipped by sensor` (the S8 refuses when the CO2 level
