@@ -17,8 +17,9 @@ on:
         type: string
 # Keyed on the ref, so this only stops re-runs of the *same* tag from
 # overlapping — every tag push is a distinct ref and therefore a distinct
-# group. Cross-device serialisation of the shared gh-pages branch is handled
-# by the `publish-pages` job's own concurrency group, not here.
+# group. Concurrent releases of different devices are made safe by the
+# `publish-pages` job itself, which pushes to gh-pages without force and
+# retries on the new tip if another release pushed first.
 concurrency:
   group: firmware-release-${{ github.ref }}
   cancel-in-progress: false
@@ -193,11 +194,12 @@ jobs:
   # ---------------------------------------------------------------------
   # Publish the per-device manifest + binaries to GitHub Pages.
   #
-  # Strategy: clone the existing gh-pages branch, overlay this release's
-  # files into it, rebuild the landing page, then force-push the result
-  # back. `keep_files: false` on the deploy action means each release
-  # leaves a clean commit (no stale files from renamed slugs), while
-  # the overlay-on-snapshot approach preserves every other device.
+  # Strategy: stage only THIS release's files, then commit them on top of
+  # the current gh-pages tip and push WITHOUT force. If another release
+  # pushed in between, the push is rejected; we fetch the new tip and
+  # re-apply. This keeps every other device's files without relying on a
+  # concurrency queue (GitHub keeps at most one *pending* job per group and
+  # cancels older pending ones, which silently dropped deploys).
   #
   # Skipped for pre-releases so fielded devices don't auto-install betas.
   # ---------------------------------------------------------------------
@@ -205,15 +207,6 @@ jobs:
     needs: [resolve, build]
     if: needs.resolve.outputs.is_tag_release == 'true' && needs.resolve.outputs.is_prerelease
       == 'false'
-    # gh-pages is a single shared branch and the deploy below force-pushes a
-    # full site snapshot (keep_files: false), so two devices releasing at the
-    # same time clobber each other — whichever pushes last wins and the other
-    # release never reaches the site. This group is deliberately constant
-    # (no ${{ github.ref }}) so that EVERY Pages deploy, for any device or
-    # tag, queues behind the one before it.
-    concurrency:
-      group: gh-pages-deploy
-      cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -233,17 +226,7 @@ jobs:
         with:
           name: md5-${{ needs.resolve.outputs.slug }}
           path: .
-      # Fetch the current gh-pages so the landing page can list every
-      # previously-published device, not just this release's. If the
-      # branch doesn't exist yet, start from an empty site.
-      - name: Check out existing Pages content
-        uses: actions/checkout@v7
-        with:
-          ref: gh-pages
-          path: existing-pages
-          fetch-depth: 1
-        continue-on-error: true
-      - name: Assemble site
+      - name: Stage this release's files
         env:
           SLUG: ${{ needs.resolve.outputs.slug }}
           VERSION: ${{ needs.resolve.outputs.version }}
@@ -253,23 +236,16 @@ jobs:
         run: |
           set -euo pipefail
           md5=$(cat firmware.md5)
-
-          # Start from existing Pages content so other devices' files survive.
-          site=site
-          if [[ -d existing-pages ]]; then
-            mkdir -p "${site}"
-            # Copy everything except git metadata.
-            rsync -a --exclude='.git' existing-pages/ "${site}/"
-          fi
-          mkdir -p "${site}/${SLUG}/firmware/${VERSION}" "${site}/${SLUG}/firmware/latest"
+          out=release
+          mkdir -p "${out}/${SLUG}/firmware/${VERSION}" "${out}/${SLUG}/firmware/latest"
 
           # Versioned binaries (immutable URLs for anyone pinning a release).
-          cp "dist/${SLUG}/${SLUG}.factory.bin" "${site}/${SLUG}/firmware/${VERSION}/"
-          cp "dist/${SLUG}/${SLUG}.ota.bin"     "${site}/${SLUG}/firmware/${VERSION}/"
+          cp "dist/${SLUG}/${SLUG}.factory.bin" "${out}/${SLUG}/firmware/${VERSION}/"
+          cp "dist/${SLUG}/${SLUG}.ota.bin"     "${out}/${SLUG}/firmware/${VERSION}/"
 
           # "latest" copies drive the manifest. Overwritten on each release.
-          cp "dist/${SLUG}/${SLUG}.factory.bin" "${site}/${SLUG}/firmware/latest/"
-          cp "dist/${SLUG}/${SLUG}.ota.bin"     "${site}/${SLUG}/firmware/latest/"
+          cp "dist/${SLUG}/${SLUG}.factory.bin" "${out}/${SLUG}/firmware/latest/"
+          cp "dist/${SLUG}/${SLUG}.ota.bin"     "${out}/${SLUG}/firmware/latest/"
 
           # Paths in the manifest are relative to manifest.json's location,
           # which lives at /<slug>/manifest.json — so drop the /<slug>/ prefix.
@@ -281,35 +257,76 @@ jobs:
             --factory-path "firmware/latest/${SLUG}.factory.bin" \
             --md5 "${md5}" \
             --release-url "https://github.com/${REPO}/releases/tag/${SLUG}%2Fv${VERSION}" \
-            --output "${site}/${SLUG}/manifest.json"
+            --output "${out}/${SLUG}/manifest.json"
 
-          # Rebuild the landing page so the newly-released device shows up
-          # (or updates its version) and any previously-published devices
-          # remain listed.
-          python scripts/build_landing_page.py \
-            --devices-file devices.yaml \
-            --site-dir "${site}" \
-            --repo "${REPO}" \
-            --title "ESPHome firmware" \
-            --output "${site}/index.html"
+          find "${out}" -type f | sort
+      - name: Publish to gh-pages
+        env:
+          SLUG: ${{ needs.resolve.outputs.slug }}
+          VERSION: ${{ needs.resolve.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # GitHub Pages treats leading-underscore paths as Jekyll
-          # specials; this sentinel file disables that.
-          touch "${site}/.nojekyll"
+          for attempt in 1 2 3 4 5; do
+            rm -rf site
+            git worktree prune
 
-          ls -la "${site}"
-          ls -la "${site}/${SLUG}"
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
-          # `keep_files: false` plus a full site snapshot means we get a
-          # clean slate each release — safer than keep_files: true which
-          # can leave stale files lying around when slugs are renamed.
-          keep_files: false
-          commit_message: "Deploy ${{ needs.resolve.outputs.slug }} v${{ needs.resolve.outputs.version
-            }}"
+            # Exit code 2 means the branch genuinely doesn't exist (first
+            # release ever). Any other failure is an error: never fall back
+            # to an empty site, which would delete other devices' files.
+            set +e
+            git ls-remote --exit-code --heads origin gh-pages >/dev/null
+            rc=$?
+            set -e
+            if [[ ${rc} -eq 0 ]]; then
+              git fetch --depth=1 origin gh-pages
+              git worktree add --detach site FETCH_HEAD
+            elif [[ ${rc} -eq 2 ]]; then
+              echo "No gh-pages branch yet; starting an empty site."
+              git worktree add --detach site
+              git -C site checkout -q --orphan gh-pages-new
+              git -C site rm -rfq .
+            else
+              echo "::error::Could not query the gh-pages branch (git ls-remote exit ${rc})."
+              exit 1
+            fi
+
+            # Overlay this release; other devices' files are untouched.
+            cp -a release/. site/
+
+            # Rebuild the landing page so the newly-released device shows up
+            # (or updates its version) and every other published device
+            # remains listed.
+            python scripts/build_landing_page.py \
+              --devices-file devices.yaml \
+              --site-dir site \
+              --repo "${REPO}" \
+              --title "ESPHome firmware" \
+              --output site/index.html
+
+            # GitHub Pages treats leading-underscore paths as Jekyll
+            # specials; this sentinel file disables that.
+            touch site/.nojekyll
+
+            git -C site add -A
+            if git -C site diff --cached --quiet; then
+              echo "Nothing changed on gh-pages; already published."
+              exit 0
+            fi
+            git -C site commit -q -m "Deploy ${SLUG} v${VERSION}"
+            if git -C site push origin HEAD:refs/heads/gh-pages; then
+              echo "Published ${SLUG} v${VERSION} (attempt ${attempt})."
+              exit 0
+            fi
+            echo "::warning::gh-pages moved during publish (attempt ${attempt}); retrying on the new tip."
+            git worktree remove --force site
+            sleep $((attempt * 5))
+          done
+          echo "::error::Could not publish to gh-pages after 5 attempts."
+          exit 1
   # ---------------------------------------------------------------------
   # Cut the GitHub Release. Happens for every tag, including pre-releases.
   # ---------------------------------------------------------------------
