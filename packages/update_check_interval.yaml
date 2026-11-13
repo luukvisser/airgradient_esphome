@@ -26,29 +26,40 @@ globals:
     restore_value: false
     initial_value: 'false'
   # Interval last applied to firmware_update. Resuming restarts its timer, so
-  # only resume when the interval actually changes.
+  # only resume when the interval actually changes. Starts at the device
+  # YAML's `update_interval: 24h`, so the default needs no resume at boot.
   - id: update_check_applied_ms
     type: uint32_t
     restore_value: false
-    initial_value: '0xFFFFFFFF'
+    initial_value: '24 * 3600000UL'
 script:
   - id: apply_update_check_interval
     mode: queued
     then:
       - if:
           condition:
-            lambda: return id(update_check_ready) && ${update_check_interval_ms} != id(update_check_applied_ms);
+            lambda: return id(update_check_ready);
           then:
-            - if:
-                condition:
-                  lambda: return ${update_check_interval_ms} == 0;
-                then:
-                  - component.suspend: firmware_update
-                else:
-                  - component.resume:
-                      id: firmware_update
-                      update_interval: !lambda return ${update_check_interval_ms};
-            - lambda: id(update_check_applied_ms) = ${update_check_interval_ms};
+            - lambda: |-
+                const uint32_t ms = ${update_check_interval_ms};
+                if (ms == 0) {
+                  // Off: also cancel the one-time check firmware_update schedules
+                  // in its setup() for when the network comes up; component.suspend
+                  // only stops the regular poller. 0 is that interval's id in
+                  // ESPHome's http_request_update.cpp (INITIAL_CHECK_INTERVAL_ID);
+                  // if it ever changes, this cancel does nothing.
+                  App.scheduler.cancel_interval(id(firmware_update), static_cast<uint32_t>(0));
+                }
+                // Same guard as the component.suspend/resume actions.
+                if (ms == id(update_check_applied_ms) || !id(firmware_update).is_ready())
+                  return;
+                if (ms == 0) {
+                  id(firmware_update).stop_poller();
+                } else {
+                  id(firmware_update).set_update_interval(ms);
+                  id(firmware_update).start_poller();
+                }
+                id(update_check_applied_ms) = ms;
 select:
   # Option order must match the update_check_interval_ms substitution.
   - platform: template
