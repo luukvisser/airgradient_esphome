@@ -168,6 +168,15 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | Factory reset                           | 🔧 config / hold            | ✅ button                     | ✅ button                            |
 | Safe-mode reboot                        | ❌                          | ✅ switch                     | ✅ button (`safe_mode`)              |
 
+### Security & network
+
+- **Verified HTTPS.** Cloud uploads and firmware update checks only trust the roots in
+  [`packages/certs/ca_bundle.pem`](packages/certs/ca_bundle.pem): AirGradient's own root
+  CA (pinned, like AirGradient's firmware) and the public roots GitHub Pages uses, so a
+  device on your network cannot impersonate either server with an ordinary certificate.
+  One trust list serves both hosts, so AirGradient's CA is also trusted for the update
+  host. A weekly CI check confirms both hosts still chain to the bundle.
+
 ### Sensors reported
 
 | Feature                              | AirGradient (stock)    | MallocArray             | This repo              |
