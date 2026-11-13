@@ -1,11 +1,13 @@
 # Config switches to turn off network services that are not needed once the
-# device is adopted in Home Assistant (Web Server, Bluetooth, Fallback
-# Hotspot), and an optional Web Password for the web page and REST API. Behaviour, caveats and recommendations are documented in
+# device is adopted in Home Assistant (Web Server, Bluetooth, OTA Updates,
+# Fallback Hotspot), and an optional Web Password for the web page and REST
+# API. Behaviour, caveats and recommendations are documented in
 # packages.md (switch_network_services.yaml); keep that the single place for
 # user-facing explanations.
 #
 # Requires `web_server:`, `esp32_ble` (pulled in by `improv_ble:`), a
-# `wifi:` with id wifi_client and an `ap:`, and packages/wifi_power_save.yaml
+# `wifi:` with id wifi_client and an `ap:`, an `ota: - platform: esphome` with
+# id ota_esphome, and packages/wifi_power_save.yaml
 # (apply_wifi_power_save is re-run after Bluetooth toggles).
 ---
 substitutions:
@@ -32,6 +34,7 @@ esphome:
     - priority: 600
       then:
         - script.execute: apply_web_auth
+        - script.execute: apply_ota_auth
     - priority: -100 # After all components (web server, BLE) are set up.
       then:
         - lambda: id(network_services_ready) = true;
@@ -57,6 +60,19 @@ globals:
     max_restore_data_length: 64
     initial_value: '""'
 script:
+  - id: apply_ota_auth
+    then:
+      - lambda: |-
+          if (id(ota_enabled).state) {
+            id(ota_esphome).set_auth_password("");
+          } else {
+            // Random per boot and never shown: plaintext uploads fail
+            // authentication. Uploads encrypted with the API key skip it.
+            char password[33];
+            snprintf(password, sizeof(password), "%08" PRIx32 "%08" PRIx32 "%08" PRIx32 "%08" PRIx32,
+                     random_uint32(), random_uint32(), random_uint32(), random_uint32());
+            id(ota_esphome).set_auth_password(password);
+          }
   - id: apply_web_auth
     then:
       - lambda: |-
@@ -106,6 +122,11 @@ script:
                 else:
                   - ble.disable:
             - script.execute: reapply_wifi_power_save_later
+ota:
+  - id: !extend ota_esphome
+    # Compiles in the password check; apply_ota_auth sets the real value
+    # (empty = no password while the OTA Updates switch is on).
+    password: ""
 switch:
   - platform: template
     id: web_server_enabled
@@ -158,6 +179,31 @@ switch:
       - script.execute: apply_network_services
     on_turn_off:
       - script.execute: apply_network_services
+  - platform: template
+    id: ota_enabled
+    name: "OTA Updates"
+    icon: mdi:upload-network
+    optimistic: false
+    turn_on_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(ota_enabled).publish_state(true);
+          else
+            ESP_LOGW("network_services", "OTA Updates can only be changed while Home Assistant is connected");
+    turn_off_action:
+      - lambda: |-
+          if (${network_change_allowed})
+            id(ota_enabled).publish_state(false);
+          else
+            ESP_LOGW("network_services", "OTA Updates can only be changed while Home Assistant is connected");
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    on_turn_on:
+      - script.execute: apply_ota_auth
+    on_turn_off:
+      - script.execute: apply_ota_auth
   - platform: template
     id: fallback_hotspot_enabled
     name: "Fallback Hotspot"
