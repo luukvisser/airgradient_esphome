@@ -6,15 +6,13 @@
 # user-facing explanations.
 #
 # Requires `web_server:`, `esp32_ble` (pulled in by `improv_ble:`), a
-# `wifi:` with id wifi_client and an `ap:`, an `ota: - platform: esphome` with
-# id ota_esphome, and packages/wifi_power_save.yaml
+# `wifi:` with id wifi_client and an `ap:` whose ap_timeout is the device
+# YAML's `fallback_ap_timeout_ms` substitution (restored by the Fallback
+# Hotspot switch; ESPHome offers no getter), an `ota: - platform: esphome`
+# with id ota_esphome, and packages/wifi_power_save.yaml
 # (apply_wifi_power_save is re-run after Bluetooth toggles).
 ---
 substitutions:
-  # Fallback hotspot delay. The device YAMLs use it for `wifi: ap: ap_timeout:`
-  # (ESPHome offers no getter), and it is restored when the Fallback Hotspot
-  # switch is turned back on, so there is a single source of truth.
-  fallback_ap_timeout_ms: "90000"
   # C++ condition: a switch change is accepted. During setup the restored
   # state is always applied; afterwards Home Assistant must be connected, so
   # the open web page (the only control without HA) cannot flip them.
