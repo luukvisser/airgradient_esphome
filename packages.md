@@ -102,21 +102,40 @@ Reports CO2 concentration. Exposes controls for:
 
 - **CO2 offset** — ppm added to every reading (default +27 for new devices). The S8's
   calibration target is a fixed 400 ppm, while outdoor air is now about 425–430 ppm.
-- **Pressure compensation** — air pressure in hPa. The S8 reads 1.6 % high per kPa above
-  101.3 kPa and does not correct for it. The default 1013.25 hPa leaves readings
-  unchanged; to compensate, push a live value from Home Assistant, e.g.:
+- **Pressure compensation** — local air pressure in hPa. The S8 reads 1.6 % high per kPa
+  above 101.3 kPa and does not correct for it. Only the part of the reading above 400
+  ppm is scaled, because ABC and background calibration already pin fresh air to 400 ppm
+  at the local pressure. The default 1013.25 hPa leaves readings unchanged. The value is
+  not stored on the device, so push it from Home Assistant.
+
+  Use **station pressure** (what a sensor in the room measures, e.g. an Aqara T1 or a
+  BME280), not the sea-level-adjusted pressure most weather integrations report. Replace
+  both entity IDs with your own; the second one depends on the device's friendly name:
+
   ```yaml
   automation:
-    - triggers:
+    - alias: "Push pressure to AirGradient CO2 compensation"
+      triggers:
         - trigger: state
-          entity_id: sensor.outdoor_pressure
+          entity_id: sensor.aqara_t1_pressure
+        - trigger: homeassistant
+          event: start
+        - trigger: state # the device restarted and lost the value
+          entity_id: number.ag_one_senseair_s8_co2_pressure_compensation
+          from: unavailable
+      conditions:
+        - condition: template # skip 'unavailable'/'unknown' and out-of-range values
+          value_template: >
+            {{ states('sensor.aqara_t1_pressure') | is_number and
+               800 <= states('sensor.aqara_t1_pressure') | float <= 1100 }}
       actions:
         - action: number.set_value
           target:
             entity_id: number.ag_one_senseair_s8_co2_pressure_compensation
           data:
-            value: "{{ states('sensor.outdoor_pressure') }}"
+            value: "{{ states('sensor.aqara_t1_pressure') | float | round(1) }}"
   ```
+
 - **ABC interval** — Automatic Baseline Correction period (7, 14, 30, 90, or 180 days;
   default 14). Each period the sensor nudges its **lowest** reading towards 400 ppm, by
   at most about 30–50 ppm. Pick a period in which the room is properly aired out at
