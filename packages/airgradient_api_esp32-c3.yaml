@@ -50,9 +50,10 @@ esphome:
                   return "https://hw.airgradient.com/sensors/airgradient:" + get_mac_address() + "/measures";
                 request_headers:
                   Content-Type: application/json
-                json:
-                  wifi: !lambda return to_string(-50);
-                  boot: !lambda return to_string(id(boot_count));
+                # Built by hand (like the regular upload) so wifi and boot are
+                # JSON numbers; `json:` with lambdas serialises them as strings.
+                body: !lambda |-
+                  return "{\"wifi\":-50,\"boot\":" + to_string(id(boot_count)) + "}";
 http_request:
   # https://esphome.io/components/http_request.html
   watchdog_timeout: 30s

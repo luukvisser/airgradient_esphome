@@ -237,8 +237,8 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state
-                        * 2) / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state * 2.0f) / 100.0f;'
                       range_from: 0
                       range_to: 10
                       red: !lambda |-
@@ -259,8 +259,8 @@ script:
                         return (x < $co2_red) ? 0.0f : (x <= $co2_purple) ? (x - $co2_red) / ($co2_purple - $co2_red) : 1.0f;
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state)
-                        / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state) / 100.0f;'
                       range_from: 1
                       range_to: 9
                       red: !lambda |-
@@ -325,8 +325,8 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state
-                        * 2) / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state * 2.0f) / 100.0f;'
                       range_from: 0
                       range_to: 10
                       red: !lambda |-
@@ -348,8 +348,8 @@ script:
                         return 1.0f;
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state)
-                        / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state) / 100.0f;'
                       range_from: 1
                       range_to: 9
                       red: !lambda |-
@@ -414,8 +414,8 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state
-                        * 2) / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state * 2.0f) / 100.0f;'
                       range_from: 0
                       range_to: 10
                       red: !lambda |-
@@ -436,8 +436,8 @@ script:
                         return (x < $voc_red) ? 0.0f : (x <= $voc_purple) ? (x - $voc_red) / ($voc_purple - $voc_red) : 1.0f;
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state)
-                        / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state) / 100.0f;'
                       range_from: 1
                       range_to: 9
                       red: !lambda |-
@@ -541,8 +541,8 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state
-                        * 2) / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state * 2.0f) / 100.0f;'
                       range_from: 0
                       range_to: 4
                       red: !lambda |-
@@ -563,8 +563,8 @@ script:
                         return (x < $co2_red) ? 0.0f : (x <= $co2_purple) ? (x - $co2_red) / ($co2_purple - $co2_red) : 1.0f;
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state)
-                        / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state) / 100.0f;'
                       range_from: 1
                       range_to: 3
                       red: !lambda |-
@@ -623,8 +623,8 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state
-                        * 2) / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state * 2.0f) / 100.0f;'
                       range_from: 5
                       range_to: 9
                       red: !lambda |-
@@ -646,8 +646,8 @@ script:
                         return 1.0f;
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state)
-                        / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state) / 100.0f;'
                       range_from: 6
                       range_to: 8
                       red: !lambda |-
@@ -752,8 +752,8 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state
-                        * 2) / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state * 2.0f) / 100.0f;'
                       range_from: 0
                       range_to: 4
                       red: !lambda |-
@@ -774,8 +774,8 @@ script:
                         return (x < $co2_red) ? 0.0f : (x <= $co2_purple) ? (x - $co2_red) / ($co2_purple - $co2_red) : 1.0f;
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state)
-                        / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state) / 100.0f;'
                       range_from: 1
                       range_to: 3
                       red: !lambda |-
@@ -834,8 +834,8 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state
-                        * 2) / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state * 2.0f) / 100.0f;'
                       range_from: 5
                       range_to: 9
                       red: !lambda |-
@@ -857,8 +857,8 @@ script:
                         return 1.0f;
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state)
-                        / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state) / 100.0f;'
                       range_from: 6
                       range_to: 8
                       red: !lambda |-
@@ -953,8 +953,8 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state
-                        * 2) / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state * 2.0f) / 100.0f;'
                       range_from: 0
                       range_to: 4
                       red: !lambda |-
@@ -975,8 +975,8 @@ script:
                         return (x < $co2_red) ? 0.0f : (x <= $co2_purple) ? (x - $co2_red) / ($co2_purple - $co2_red) : 1.0f;
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state)
-                        / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state) / 100.0f;'
                       range_from: 1
                       range_to: 3
                       red: !lambda |-
@@ -1035,8 +1035,8 @@ script:
                 then:
                   - light.addressable_set:
                       id: led_strip
-                      color_brightness: !lambda 'return (id(led_brightness).state - id(led_fade).state)
-                        / 100.0f;'
+                      color_brightness: !lambda 'return std::max(0.0f, id(led_brightness).state
+                        - id(led_fade).state) / 100.0f;'
                       range_from: 5
                       range_to: 7
                       red: !lambda |-
@@ -1151,7 +1151,7 @@ script:
                   - light.addressable_set:
                       id: led_strip
                       range_from: !lambda |-
-                        int n = std::max(1, std::min(11, 2 + (int)((id(co2).state - 600.0f) / 100.0f)));
+                        int n = std::max(1, std::min(11, 2 + (int)floorf((id(co2).state - 600.0f) / 100.0f)));
                         return 11 - n;
                       range_to: 10
                       color_brightness: !lambda 'return id(led_brightness).state / 100.0f;'
