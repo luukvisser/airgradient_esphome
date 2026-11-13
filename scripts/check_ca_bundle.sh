@@ -16,29 +16,44 @@ failed=0
 # 1. Every host's served chain verifies against the bundle alone, including
 #    the hostname check (OpenSSL falls back to the subject CN when there is no
 #    subjectAltName, as mbedTLS on the device does).
+# GNU timeout (Linux CI), gtimeout (Homebrew coreutils on macOS) or none.
+timeout_cmd=()
+if command -v timeout >/dev/null; then
+  timeout_cmd=(timeout 20)
+elif command -v gtimeout >/dev/null; then
+  timeout_cmd=(gtimeout 20)
+fi
+
 # Try twice so a transient network error does not fail the weekly run.
 check_host() {
-  timeout 20 openssl s_client -connect "${1}:443" -servername "${1}" \
+  ${timeout_cmd[@]+"${timeout_cmd[@]}"} openssl s_client -connect "${1}:443" -servername "${1}" \
     -CAfile "${bundle}" -no-CApath -no-CAstore -verify_hostname "${1}" \
     -verify_return_error </dev/null 2>&1 || true
 }
+# A completed check needs both a verify result and a certificate chain:
+# OpenSSL prints "Verify return code: 0 (ok)" even when the connection closed
+# before any certificate arrived ("no peer certificate available").
+got_chain() {
+  grep -q "Verify return code:" <<<"${1}" && grep -qE "^ *[0-9]+ s:" <<<"${1}"
+}
 for host in "${hosts[@]}"; do
   out=$(check_host "${host}")
-  if ! grep -q "Verify return code:" <<<"${out}"; then
+  if ! got_chain "${out}"; then
     sleep 10
     out=$(check_host "${host}")
   fi
-  if grep -q "Verify return code: 0 (ok)" <<<"${out}"; then
-    root=$(grep -E "^ *[0-9]+ s:" <<<"${out}" | tail -n1 | sed 's/^ *[0-9]* s://' || true)
-    echo "OK    ${host}  (chain top: ${root:-unknown})"
-  elif grep -q "Verify return code:" <<<"${out}"; then
+  if got_chain "${out}" && grep -q "Verify return code: 0 (ok)" <<<"${out}"; then
+    root=$(grep -E "^ *[0-9]+ s:" <<<"${out}" | tail -n1 | sed 's/^ *[0-9]* s://')
+    echo "OK    ${host}  (chain top: ${root})"
+  elif got_chain "${out}"; then
     # The TLS handshake happened, so this is a real certificate problem.
     echo "::error::${host} does not verify against ${bundle}"
     grep -E "verify error|Verify return code|^ *[0-9]+ [si]:" <<<"${out}" || true
     failed=1
   else
-    # No handshake (DNS, timeout, connection refused): not a bundle problem.
-    echo "::error::Could not connect to ${host}:443 to check its certificate (network error, not a bundle problem)"
+    # No certificate received (DNS, timeout, refused or reset connection):
+    # not a bundle problem, but the bundle could not be checked either.
+    echo "::error::Could not get a certificate from ${host}:443 (network error, not a bundle problem)"
     tail -n 5 <<<"${out}" || true
     failed=1
   fi

@@ -16,7 +16,12 @@ esphome:
     # After every component (including firmware_update) is set up.
     - priority: -100
       then:
-        - lambda: id(update_check_ready) = true;
+        - lambda: |-
+            // Start from the interval firmware_update actually runs with (the
+            // device YAML's update_interval), so a matching selection needs no
+            // resume and a different one is applied below.
+            id(update_check_applied_ms) = id(firmware_update).get_update_interval();
+            id(update_check_ready) = true;
         - script.execute: apply_update_check_interval
 globals:
   # The select restores its state during setup, before firmware_update is
@@ -26,40 +31,45 @@ globals:
     restore_value: false
     initial_value: 'false'
   # Interval last applied to firmware_update. Resuming restarts its timer, so
-  # only resume when the interval actually changes. Starts at the device
-  # YAML's `update_interval: 24h`, so the default needs no resume at boot.
+  # only resume when the interval actually changes. Set at boot (see above).
   - id: update_check_applied_ms
     type: uint32_t
     restore_value: false
-    initial_value: '24 * 3600000UL'
+    initial_value: '0'
+  # Whether the boot-time application has run (see the Off branch below).
+  - id: update_check_booted
+    type: bool
+    restore_value: false
+    initial_value: 'false'
 script:
   - id: apply_update_check_interval
     mode: queued
     then:
-      - if:
-          condition:
-            lambda: return id(update_check_ready);
-          then:
-            - lambda: |-
-                const uint32_t ms = ${update_check_interval_ms};
-                if (ms == 0) {
-                  // Off: also cancel the one-time check firmware_update schedules
-                  // in its setup() for when the network comes up; component.suspend
-                  // only stops the regular poller. 0 is that interval's id in
-                  // ESPHome's http_request_update.cpp (INITIAL_CHECK_INTERVAL_ID);
-                  // if it ever changes, this cancel does nothing.
-                  App.scheduler.cancel_interval(id(firmware_update), static_cast<uint32_t>(0));
-                }
-                // Same guard as the component.suspend/resume actions.
-                if (ms == id(update_check_applied_ms) || !id(firmware_update).is_ready())
-                  return;
-                if (ms == 0) {
-                  id(firmware_update).stop_poller();
-                } else {
-                  id(firmware_update).set_update_interval(ms);
-                  id(firmware_update).start_poller();
-                }
-                id(update_check_applied_ms) = ms;
+      - lambda: |-
+          if (!id(update_check_ready))
+            return;
+          const bool at_boot = !id(update_check_booted);
+          id(update_check_booted) = true;
+          const uint32_t ms = ${update_check_interval_ms};
+          // Same guard as the component.suspend/resume actions.
+          if (ms == id(update_check_applied_ms) || !id(firmware_update).is_ready())
+            return;
+          if (ms == 0) {
+            id(firmware_update).stop_poller();
+            // Also cancel the one-time check firmware_update schedules in its
+            // setup() for when the network comes up; stop_poller() only stops
+            // the regular poller. 0 is that interval's id in ESPHome's
+            // http_request_update.cpp (INITIAL_CHECK_INTERVAL_ID). At boot it
+            // must still be pending, so warn if it was not found: that means
+            // ESPHome changed it and "Off" no longer skips the boot check.
+            bool cancelled = App.scheduler.cancel_interval(id(firmware_update), static_cast<uint32_t>(0));
+            if (at_boot && !cancelled)
+              ESP_LOGW("update_check", "Could not cancel the initial update check; one check may still run after boot");
+          } else {
+            id(firmware_update).set_update_interval(ms);
+            id(firmware_update).start_poller();
+          }
+          id(update_check_applied_ms) = ms;
 select:
   # Option order must match the update_check_interval_ms substitution.
   - platform: template
