@@ -1,5 +1,16 @@
-# SenseAir S8 NDIR CO2 sensor. Exposes CO2 concentration, offset calibration, ABC controls,
-# and a manual calibration button. Depends on: senseair_co2_uart (from board package).
+# SenseAir S8 NDIR CO2 sensor. Exposes CO2 concentration, offset and pressure compensation,
+# ABC controls, a manual calibration button and its result.
+# Depends on: senseair_co2_uart (from board package).
+#
+# How the S8 calibrates (Senseair PSP0126 product spec + TDE2067 Modbus manual):
+#   - ABC tracks the LOWEST reading over each ABC period and nudges that minimum towards a
+#     fixed 400 ppm target, by at most ~30–50 ppm per period. The target is not
+#     configurable on the S8, so the offset below accounts for outdoor air being above
+#     400 ppm today. Specified accuracy is only reached after 3 ABC periods.
+#   - Writing the ABC period (HR32) never resets the collected ABC samples; 0 pauses ABC.
+#   - Background calibration sets the current reading to 400 ppm in one step. The sensor
+#     may refuse it when the signal is unstable; bit CI6 of HR1 confirms it ran.
+#   - Readings rise by 1.6 % per kPa above 101.3 kPa; the sensor does not compensate.
 ---
 sensor:
   - platform: senseair
@@ -14,12 +25,117 @@ sensor:
       accuracy_decimals: 0
       filters:
         - skip_initial: 1 # Sometimes returns 0 at first boot instead of valid data
-        - lambda: return x + id(co2_offset_number).state;
+        # Pressure compensation first (multiplicative, +1.6 %/kPa per the S8 LP spec),
+        # then the additive offset for the ABC 400 ppm target.
+        - lambda: |-
+            float p = id(co2_pressure_hpa).state;
+            if (!std::isnan(p) && p > 0.0f)
+              x = x / (1.0f + 0.0016f * (p - 1013.25f));
+            return x + id(co2_offset_number).state;
       web_server:
         sorting_group_id: grp_sensors
     id: senseair_co2
     uart_id: senseair_co2_uart
     update_interval: 60s
+text_sensor:
+  - platform: template
+    name: "SenseAir S8 CO2 Calibration Result"
+    id: co2_calibration_result
+    entity_category: diagnostic
+    icon: "mdi:check-decagram"
+    web_server:
+      sorting_group_id: grp_co2
+script:
+  # Manual background calibration, shared by the web/HA button and the physical config
+  # button. Only run it after the device has been in steady fresh air for 5+ minutes:
+  # the sensor assumes it currently sees 400 ppm and corrects in one step.
+  - id: co2_background_calibration
+    mode: single
+    then:
+      - logger.log: "Starting manual CO2 background calibration"
+      - text_sensor.template.publish:
+          id: co2_calibration_result
+          state: "Running"
+      # Clears the acknowledgement register (HR1), then writes 0x7C06 to HR2.
+      - senseair.background_calibration: senseair_co2
+      # The manual requires ≥ 2 s (one lamp cycle); the extra margin is harmless because
+      # the acknowledgement bit stays set until it is cleared again.
+      - delay: 70s
+      - lambda: |-
+          auto *uart = id(senseair_co2_uart);
+          uint8_t b;
+          while (uart->available()) uart->read_byte(&b);  // drop stale bytes
+          // Read HR1 (acknowledgement register): FE 03 0000 0001 + CRC.
+          static const uint8_t req[8] = {0xFE, 0x03, 0x00, 0x00, 0x00, 0x01, 0x90, 0x05};
+          uint8_t resp[7];
+          uart->write_byte(0x00);  // wake-up byte some S8 models need (as ESPHome's driver sends)
+          uart->flush();
+          delay(5);
+          uart->write_array(req, sizeof(req));
+          bool ok = uart->read_array(resp, sizeof(resp));
+          uart->flush();
+          if (!ok || resp[0] != 0xFE || resp[1] != 0x03 ||
+              crc16(resp, 5) != (uint16_t) (resp[5] | (resp[6] << 8))) {
+            ESP_LOGE("co2", "No valid reply when reading the calibration result");
+            id(co2_calibration_result).publish_state("No response");
+            return;
+          }
+          if (resp[4] & 0x20) {  // CI6: background calibration has been performed
+            ESP_LOGI("co2", "Background calibration performed");
+            id(co2_calibration_result).publish_state("OK");
+          } else {
+            ESP_LOGW("co2", "Sensor skipped background calibration (unstable signal?)");
+            id(co2_calibration_result).publish_state("Skipped by sensor");
+          }
+  # Writes the ABC period (HR32, hours; 0 = ABC paused) only when it differs from what the
+  # sensor already holds, so the EEPROM is not rewritten on every boot. Replaces
+  # senseair.abc_enable, which always writes a hard-coded 180 h.
+  - id: co2_abc_write_period
+    mode: queued
+    parameters:
+      hours: int
+    then:
+      - lambda: |-
+          auto *uart = id(senseair_co2_uart);
+          uint8_t b;
+          while (uart->available()) uart->read_byte(&b);  // drop stale bytes
+          auto transact = [&](const uint8_t *req, uint8_t *resp, size_t resp_len) -> bool {
+            uart->write_byte(0x00);  // wake-up byte some S8 models need
+            uart->flush();
+            delay(5);
+            uart->write_array(req, 8);
+            bool ok = uart->read_array(resp, resp_len);
+            uart->flush();
+            return ok;
+          };
+          const uint16_t target = (uint16_t) hours;
+
+          static const uint8_t read_req[8] = {0xFE, 0x03, 0x00, 0x1F, 0x00, 0x01, 0xA1, 0xC3};
+          uint8_t read_resp[7];
+          if (transact(read_req, read_resp, sizeof(read_resp)) && read_resp[0] == 0xFE &&
+              read_resp[1] == 0x03 &&
+              crc16(read_resp, 5) == (uint16_t) (read_resp[5] | (read_resp[6] << 8))) {
+            uint16_t current = (read_resp[3] << 8) | read_resp[4];
+            if (current == target) {
+              ESP_LOGI("co2", "ABC period already %u h, not rewriting", current);
+              return;
+            }
+            ESP_LOGI("co2", "ABC period is %u h, changing to %u h", current, target);
+          } else {
+            ESP_LOGW("co2", "Could not read current ABC period, writing %u h anyway", target);
+          }
+
+          uint8_t write_req[8] = {0xFE, 0x06, 0x00, 0x1F, (uint8_t) (target >> 8),
+                                  (uint8_t) (target & 0xFF), 0x00, 0x00};
+          uint16_t crc = crc16(write_req, 6);
+          write_req[6] = crc & 0xFF;
+          write_req[7] = crc >> 8;
+          uint8_t echo[8];  // the S8 answers a register write with an echo of the request
+          if (transact(write_req, echo, sizeof(echo)) && memcmp(echo, write_req, 8) == 0) {
+            ESP_LOGI("co2", "ABC period set to %u h%s", target, target == 0 ? " (ABC paused)" : "");
+          } else {
+            ESP_LOGE("co2", "Writing ABC period %u h failed (no or invalid echo)", target);
+          }
 button:
   # https://github.com/esphome/issues/issues/2444
   - platform: template
@@ -30,9 +146,7 @@ button:
       sorting_group_id: grp_co2
     on_press:
       then:
-        - senseair.background_calibration: senseair_co2
-        - delay: 70s
-        - senseair.background_calibration_result: senseair_co2
+        - script.execute: co2_background_calibration
   - platform: template
     # Displays the current ABC interval in the ESPhome logs to verify status
     name: "SenseAir S8 CO2 Write Calibration Interval To Log"
@@ -47,10 +161,12 @@ number:
   - platform: template
     name: "SenseAir S8 CO2 Offset"
     id: co2_offset_number
+    # ABC and background calibration assume fresh air is 400 ppm; outdoor air is now
+    # ~425–430 ppm. Only applies to new devices: restore_value keeps an existing setting.
     min_value: -400
     max_value: 400
     step: 1
-    initial_value: '22'
+    initial_value: '27'
     restore_value: true
     optimistic: true
     mode: box
@@ -59,15 +175,31 @@ number:
     icon: "mdi:tune-vertical"
     web_server:
       sorting_group_id: grp_co2
+  - platform: template
+    # Air pressure used to compensate the reading. The default (1013.25 hPa) is a no-op;
+    # push a live value from Home Assistant (number.set_value) to enable compensation.
+    name: "SenseAir S8 CO2 Pressure Compensation"
+    id: co2_pressure_hpa
+    min_value: 800
+    max_value: 1100
+    step: 0.1
+    initial_value: '1013.25'
+    restore_value: true
+    optimistic: true
+    mode: box
+    entity_category: config
+    unit_of_measurement: "hPa"
+    device_class: atmospheric_pressure
+    icon: "mdi:gauge"
+    web_server:
+      sorting_group_id: grp_co2
 select:
   - platform: template
     name: "SenseAir S8 CO2 ABC Interval"
     id: co2_abc_interval_select
-    # Option labels are days; set_action parses the leading number and converts to hours (× 24).
-    # The written period is stored in the S8's own non-volatile memory, so it survives
-    # reboots — set_action is intentionally not re-run on boot (restore_value only restores
-    # the UI label). The raw frame shares senseair_co2_uart with the polling component; the
-    # two only ever write briefly and sequentially, so no bus arbitration is needed.
+    # Option labels are days; the leading number × 24 is written to the sensor as hours.
+    # Restored before the ABC switch sets up (select priority HARDWARE > switch), so the
+    # switch's boot-time turn_on applies the restored interval.
     options: ["7 days", "14 days", "30 days", "90 days", "180 days"]
     initial_option: "14 days"
     restore_value: true
@@ -77,22 +209,15 @@ select:
     web_server:
       sorting_group_id: grp_co2
     set_action:
-      - lambda: |-
-          uint16_t hours = (uint16_t)(atoi(x.c_str()) * 24);
-          uint8_t frame[8] = {
-            0xFE, 0x06, 0x00, 0x1F,
-            (uint8_t)(hours >> 8), (uint8_t)(hours & 0xFF),
-            0x00, 0x00
-          };
-          uint16_t crc = 0xFFFF;
-          for (int i = 0; i < 6; i++) {
-            crc ^= frame[i];
-            for (int j = 0; j < 8; j++)
-              crc = (crc & 1) ? (crc >> 1) ^ 0xA001 : crc >> 1;
-          }
-          frame[6] = crc & 0xFF;
-          frame[7] = crc >> 8;
-          id(senseair_co2_uart).write_array(frame, 8);
+      # Only write while ABC is on; otherwise the new interval is applied when ABC is
+      # switched back on (writing a non-zero period would silently re-enable ABC).
+      - if:
+          condition:
+            switch.is_on: senseair_co2_abc_switch
+          then:
+            - script.execute:
+                id: co2_abc_write_period
+                hours: !lambda 'return atoi(x.c_str()) * 24;'
 switch:
   - platform: template
     name: "SenseAir S8 CO2 Automatic Baseline Correction"
@@ -102,7 +227,14 @@ switch:
     entity_category: config
     web_server:
       sorting_group_id: grp_co2
+    # Also runs at boot with the restored state, keeping the sensor in sync with the UI.
     turn_on_action:
-      - senseair.abc_enable: senseair_co2
+      - script.execute:
+          id: co2_abc_write_period
+          hours: !lambda |-
+            int days = atoi(id(co2_abc_interval_select).current_option().c_str());
+            return (days > 0 ? days : 14) * 24;
     turn_off_action:
-      - senseair.abc_disable: senseair_co2
+      - script.execute:
+          id: co2_abc_write_period
+          hours: 0

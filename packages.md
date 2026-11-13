@@ -100,19 +100,34 @@ SenseAir S8 NDIR CO2 sensor.
 
 Reports CO2 concentration. Exposes controls for:
 
-- **CO2 offset** — shift the reading by a known number of ppm (positive or negative):
+- **CO2 offset** — ppm added to every reading (default +27 for new devices). The S8's
+  calibration target is a fixed 400 ppm, while outdoor air is now about 425–430 ppm.
+- **Pressure compensation** — air pressure in hPa. The S8 reads 1.6 % high per kPa above
+  101.3 kPa and does not correct for it. The default 1013.25 hPa leaves readings
+  unchanged; to compensate, push a live value from Home Assistant, e.g.:
   ```yaml
-  substitutions:
-    co2_offset: "0"
+  automation:
+    - triggers:
+        - trigger: state
+          entity_id: sensor.outdoor_pressure
+      actions:
+        - action: number.set_value
+          target:
+            entity_id: number.ag_one_senseair_s8_co2_pressure_compensation
+          data:
+            value: "{{ states('sensor.outdoor_pressure') }}"
   ```
 - **ABC interval** — Automatic Baseline Correction period (7, 14, 30, 90, or 180 days;
-  default 14). The sensor re-zeros to the lowest reading seen each period, so a
-  weekly/fortnightly cadence matches when a typical home sees fresh air. Use a longer
-  interval (or the ABC on/off switch) for rooms that rarely reach outdoor CO2 levels.
-- **Manual calibration button** — triggers a background calibration and logs the result
-  70 s later.
+  default 14). Each period the sensor nudges its **lowest** reading towards 400 ppm, by
+  at most about 30–50 ppm. Pick a period in which the room is properly aired out at
+  least once; otherwise ABC slowly drags all readings too low.
 - **ABC on/off switch** — disable ABC entirely if the device rarely sees
-  outdoor-equivalent air.
+  outdoor-equivalent air. The interval and switch are written to the sensor at boot and
+  on change, and only when the sensor holds a different value.
+- **Manual calibration button** — sets the current reading to 400 ppm in one step. Put
+  the device in steady fresh air for 5+ minutes first. The result appears 70 s later in
+  **Calibration Result**: `OK`, `Skipped by sensor` (the S8 refuses when the CO2 level
+  is still changing) or `No response`.
 
 ### `sensor_sgp41.yaml`
 

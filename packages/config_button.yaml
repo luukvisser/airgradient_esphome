@@ -1,7 +1,7 @@
 # Physical config button (GPIO9) on AirGradient ONE / Open Air hardware.
 # Gestures: hold 1–5 s → CO2 calibration; hold ~8 s → factory reset;
 #           double-click → check for and install a firmware update.
-# Depends on: senseair_co2 (from sensor_s8 package) for the CO2 calibration hold,
+# Depends on: co2_background_calibration (from sensor_s8 package) for the CO2 calibration hold,
 #             factory_reset_btn (from button_factory_reset package) for the 8s-hold reset,
 #             firmware_update (the update: component in the device YAML) for the double-click.
 # Cannot be used without those packages.
@@ -46,10 +46,7 @@ binary_sensor:
           - ON for 1s to 5s
           - OFF for at least 0.5s
         then:
-          - logger.log: "Starting manual CO2 calibration"
-          - senseair.background_calibration: senseair_co2
-          - delay: 70s
-          - senseair.background_calibration_result: senseair_co2
+          - script.execute: co2_background_calibration
       - timing: # Double-click → check for and install a firmware update
           - ON for at most 1s
           - OFF for at most 0.5s
