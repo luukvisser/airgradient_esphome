@@ -111,7 +111,7 @@ through the **Firmware Update** entity (GitHub Pages) keep working with OTA Upda
   Turning it off does not stop a hotspot that is already running; it closes once Wi-Fi
   reconnects. While the hotspot is active, the captive portal reopens port 80 regardless
   of the Web Server switch. Turning the switch back on restores the hotspot delay from
-  the device YAML's `fallback_ap_timeout_ms` substitution (90 s), the same value
+  the `fallback_ap_timeout_ms` substitution (90 s by default), the same value
   `wifi: ap: ap_timeout:` uses.
 
 ### `wifi_power_save.yaml`

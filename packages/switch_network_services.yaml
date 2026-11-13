@@ -6,13 +6,16 @@
 # user-facing explanations.
 #
 # Requires `web_server:`, `esp32_ble` (pulled in by `improv_ble:`), a
-# `wifi:` with id wifi_client and an `ap:` whose ap_timeout is the device
-# YAML's `fallback_ap_timeout_ms` substitution (restored by the Fallback
-# Hotspot switch; ESPHome offers no getter), an `ota: - platform: esphome`
-# with id ota_esphome, and packages/wifi_power_save.yaml
+# `wifi:` with id wifi_client and an `ap:` whose ap_timeout should be
+# `${fallback_ap_timeout_ms}ms` (restored by the Fallback Hotspot switch;
+# ESPHome offers no getter), an `ota: - platform: esphome` with id
+# ota_esphome, and packages/wifi_power_save.yaml
 # (apply_wifi_power_save is re-run after Bluetooth toggles).
 ---
 substitutions:
+  # Default fallback hotspot delay; the device YAMLs override it with their
+  # own value, which they also use for `wifi: ap: ap_timeout:`.
+  fallback_ap_timeout_ms: "90000"
   # C++ condition: a switch change is accepted. During setup the restored
   # state is always applied; afterwards Home Assistant must be connected, so
   # the open web page (the only control without HA) cannot flip them.
@@ -33,15 +36,22 @@ esphome:
     - priority: 600
       then:
         - script.execute: apply_web_auth
+    # The OTA Updates switch already set a password when it was restored
+    # (priority 798), so OTA is never open. With OTA off, generate it again
+    # here: Wi-Fi (250) has started the radio, so esp_random() is truly
+    # random now, and the OTA server (200) is not listening yet, so no
+    # upload can be mid-authentication when the password changes.
+    - priority: 220
+      then:
+        - if:
+            condition:
+              switch.is_off: ota_enabled
+            then:
+              - script.execute: apply_ota_auth
     - priority: -100 # After all components (web server, BLE) are set up.
       then:
         - lambda: id(network_services_ready) = true;
         - script.execute: apply_network_services
-        # The OTA Updates switch already set a password when it was restored
-        # (priority 798), so OTA is never open. Generate it again now that
-        # Wi-Fi has started: before the radio is on, esp_random() is only
-        # pseudo-random.
-        - script.execute: apply_ota_auth
 globals:
   # Switch actions are ignored until on_boot has run: template switches
   # restore their state during setup, before the web server and BLE exist.
@@ -72,7 +82,7 @@ script:
             // Random per boot and never shown: plaintext uploads fail
             // authentication. Uploads encrypted with the API key skip it.
             // esp_random() is only truly random once Wi-Fi/BLE runs, hence
-            // the second call from on_boot.
+            // the second call from on_boot (priority 220).
             char password[33];
             snprintf(password, sizeof(password), "%08" PRIx32 "%08" PRIx32 "%08" PRIx32 "%08" PRIx32,
                      random_uint32(), random_uint32(), random_uint32(), random_uint32());
