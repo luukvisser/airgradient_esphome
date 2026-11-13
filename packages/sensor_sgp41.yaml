@@ -33,7 +33,7 @@ sensor:
   - platform: sgp4x
     id: sgp4x_sensor
     # SGP41 https://esphome.io/components/sensor/sgp4x.html
-    voc:
+    voc_index:
       name: "VOC index"
       id: voc
       icon: mdi:molecule
@@ -41,7 +41,7 @@ sensor:
         - throttle: 30s
       web_server:
         sorting_group_id: grp_sensors
-    nox:
+    nox_index:
       name: "NOx index"
       id: nox
       icon: mdi:molecule

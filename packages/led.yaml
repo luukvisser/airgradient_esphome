@@ -2,7 +2,7 @@
 light:
   # https://esphome.io/components/light/esp32_rmt_led_strip.html
   - platform: esp32_rmt_led_strip
-    rgb_order: GRB
+    channel_colors: GRB
     pin: GPIO10 # Pin 16
     num_leds: 11
     chipset: ws2812
