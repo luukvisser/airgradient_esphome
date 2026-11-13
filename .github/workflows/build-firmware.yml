@@ -157,18 +157,16 @@ jobs:
           SLUG: ${{ needs.resolve.outputs.slug }}
         run: |
           set -euo pipefail
-          build_dir=".esphome/build/${NODE_NAME}/.pioenvs/${NODE_NAME}"
-          if [[ ! -d "${build_dir}" ]]; then
-            # Fall back for platforms that lay out build dirs differently.
-            candidate=$(find .esphome/build -type d -name ".pioenvs" | head -n1 || true)
-            if [[ -n "${candidate}" ]]; then
-              build_dir=$(find "${candidate}" -mindepth 1 -maxdepth 1 -type d | head -n1)
-            fi
-          fi
-          if [[ ! -f "${build_dir}/firmware.factory.bin" ]]; then
-            echo "::error::Could not locate firmware.factory.bin under ${build_dir}"
+          # Locate the build output instead of assuming a layout: PlatformIO
+          # builds put it in .pioenvs/<node>/, while native ESP-IDF builds
+          # (ESPHome >= 2026.10) put it in build/.
+          device_dir=".esphome/build/${NODE_NAME}"
+          factory=$(find "${device_dir}" -type f -name firmware.factory.bin -print -quit 2>/dev/null || true)
+          if [[ -z "${factory}" ]]; then
+            echo "::error::Could not locate firmware.factory.bin under ${device_dir}"
             exit 1
           fi
+          build_dir=$(dirname "${factory}")
           echo "Using build dir: ${build_dir}"
 
           out="dist/${SLUG}"
