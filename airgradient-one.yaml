@@ -67,7 +67,7 @@ wifi:
 captive_portal:
   id: captive_portal_web
 esp32_improv:
-  id: improv_ble
+  id: improv_ble_provisioner
   authorizer: none
 improv_serial:
   id: improv_serial_provisioner
