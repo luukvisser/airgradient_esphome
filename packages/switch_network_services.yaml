@@ -35,11 +35,15 @@ esphome:
     - priority: 600
       then:
         - script.execute: apply_web_auth
-        - script.execute: apply_ota_auth
     - priority: -100 # After all components (web server, BLE) are set up.
       then:
         - lambda: id(network_services_ready) = true;
         - script.execute: apply_network_services
+        # The OTA Updates switch already set a password when it was restored
+        # (priority 798), so OTA is never open. Generate it again now that
+        # Wi-Fi has started: before the radio is on, esp_random() is only
+        # pseudo-random.
+        - script.execute: apply_ota_auth
 globals:
   # Switch actions are ignored until on_boot has run: template switches
   # restore their state during setup, before the web server and BLE exist.
@@ -69,6 +73,8 @@ script:
           } else {
             // Random per boot and never shown: plaintext uploads fail
             // authentication. Uploads encrypted with the API key skip it.
+            // esp_random() is only truly random once Wi-Fi/BLE runs, hence
+            // the second call from on_boot.
             char password[33];
             snprintf(password, sizeof(password), "%08" PRIx32 "%08" PRIx32 "%08" PRIx32 "%08" PRIx32,
                      random_uint32(), random_uint32(), random_uint32(), random_uint32());
