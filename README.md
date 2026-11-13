@@ -160,7 +160,7 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | Feature                                 | AirGradient (stock)         | MallocArray                   | This repo                            |
 | --------------------------------------- | --------------------------- | ----------------------------- | ------------------------------------ |
 | Wi-Fi AP fallback + captive portal      | ✅                          | ✅                            | ✅                                   |
-| Improv BLE provisioning                 | ❌                          | ❌                            | ✅ `esp32_improv`                    |
+| Improv BLE provisioning                 | ❌                          | ❌                            | ✅ `improv_ble`                      |
 | Improv Serial provisioning              | ❌                          | ❌                            | ✅ `improv_serial`                   |
 | OTA firmware update                     | 📱 cloud OTA                | ✅ ESPHome                    | ✅ `http_request` manifest + ESPHome |
 | Automatic new-firmware check            | ✅ polls AirGradient server | ❌ manual (ESPHome dashboard) | ✅ polls manifest every 6 h          |
@@ -388,7 +388,7 @@ The three firmwares treat the bar very differently:
 | `project` identification  | `esphome.project` in each device's YAML            |
 | Open-source configuration | this repository                                    |
 | User-applied updates      | `update.http_request` → per-device `manifest.json` |
-| Wi-Fi provisioning (BLE)  | `esp32_improv`                                     |
+| Wi-Fi provisioning (BLE)  | `improv_ble`                                       |
 | Wi-Fi provisioning (USB)  | `improv_serial`                                    |
 | Fallback Wi-Fi AP         | `wifi.ap` + `captive_portal`                       |
 | Dashboard adoption        | `dashboard_import.package_import_url`              |
