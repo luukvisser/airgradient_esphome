@@ -76,13 +76,20 @@ adopted in Home Assistant, reducing attack surface and network noise:
 | Bluetooth        | Stops the BLE stack (Improv Wi-Fi provisioning); Wi-Fi gets the radio.     |
 | Fallback Hotspot | No access point + captive portal when Wi-Fi is lost; keeps retrying Wi-Fi. |
 
+A **Web Password** field sets an optional per-device password for the web page and its
+REST API (digest auth, username `admin`). Empty (the default) means no password. It can
+only be changed while Home Assistant is connected and is shown as `********`, so the
+password never ends up in Home Assistant's history. With a password set, use
+`curl --digest -u admin:<password> http://<ip>/sensor/<id>`. A factory reset clears it.
+
 All switches default to on and keep their state across reboots. The native API is never
 affected, so the services can always be re-enabled from Home Assistant.
 
 - **Only changeable while Home Assistant is connected.** A device used without Home
   Assistant cannot lock itself out, and nobody can flip them through the open web page.
-  While Home Assistant is connected the web page can still change them, so turn the web
-  server off for full protection. Turning the web server back **on** is always allowed.
+  While Home Assistant is connected the web page can still change them, so set a Web
+  Password or turn the web server off for full protection. Turning the web server back
+  **on** is always allowed.
 - **Tip: turn Bluetooth off once the device is set up.** While Bluetooth is on, Wi-Fi
   and Bluetooth share the radio in time slices. After a Bluetooth toggle the Wi-Fi power
   save mode is re-applied (requires [`wifi_power_save.yaml`](#wifi_power_saveyaml)).
