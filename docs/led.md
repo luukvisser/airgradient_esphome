@@ -128,31 +128,34 @@ controlled by the **LED Fade %** slider. Set to 0 for uniform brightness across 
 
 ## Left LED notification override
 
-A Home-Assistant-triggerable overlay that briefly lights the **leftmost LED** (index 0)
-on top of whatever mode is active, then returns to normal operation. Use it to surface a
-notification from an HA automation (doorbell, timer, alert, …) on the air-quality bar.
+A Home-Assistant-controllable overlay that lights the **leftmost LED** (index 0) on top
+of whatever mode is active, for as long as it is switched on. Use it to surface a
+notification from an HA automation (washing machine done, door open, alert, …) on the
+air-quality bar, and switch it off again when the condition clears.
 
 | Entity                                          | Type   | Purpose                                                                        |
 | ----------------------------------------------- | ------ | ------------------------------------------------------------------------------ |
-| **Left LED Notification**                       | button | Fires the override (HA calls `button.press`).                                  |
-| **Left LED Notification Duration**              | number | How long LED 0 stays lit, **1–300 s** (default **60 s**).                      |
+| **Left LED Notification**                       | switch | ON lights LED 0; OFF returns it to the current mode.                           |
 | **Left LED Notification Color**                 | light  | Color-wheel picker for the overlay hue (default **white**).                    |
 | **Left LED Notification Brightness %**          | number | Brightness of the overlay, **0–100 %** (default **100 %**).                    |
 | **Left LED Notification Follow LED Brightness** | switch | Follow the bar's **LED Brightness %** instead of the slider (default **off**). |
 
 Behaviour:
 
-- LED 0 lights immediately in the chosen color and stays lit for the configured
-  duration, then LED 0 returns to whatever the current mode shows — e.g. CO₂ 4 000 ppm
-  goes back to purple. It is a true overrule layered on top of every mode, not a new
-  mode.
+- Switching it **ON** lights LED 0 immediately in the chosen color; it stays lit until
+  the switch is turned **OFF**, after which LED 0 shows whatever the current mode shows
+  — e.g. CO₂ 4 000 ppm goes back to purple. It is a true overrule layered on top of
+  every mode, not a new mode. There is no timer: switch it off from an automation (or
+  add a `delay:` in the automation) when the notification should end.
+- The switch state is restored after a reboot (default **off**), so a notification that
+  is still active comes back after a power cut.
 - Brightness is set by its own **Left LED Notification Brightness %** slider (default
   100 %), decoupled from the bar's **LED Brightness %** — so a notification can be full
   brightness even when the bar is dimmed. Turn on the **Left LED Notification Follow LED
   Brightness** switch to instead track the bar's **LED Brightness %**. The color light's
   own brightness slider is ignored; only its hue is used.
-- Pressing the button again restarts the timer (`mode: restart`).
 - The override survives the shared 5 s LED repaint because it is painted as the final
   step of the `update_leds` script.
-- When **LED Mode** is **Off**, the button does nothing — a bar the user switched off
-  stays dark.
+- When **LED Mode** is **Off**, LED 0 stays dark even while the switch is on — a bar the
+  user switched off stays dark. The notification appears as soon as a mode is selected
+  again.
