@@ -92,7 +92,7 @@ Within every device YAML and package, follow this top-level key order:
 6. `http_request`
 7. `update`
 8. `wifi` / `network`
-9. `captive_portal` / `esp32_improv` / `improv_serial`
+9. `captive_portal` / `improv_ble` / `improv_serial`
 10. `web_server`
 11. `dashboard_import`
 12. Component sections (`sensor`, `binary_sensor`, `button`, `number`, `select`,
