@@ -13,6 +13,10 @@
 ---
 substitutions:
   config_version: "1.10.0" # keep in sync with esphome.project.version below
+  # Fallback hotspot delay (wifi: ap: ap_timeout below). Also used by
+  # packages/switch_network_services.yaml, which restores it when the Fallback
+  # Hotspot switch is turned back on.
+  fallback_ap_timeout_ms: "90000"
 esphome:
   name: "airgradient-one"
   friendly_name: "AG ONE"
@@ -60,7 +64,8 @@ wifi:
   # (packages/wifi_power_save.yaml) overrides it at runtime.
   power_save_mode: none
   ap:
-    ap_timeout: 90s
+    # See fallback_ap_timeout_ms in substitutions above.
+    ap_timeout: ${fallback_ap_timeout_ms}ms
     password: "cleanair"
 captive_portal:
   id: captive_portal_web
@@ -120,6 +125,7 @@ packages:
   led_combo: !include packages/led_combo.yaml
   # ── Integrations ────────────────────────────────────────────────────────
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
+  network_services: !include packages/switch_network_services.yaml
   time: !include packages/time_homeassistant.yaml
   # ── System utilities ────────────────────────────────────────────────────
   security: !include packages/security.yaml
