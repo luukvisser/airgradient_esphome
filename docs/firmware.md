@@ -48,13 +48,14 @@ each device YAML), so they always point at the newest published release for that
 
 ## OTA updates
 
-Once flashed, the device updates itself automatically. Every 6 hours it polls its
-manifest URL, compares the available version to the installed one, and installs any
+Once flashed, the device updates itself automatically. Every 24 hours by default (set
+with the **Update Check Interval** select: Off, 6 hours, 24 hours or weekly) it polls
+its manifest URL, compares the available version to the installed one, and installs any
 update in the background:
 
 ```mermaid
 sequenceDiagram
-    participant D as Device (every 6 h)
+    participant D as Device (every 24 h)
     participant P as GitHub Pages
 
     D->>P: GET /slug/manifest.json

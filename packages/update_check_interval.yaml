@@ -1,0 +1,88 @@
+# "Update Check Interval" select: how often the device polls its GitHub Pages
+# manifest for new firmware (Off / every 6 hours / every 24 hours / weekly).
+# Manual checks (the update entity in Home Assistant, the "Firmware Update
+# Check" button, double-clicking the config button) always work.
+# Depends on: an `update:` component with id firmware_update in the device YAML.
+---
+substitutions:
+  # C++ expression: the selected interval in ms (0 = Off). Indexes follow the
+  # update_check_interval options; falls back to 24 h without a state.
+  update_check_interval_ms: >-
+    ([]() -> uint32_t { static const uint32_t MS[] = {0, 6 * 3600000UL, 24 * 3600000UL, 7
+    * 24 * 3600000UL}; auto i = id(update_check_interval).active_index(); return MS[i.has_value()
+    ? *i : 2]; }())
+esphome:
+  on_boot:
+    # After every component (including firmware_update) is set up.
+    - priority: -100
+      then:
+        - lambda: |-
+            // Start from the interval firmware_update actually runs with (the
+            // device YAML's update_interval), so a matching selection needs no
+            // resume and a different one is applied by the script below.
+            const uint32_t yaml_ms = id(firmware_update).get_update_interval();
+            id(update_check_applied_ms) = yaml_ms;
+            id(update_check_ready) = true;
+            // firmware_update's setup() schedules a one-time check for when the
+            // network comes up, if its interval is longer than that check's 60 s
+            // retry window. Stopping the poller does not cancel it, so with "Off"
+            // restored, cancel it here. 0 is its id in ESPHome's
+            // http_request_update.cpp (INITIAL_CHECK_INTERVAL_ID); warn if it was
+            // scheduled but not found, i.e. ESPHome changed that id.
+            if (${update_check_interval_ms} == 0 && yaml_ms != SCHEDULER_DONT_RUN && yaml_ms > 60000 &&
+                !App.scheduler.cancel_interval(id(firmware_update), static_cast<uint32_t>(0)))
+              ESP_LOGW("update_check", "Could not cancel the initial update check; one check may still run after boot");
+        - script.execute: apply_update_check_interval
+globals:
+  # The select restores its state during setup, before firmware_update is
+  # ready; changes are applied only once on_boot has run.
+  - id: update_check_ready
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  # Interval last applied to firmware_update. Resuming restarts its timer, so
+  # only resume when the interval actually changes. Set at boot (see above).
+  - id: update_check_applied_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+script:
+  - id: apply_update_check_interval
+    mode: queued
+    then:
+      - lambda: |-
+          if (!id(update_check_ready))
+            return;
+          const uint32_t ms = ${update_check_interval_ms};
+          // Same guard as the component.suspend/resume actions.
+          if (ms == id(update_check_applied_ms) || !id(firmware_update).is_ready())
+            return;
+          if (ms == 0) {
+            id(firmware_update).stop_poller();
+            // Switched to Off within a minute of boot: the initial check may
+            // still be pending (see on_boot); nothing to cancel otherwise.
+            App.scheduler.cancel_interval(id(firmware_update), static_cast<uint32_t>(0));
+          } else {
+            id(firmware_update).set_update_interval(ms);
+            id(firmware_update).start_poller();
+          }
+          id(update_check_applied_ms) = ms;
+select:
+  # Option order must match the update_check_interval_ms substitution.
+  - platform: template
+    id: update_check_interval
+    name: "Update Check Interval"
+    icon: mdi:update
+    options:
+      - "Off"
+      - "Every 6 hours"
+      - "Every 24 hours"
+      - "Weekly"
+    initial_option: "Every 24 hours"
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    on_value:
+      - script.execute: apply_update_check_interval

@@ -163,7 +163,7 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 | Improv BLE provisioning                 | ❌                          | ❌                            | ✅ `improv_ble`                      |
 | Improv Serial provisioning              | ❌                          | ❌                            | ✅ `improv_serial`                   |
 | OTA firmware update                     | 📱 cloud OTA                | ✅ ESPHome                    | ✅ `http_request` manifest + ESPHome |
-| Automatic new-firmware check            | ✅ polls AirGradient server | ❌ manual (ESPHome dashboard) | ✅ polls manifest every 6 h          |
+| Automatic new-firmware check            | ✅ polls AirGradient server | ❌ manual (ESPHome dashboard) | ✅ polls manifest, 24 h default      |
 | Dashboard adoption (`dashboard_import`) | ➖                          | ✅                            | ✅                                   |
 | Factory reset                           | 🔧 config / hold            | ✅ button                     | ✅ button                            |
 | Safe-mode reboot                        | ❌                          | ✅ switch                     | ✅ button (`safe_mode`)              |

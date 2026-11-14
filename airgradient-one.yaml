@@ -12,7 +12,7 @@
 #     on GitHub Pages, and attaches binaries to a GitHub Release.
 ---
 substitutions:
-  config_version: "1.9.0" # keep in sync with esphome.project.version below
+  config_version: "1.10.0" # keep in sync with esphome.project.version below
 esphome:
   name: "airgradient-one"
   friendly_name: "AG ONE"
@@ -22,7 +22,7 @@ esphome:
   # the device slug so multiple products from the same org don't collide.
   project:
     name: "luukvisser.airgradient-one"
-    version: "1.9.0"
+    version: "1.10.0"
 logger:
 api:
 ota:
@@ -48,7 +48,9 @@ update:
     # Per-device manifest URL. Must match the Pages path the release
     # workflow publishes to (site/<slug>/manifest.json).
     source: "https://luukvisser.github.io/airgradient_esphome/airgradient-one/manifest.json"
-    update_interval: 6h
+    # Default; overridden at runtime by the Update Check Interval select
+    # (packages/update_check_interval.yaml).
+    update_interval: 24h
     entity_category: diagnostic
     web_server:
       sorting_group_id: grp_system
@@ -124,6 +126,8 @@ packages:
   airgradient_api: !include packages/airgradient_api_esp32-c3.yaml
   time: !include packages/time_homeassistant.yaml
   # ── System utilities ────────────────────────────────────────────────────
+  security: !include packages/security.yaml
+  update_check: !include packages/update_check_interval.yaml
   diagnostic_esp32: !include packages/diagnostic_esp32.yaml
   hardware_watchdog: !include packages/watchdog.yaml
   button_factory_reset: !include packages/button_factory_reset.yaml
