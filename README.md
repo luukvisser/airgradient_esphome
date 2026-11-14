@@ -171,8 +171,9 @@ Everything below repeats these in context alongside the stock-firmware equivalen
 ### Security & network
 
 - **Switch off what you don't use.** Config switches in Home Assistant turn off the web
-  server, Bluetooth and the fallback hotspot; they can only be changed while Home
-  Assistant is connected. Tip: turn Bluetooth off once the device is set up. Details in
+  server, Bluetooth and the fallback hotspot, and set an optional web password; they can
+  only be changed while Home Assistant is connected. Tip: turn Bluetooth off once the
+  device is set up. Details in
   [`switch_network_services.yaml`](packages.md#switch_network_servicesyaml).
 - **Verified HTTPS.** Cloud uploads and firmware update checks only trust the roots in
   [`packages/certs/ca_bundle.pem`](packages/certs/ca_bundle.pem): AirGradient's own root
