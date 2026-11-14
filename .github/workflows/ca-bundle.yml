@@ -1,0 +1,30 @@
+---
+name: CA bundle
+# The firmware trusts only packages/certs/ca_bundle.pem for HTTPS. Check that
+# hw.airgradient.com and luukvisser.github.io still chain to it whenever the
+# bundle changes, and weekly so a server certificate change is caught before
+# it silently breaks cloud uploads and OTA update checks.
+on:
+  pull_request:
+    paths:
+      - packages/certs/ca_bundle.pem
+      - scripts/check_ca_bundle.sh
+      - .github/workflows/ca-bundle.yml
+  push:
+    branches: [main]
+    paths:
+      - packages/certs/ca_bundle.pem
+      - scripts/check_ca_bundle.sh
+      - .github/workflows/ca-bundle.yml
+  schedule:
+    - cron: "17 6 * * 1" # Mondays 06:17 UTC
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify hosts chain to the pinned bundle
+        run: scripts/check_ca_bundle.sh

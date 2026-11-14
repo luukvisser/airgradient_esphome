@@ -45,9 +45,17 @@ without reflashing when Wi-Fi credentials change.
 
 ### `security.yaml`
 
-Security and recovery baseline shared by every device. Currently sets
-`safe_mode: num_attempts: 5` (ESPHome's default is 10), so a bad update falls back to
-the recovery firmware after 5 failed boots instead of 10.
+Security and recovery baseline shared by every device:
+
+- `safe_mode: num_attempts: 5` (ESPHome's default is 10), so a bad update falls back to
+  the recovery firmware after 5 failed boots instead of 10.
+- **Verified HTTPS** (`verify_ssl: true`) against
+  [`certs/ca_bundle.pem`](packages/certs/ca_bundle.pem) only: AirGradient's private root
+  CA for `hw.airgradient.com` (the same root AirGradient's own firmware pins) and the
+  public roots GitHub Pages uses or may move to, for the update manifest and firmware.
+  ESPHome has a single `http_request` component, so one trust list serves both hosts.
+  `scripts/check_ca_bundle.sh` checks that both hosts still chain to the bundle and that
+  no root expires within a year; CI runs it when the bundle changes and every week.
 
 ### `update_check_interval.yaml`
 

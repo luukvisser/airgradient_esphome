@@ -1,7 +1,22 @@
-# Security and recovery baseline shared by every device. Device YAMLs include
-# this instead of repeating it, so the devices cannot drift apart.
+# Security and recovery baseline shared by every device (recovery limits and
+# verified HTTPS). Device YAMLs include this instead of repeating it, so the
+# devices cannot drift apart.
 ---
 # Fall back to the minimal recovery firmware after 5 failed boots instead of
 # the default 10, so a bad update recovers sooner.
 safe_mode:
   num_attempts: 5
+http_request:
+  # Verify both HTTPS hosts against our own trust list instead of skipping
+  # verification. hw.airgradient.com is signed by AirGradient's private root
+  # CA, which is in no public store (that, not a missing intermediate, is why
+  # the ESP-IDF bundle could not verify it); luukvisser.github.io uses a Let's
+  # Encrypt chain. The bundle pins the AirGradient root (the same one
+  # AirGradient's own firmware pins) plus the public roots GitHub Pages may
+  # use; see packages/certs/ca_bundle.pem for fingerprints and upkeep, and
+  # scripts/check_ca_bundle.sh (run in CI) for the chain check.
+  # ESPHome has one http_request component, so one trust list serves both
+  # hosts: AirGradient's CA is also trusted for the update host.
+  verify_ssl: true
+  # Relative to the device YAML (repository root).
+  ca_certificate_path: packages/certs/ca_bundle.pem
