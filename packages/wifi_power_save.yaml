@@ -1,0 +1,89 @@
+# "Wi-Fi Power Save" select (Off / Light / High, default Off = full power) and
+# a hidden "Wi-Fi Power Save (actual)" diagnostic showing the mode the radio
+# reports. Applied immediately and restored across reboots; can be changed
+# without Home Assistant.
+# Depends on: a `wifi:` component with id wifi_client in the device YAML.
+---
+esphome:
+  includes:
+    - <esp_wifi.h>
+  on_boot:
+    # After Wi-Fi has started. ESPHome applies the stored mode when Wi-Fi
+    # starts but ignores the result; apply it again here so a failure is
+    # logged.
+    - priority: -100
+      then:
+        - lambda: id(wifi_power_save_ready) = true;
+        - script.execute: apply_wifi_power_save
+globals:
+  # The select restores its state during setup, before Wi-Fi is running;
+  # esp_wifi_set_ps() is only called once on_boot has run.
+  - id: wifi_power_save_ready
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+script:
+  - id: apply_wifi_power_save
+    mode: queued
+    then:
+      - lambda: |-
+          // Indexes follow the wifi_power_save options.
+          static const wifi::WiFiPowerSaveMode MODES[] = {wifi::WIFI_POWER_SAVE_NONE, wifi::WIFI_POWER_SAVE_LIGHT,
+                                                          wifi::WIFI_POWER_SAVE_HIGH};
+          static const wifi_ps_type_t PS_TYPES[] = {WIFI_PS_NONE, WIFI_PS_MIN_MODEM, WIFI_PS_MAX_MODEM};
+          auto index = id(wifi_power_save).active_index();
+          size_t i = index.has_value() ? *index : 0;
+          // Stored so ESPHome re-applies it whenever Wi-Fi (re)starts.
+          id(wifi_client).set_power_save_mode(MODES[i]);
+          if (id(wifi_power_save_ready)) {
+            esp_err_t err = esp_wifi_set_ps(PS_TYPES[i]);
+            if (err != ESP_OK)
+              ESP_LOGW("wifi_power_save", "esp_wifi_set_ps failed: %s", esp_err_to_name(err));
+          }
+      - component.update: wifi_power_save_actual
+select:
+  - platform: template
+    id: wifi_power_save
+    name: "Wi-Fi Power Save"
+    icon: mdi:wifi-cog
+    # Option order must match apply_wifi_power_save.
+    options:
+      - "Off (full power)"
+      - "Light"
+      - "High"
+    initial_option: "Off (full power)"
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    web_server:
+      sorting_group_id: grp_system
+    on_value:
+      - script.execute: apply_wifi_power_save
+text_sensor:
+  # Not wifi_info's power_save_mode: that one only updates when ESPHome itself
+  # applies the mode successfully, so it misses the select's direct
+  # esp_wifi_set_ps() calls and shows nothing when applying fails, which is
+  # what this sensor is meant to reveal.
+  - platform: template
+    id: wifi_power_save_actual
+    name: "Wi-Fi Power Save (actual)"
+    icon: mdi:wifi-cog
+    entity_category: diagnostic
+    disabled_by_default: true
+    update_interval: 60s
+    web_server:
+      sorting_group_id: grp_system
+    lambda: |-
+      wifi_ps_type_t ps;
+      if (esp_wifi_get_ps(&ps) != ESP_OK)
+        return std::string("unknown");
+      switch (ps) {
+        case WIFI_PS_NONE:
+          return std::string("off (full power)");
+        case WIFI_PS_MIN_MODEM:
+          return std::string("light");
+        case WIFI_PS_MAX_MODEM:
+          return std::string("high");
+        default:
+          return std::string("unknown");
+      }
