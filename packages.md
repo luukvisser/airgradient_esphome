@@ -47,6 +47,17 @@ without reflashing when Wi-Fi credentials change.
 
 Security and recovery baseline shared by every device:
 
+- **Encrypted Home Assistant connection.** The native API uses Noise encryption
+  (`api: encryption: {}`) with **no key baked in**: the prebuilt firmware is shared by
+  every device. Until a key is set, the device still accepts unencrypted connections, so
+  an existing Home Assistant entry keeps working. Home Assistant sets a per-device key
+  (on adoption, or when you add the key to an existing entry); from then on only
+  encrypted connections are accepted, and only a factory reset clears the key. Until a
+  key is set, **any** client on the network could set it (and then upload firmware), so
+  set it promptly.
+- `api: reboot_timeout: 1h` (ESPHome's default is 15 min), **only once Home Assistant
+  has adopted the device** (it holds a key): a device used without Home Assistant never
+  reboots for lack of an API client. Re-evaluated at boot and on every API connection.
 - `safe_mode: num_attempts: 5` (ESPHome's default is 10), so a bad update falls back to
   the recovery firmware after 5 failed boots instead of 10.
 - **Verified HTTPS** (`verify_ssl: true`) against
@@ -70,11 +81,12 @@ Requires an `update:` component with id `firmware_update` in the device YAML.
 Adds config switches to turn off network services that are not needed once the device is
 adopted in Home Assistant, reducing attack surface and network noise:
 
-| Switch           | When off                                                                   |
-| ---------------- | -------------------------------------------------------------------------- |
-| Web Server       | Stops the HTTP listener on port 80. Turning it back on is always allowed.  |
-| Bluetooth        | Stops the BLE stack (Improv Wi-Fi provisioning); Wi-Fi gets the radio.     |
-| Fallback Hotspot | No access point + captive portal when Wi-Fi is lost; keeps retrying Wi-Fi. |
+| Switch           | When off                                                                                                        |
+| ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| Web Server       | Stops the HTTP listener on port 80. Turning it back on is always allowed.                                       |
+| Bluetooth        | Stops the BLE stack (Improv Wi-Fi provisioning); Wi-Fi gets the radio.                                          |
+| OTA Updates      | Random password on the ESPHome OTA port: plaintext uploads fail. Uploads encrypted with the API key still work. |
+| Fallback Hotspot | No access point + captive portal when Wi-Fi is lost; keeps retrying Wi-Fi.                                      |
 
 A **Web Password** field sets an optional per-device password for the web page and its
 REST API (digest auth, username `admin`). Empty (the default) means no password. It can
@@ -83,7 +95,8 @@ password never ends up in Home Assistant's history. With a password set, use
 `curl --digest -u admin:<password> http://<ip>/sensor/<id>`. A factory reset clears it.
 
 All switches default to on and keep their state across reboots. The native API is never
-affected, so the services can always be re-enabled from Home Assistant.
+affected, so the services can always be re-enabled from Home Assistant. Firmware updates
+through the **Firmware Update** entity (GitHub Pages) keep working with OTA Updates off.
 
 - **Only changeable while Home Assistant is connected.** A device used without Home
   Assistant cannot lock itself out, and nobody can flip them through the open web page.

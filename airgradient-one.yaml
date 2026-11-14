@@ -28,7 +28,6 @@ esphome:
     name: "luukvisser.airgradient-one"
     version: "1.10.0"
 logger:
-api:
 ota:
   - platform: esphome
     id: ota_esphome
