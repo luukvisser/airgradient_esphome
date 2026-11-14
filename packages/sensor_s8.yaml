@@ -72,7 +72,8 @@ number:
     name: "SenseAir S8 CO2 Offset"
     id: co2_offset_number
     # ABC and background calibration assume fresh air is 400 ppm; outdoor air is now
-    # ~425–430 ppm. Only applies to new devices: restore_value keeps an existing setting.
+    # ~425–430 ppm. restore_value keeps an offset that was changed on the device; one that
+    # never was (the old default 22) is not stored, so such a device moves to 27 too.
     min_value: -400
     max_value: 400
     step: 1
