@@ -244,6 +244,9 @@ jobs:
           mkdir -p "${out}/${SLUG}/firmware/${VERSION}" "${out}/${SLUG}/firmware/latest"
 
           # Versioned binaries: immutable URLs, which the manifest points at.
+          # Never prune old firmware/<version>/ directories from gh-pages:
+          # devices (or CDN caches) holding an older manifest download from
+          # them.
           cp "dist/${SLUG}/${SLUG}.factory.bin" "${out}/${SLUG}/firmware/${VERSION}/"
           cp "dist/${SLUG}/${SLUG}.ota.bin"     "${out}/${SLUG}/firmware/${VERSION}/"
 
@@ -353,13 +356,16 @@ jobs:
       - name: Generate release notes from commits since previous release of THIS device
         env:
           SLUG: ${{ needs.resolve.outputs.slug }}
+          # Via env, never interpolated into the script (see Parse step).
+          NAME: ${{ needs.resolve.outputs.name }}
+          VERSION: ${{ needs.resolve.outputs.version }}
         run: |
           # Only compare against the previous tag for the same device so
           # the changelog is scoped to changes that actually affect it.
           prev=$(git tag --sort=-creatordate --list "${SLUG}/v*" \
                  | grep -v "^${GITHUB_REF_NAME}$" | head -n1 || true)
           {
-            echo "## ${{ needs.resolve.outputs.name }} v${{ needs.resolve.outputs.version }}"
+            echo "## ${NAME} v${VERSION}"
             echo
             echo "### Changes"
             if [[ -n "${prev}" ]]; then

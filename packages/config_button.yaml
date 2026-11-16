@@ -58,7 +58,10 @@ binary_sensor:
               format: "Config button double-click — checking for firmware update"
           - update.check: firmware_update
           # The manifest fetch runs in its own task (up to 10 s HTTP timeout
-          # plus TLS), so wait for its result instead of a fixed delay.
+          # plus TLS), so wait for an available update instead of a fixed
+          # delay. If an earlier check already found an update, this installs
+          # that one at once (still newer than the installed firmware); a
+          # newer release found by this check needs another double-click.
           - wait_until:
               condition:
                 update.is_available: firmware_update
@@ -71,5 +74,5 @@ binary_sensor:
               else:
                 - logger.log:
                     level: INFO
-                    format: "No firmware update available (or the check did not finish within
-                      30 s)"
+                    format: "No firmware update found within 30 s: up to date, or the check
+                      failed (see the Firmware Update entity)"

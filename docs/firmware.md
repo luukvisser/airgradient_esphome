@@ -14,8 +14,9 @@ installation required.
 4. Click **Install** next to your device.
 5. The browser will prompt you to select a serial port — choose the one that corresponds
    to your device (typically listed as `USB Serial` or similar).
-6. Follow the on-screen prompts. The installer will erase and flash the latest released
-   firmware automatically.
+6. Follow the on-screen prompts. The installer asks whether to erase the device first:
+   erase when coming from stock AirGradient (or other) firmware; skip it to keep Wi-Fi,
+   the API key and settings when reinstalling this firmware.
 
 > **Note:** The install page is only live after the first release has been published via
 > the CI/CD pipeline. If the page returns a 404, no release has been tagged yet.
