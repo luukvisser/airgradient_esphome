@@ -21,20 +21,6 @@ substitutions:
   co2_orange: '1000' # Ventilation recommended
   co2_red: '1200' # Poor air quality; open a window
   co2_purple: '1500' # Unacceptable; noticeable drowsiness/headaches possible
-  # CO2 Bar geometry, shared by every lambda that draws the bar so the formula
-  # lives in one place. C++ expressions (immediately invoked lambdas).
-  # Lit LEDs (1-11): 1 below 600 ppm, one more per 100 ppm, all 11 from 1500 ppm.
-  co2_bar_leds: >-
-    ([]() -> int { return std::max(1, std::min(11, 2 + (int)floorf((id(co2).state - 600.0f)
-    / 100.0f))); }())
-  # Whether the half-power preview of the next LED shows: in the upper half of
-  # each 100 ppm band, never at 11 LEDs. The bar is 1 LED for everything under
-  # 600 ppm, so the preview of the 2nd LED belongs to 550-599 ppm only; without
-  # the cut-off the floorf bands below 500 ppm would light it every other 50 ppm.
-  co2_bar_preview: >-
-    ([]() -> bool { float relative = id(co2).state - 600.0f; if (relative < -100.0f) return
-    false; float band_pos = relative - floorf(relative / 100.0f) * 100.0f; return ${co2_bar_leds}
-    < 11 && band_pos >= 50.0f; }())
   # PM2.5 thresholds, compressed to 0–25 µg/m³ so the full green→purple gradient
   # is visible across the bar's display range. Shared by every PM2.5 view (solid
   # PM2.5 mode, the combo modes, and PM2.5 Bar).
@@ -48,6 +34,23 @@ substitutions:
   voc_orange: '300' # Notable VOC event in progress
   voc_red: '375' # Sustained VOC event; ventilate
   voc_purple: '475' # Extreme (near top of SGP41 scale)
+  # ── Internal: CO2 Bar geometry (not settings, do not override) ─────────────
+  # C++ expressions shared by every lambda that draws the CO2 Bar, so the
+  # formula lives in one place. They are folded onto one line, so never add a
+  # `//` comment inside them (it would comment out the rest).
+  # Lit LEDs (1-11): 1 below 600 ppm, one more per 100 ppm, all 11 from
+  # 1500 ppm; 1 when there is no reading (NaN), so the int conversion is safe.
+  co2_bar_leds: >-
+    (std::isnan(id(co2).state) ? 1 : std::max(1, std::min(11, 2 + (int)floorf((id(co2).state
+    - 600.0f) / 100.0f))))
+  # Whether the half-power preview of the next LED shows: in the upper half of
+  # each 100 ppm band from 500 ppm, and not once all 11 LEDs are lit
+  # (1500 ppm). The bar is 1 LED below 600 ppm, so the preview of the 2nd LED
+  # covers 550-599 ppm only; without the 500 ppm cut-off the floorf bands below
+  # it would light the preview every other 50 ppm. NaN compares false.
+  co2_bar_preview: >-
+    (id(co2).state >= 500.0f && id(co2).state < 1500.0f && (id(co2).state - 600.0f) - floorf((id(co2).state
+    - 600.0f) / 100.0f) * 100.0f >= 50.0f)
 esphome:
   on_boot:
     - priority: -100
