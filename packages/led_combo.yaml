@@ -1175,6 +1175,10 @@ script:
                       condition:
                         lambda: |-
                           float relative = id(co2).state - 600.0f;
+                          // Below 500 ppm the bar is held at 1 LED until 600 ppm,
+                          // so there is no next LED to preview.
+                          if (relative < -100.0f)
+                            return false;
                           int n = std::max(1, std::min(11, 2 + (int)floorf(relative / 100.0f)));
                           float band_pos = relative - floorf(relative / 100.0f) * 100.0f;
                           return n < 11 && band_pos >= 50.0f;

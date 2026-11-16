@@ -71,8 +71,9 @@ TEMPLATE = """<!doctype html>
     <p class="subtitle">
       Firmware built with <a href="https://esphome.io/">ESPHome</a>. Connect a
       device over USB in Chrome or Edge on desktop and click Install. Already
-      flashed? Devices poll their manifest every six hours and surface updates
-      as a <em>Firmware Update</em> entity in Home Assistant.
+      flashed? Devices check their manifest every 24 hours by default and
+      offer new versions through the <em>Firmware Update</em> entity in Home
+      Assistant, where you choose when to install.
     </p>
 
     {cards}

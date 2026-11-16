@@ -48,7 +48,8 @@ sensor:
       else if (co2v <= 5000.0f) co2_score = (int)round(3.0f - 3.0f * (co2v - 1401.0f) / 3599.0f);
       else                      co2_score = 0;
 
-      // Combine: worst pollutant wins, plus synergetic deduction when both impacted
+      // Combine: worst pollutant wins, minus 1 (synergetic deduction) when the
+      // combined score is <= 7, as documented in the header above.
       int combined = std::min(pm25_score, co2_score);
       if (combined <= 7) combined = std::max(0, combined - 1);
 

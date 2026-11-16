@@ -45,6 +45,10 @@ jobs:
       - uses: actions/checkout@v7
       - name: Parse tag / dispatch input
         id: parse
+        env:
+          # Passed via env, never interpolated into the script, so the input
+          # cannot inject shell commands.
+          INPUT_DEVICE_SLUG: ${{ inputs.device_slug }}
         run: |
           set -euo pipefail
 
@@ -59,7 +63,7 @@ jobs:
             version="${ref##*/v}"
             is_tag_release=true
           else
-            slug="${{ inputs.device_slug }}"
+            slug="${INPUT_DEVICE_SLUG}"
             version="0.0.0-dispatch-${GITHUB_RUN_ID}"
             is_tag_release=false
           fi
@@ -201,7 +205,7 @@ jobs:
   # concurrency queue (GitHub keeps at most one *pending* job per group and
   # cancels older pending ones, which silently dropped deploys).
   #
-  # Skipped for pre-releases so fielded devices don't auto-install betas.
+  # Skipped for pre-releases so fielded devices are not offered betas.
   # ---------------------------------------------------------------------
   publish-pages:
     needs: [resolve, build]
@@ -239,22 +243,26 @@ jobs:
           out=release
           mkdir -p "${out}/${SLUG}/firmware/${VERSION}" "${out}/${SLUG}/firmware/latest"
 
-          # Versioned binaries (immutable URLs for anyone pinning a release).
+          # Versioned binaries: immutable URLs, which the manifest points at.
           cp "dist/${SLUG}/${SLUG}.factory.bin" "${out}/${SLUG}/firmware/${VERSION}/"
           cp "dist/${SLUG}/${SLUG}.ota.bin"     "${out}/${SLUG}/firmware/${VERSION}/"
 
-          # "latest" copies drive the manifest. Overwritten on each release.
+          # "latest" copies, overwritten on each release, for people linking to
+          # the newest build. The manifest does not use them: right after a
+          # release the Pages CDN can still serve a cached old "latest" binary
+          # with the new manifest, which then fails the OTA MD5 check.
           cp "dist/${SLUG}/${SLUG}.factory.bin" "${out}/${SLUG}/firmware/latest/"
           cp "dist/${SLUG}/${SLUG}.ota.bin"     "${out}/${SLUG}/firmware/latest/"
 
           # Paths in the manifest are relative to manifest.json's location,
           # which lives at /<slug>/manifest.json — so drop the /<slug>/ prefix.
+          # They point at the versioned (immutable) binaries, see above.
           python scripts/build_manifest.py \
             --name "${NAME}" \
             --version "${VERSION}" \
             --chip-family "${CHIP_FAMILY}" \
-            --ota-path "firmware/latest/${SLUG}.ota.bin" \
-            --factory-path "firmware/latest/${SLUG}.factory.bin" \
+            --ota-path "firmware/${VERSION}/${SLUG}.ota.bin" \
+            --factory-path "firmware/${VERSION}/${SLUG}.factory.bin" \
             --md5 "${md5}" \
             --release-url "https://github.com/${REPO}/releases/tag/${SLUG}%2Fv${VERSION}" \
             --output "${out}/${SLUG}/manifest.json"

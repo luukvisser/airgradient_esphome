@@ -33,9 +33,10 @@ def build_manifest(
         "version": version,
         # Lets Home Assistant recognise the device for adoption.
         "home_assistant_domain": "esphome",
-        # Ask users before wiping on a fresh install so existing
-        # provisioning isn't lost by accident.
-        "new_install_prompt_erase": False,
+        # Ask users before wiping on a fresh install so existing provisioning
+        # (Wi-Fi, API key, settings) isn't lost by accident. ESP Web Tools
+        # erases without asking when this is false.
+        "new_install_prompt_erase": True,
         "builds": [
             {
                 "chipFamily": chip_family,
