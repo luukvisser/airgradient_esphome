@@ -14,8 +14,9 @@ installation required.
 4. Click **Install** next to your device.
 5. The browser will prompt you to select a serial port — choose the one that corresponds
    to your device (typically listed as `USB Serial` or similar).
-6. Follow the on-screen prompts. The installer will erase and flash the latest released
-   firmware automatically.
+6. Follow the on-screen prompts. The installer asks whether to erase the device first:
+   erase when coming from stock AirGradient (or other) firmware; skip it to keep Wi-Fi,
+   the API key and settings when reinstalling this firmware.
 
 > **Note:** The install page is only live after the first release has been published via
 > the CI/CD pipeline. If the page returns a 404, no release has been tagged yet.
@@ -48,20 +49,25 @@ each device YAML), so they always point at the newest published release for that
 
 ## OTA updates
 
-Once flashed, the device updates itself automatically. Every 24 hours by default (set
-with the **Update Check Interval** select: Off, 6 hours, 24 hours or weekly) it polls
-its manifest URL, compares the available version to the installed one, and installs any
-update in the background:
+Once flashed, the device **checks** for new firmware by itself, but only installs it
+when you ask. Every 24 hours by default (set with the **Update Check Interval** select:
+Off, 6 hours, 24 hours or weekly) it fetches its manifest and compares the available
+version to the installed one. A newer version shows up on the **Firmware Update** entity
+in Home Assistant. Install it from there, or double-click the config button (check +
+install).
 
 ```mermaid
 sequenceDiagram
     participant D as Device (every 24 h)
     participant P as GitHub Pages
+    participant U as You (Home Assistant / config button)
 
     D->>P: GET /slug/manifest.json
     P-->>D: { version, ota_url, md5 }
     D->>D: Compare to installed version
     alt New version available
+        D->>D: Show "update available"
+        U->>D: Install
         D->>P: Download OTA binary
         D->>D: Verify MD5, flash, reboot
     end

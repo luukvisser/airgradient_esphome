@@ -200,8 +200,9 @@ The `Validate configs` workflow will compile the full device config on your PR.
 
 The `Build & Release Firmware` workflow validates the version, compiles firmware,
 publishes to GitHub Pages, and cuts a GitHub Release automatically. Pre-release tags
-(containing a `-`) are not pushed to the OTA manifest so fielded devices do not install
-them automatically.
+(containing a `-`) are not pushed to the OTA manifest so fielded devices are not offered
+them. Devices only check for updates; they install when the user asks (Home Assistant
+update entity or config-button double-click).
 
 ### What the pipeline does
 

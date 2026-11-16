@@ -104,6 +104,11 @@ through the **Firmware Update** entity (GitHub Pages) keep working with OTA Upda
   Password or turn the web server off for full protection. Turning the web server back
   **on** is always allowed. A refused change is logged as a warning; the web page may
   keep showing the toggle in the position you clicked until you reload it.
+- **Turn OTA Updates off once Home Assistant has set the API key.** While it is on (the
+  default), the ESPHome OTA port accepts uploads without a password, as in stock
+  ESPHome, so anyone on your network can flash firmware. It stays on by default because
+  ESPHome dashboard adoption uploads its own build that way. With it off, uploads
+  encrypted with the API key and the **Firmware Update** entity keep working.
 - **Tip: turn Bluetooth off once the device is set up.** While Bluetooth is on, Wi-Fi
   and Bluetooth share the radio in time slices. After a Bluetooth toggle the Wi-Fi power
   save mode is re-applied (requires [`wifi_power_save.yaml`](#wifi_power_saveyaml)).
